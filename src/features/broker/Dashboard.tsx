@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
 import { Property, Broker, Admin, DISTRICTS } from '@/lib/types';
@@ -107,6 +107,13 @@ export function BrokerDashboard() {
         p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.location.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
 
     return (
         <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 pb-20">

@@ -6,15 +6,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { Check, X, User, Edit2, Phone, Mail, MapPin, MessageSquare, Megaphone, Save } from 'lucide-react';
-import { useState } from 'react';
+import { Check, X, User, Edit2, Phone, Mail, MapPin, MessageSquare, Megaphone, Save, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Broker, Banner } from '@/lib/types';
 import { toast } from 'sonner';
 
 export function AdminDashboard() {
-    const { brokers, approveBroker, rejectBroker, updateBroker, banner, updateBanner } = useStore();
+    const { brokers, approveBroker, rejectBroker, updateBroker, banner, updateBanner, deleteBroker } = useStore();
     const [editingBroker, setEditingBroker] = useState<Broker | null>(null);
     const [tempBanner, setTempBanner] = useState<Banner>(banner);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
 
     const pendingBrokers = brokers.filter(b => b.status === 'pending');
     const approvedBrokers = brokers.filter(b => b.status === 'approved');
@@ -161,12 +168,17 @@ export function AdminDashboard() {
                                                 <Check className="w-4 h-4 mr-1" /> Approve
                                             </Button>
                                             <Button
-                                                variant={"destructive" as any}
-                                                className="flex-1"
+                                                variant={"outline" as any}
+                                                className="flex-1 text-red-600 border-red-100 hover:bg-red-50"
                                                 size={"sm" as any}
-                                                onClick={() => handleReject(broker.id, broker.name)}
+                                                onClick={() => {
+                                                    if (confirm(`Are you sure you want to permanently delete ${broker.name}?`)) {
+                                                        deleteBroker(broker.id);
+                                                        toast.success(`Deleted broker ${broker.name}`);
+                                                    }
+                                                }}
                                             >
-                                                <X className="w-4 h-4 mr-1" /> Reject
+                                                <Trash2 className="w-4 h-4 mr-1" /> Delete
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -232,7 +244,7 @@ export function AdminDashboard() {
                                             asChild
                                         >
                                             <a
-                                                href={`https://wa.me/91${broker.phone}?text=Hi ${broker.id}, this is Property Dosti Admin. I have a question regarding your account.`}
+                                                href={`https://wa.me/91${broker.phone}?text=Hi ${broker.name}, this is Property Dosti Admin. I have a question regarding your account.`}
                                                 target="_blank"
                                             >
                                                 <MessageSquare className="h-4 w-4" />
@@ -241,10 +253,15 @@ export function AdminDashboard() {
                                         <Button
                                             variant={"outline" as any}
                                             size={"sm" as any}
-                                            className="h-8 w-8 p-0"
-                                            onClick={() => setEditingBroker(broker)}
+                                            className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
+                                            onClick={() => {
+                                                if (confirm(`Are you sure you want to permanently delete ${broker.name}?`)) {
+                                                    deleteBroker(broker.id);
+                                                    toast.success(`Deleted broker ${broker.name}`);
+                                                }
+                                            }}
                                         >
-                                            <Edit2 className="h-4 w-4" />
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </div>
