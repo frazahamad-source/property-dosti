@@ -45,6 +45,7 @@ export interface Property {
     type: 'sale' | 'rent';
     category: 'residential' | 'commercial' | 'land';
     images: string[];
+    amenities: string[];
     createdAt: string; // ISO date
     updatedAt: string; // ISO date
     expiresAt: string; // ISO date (45 days validity)

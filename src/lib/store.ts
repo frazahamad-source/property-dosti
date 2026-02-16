@@ -47,7 +47,7 @@ export const useStore = create<AppState>((set) => ({
 
     addProperty: (property) =>
         set((state) => ({
-            properties: [{ ...property, likes: 0, leadsCount: 0 }, ...state.properties]
+            properties: [{ ...property, likes: 0, leadsCount: 0, amenities: property.amenities || [] }, ...state.properties]
         })),
 
     updateProperty: (id, updates) =>

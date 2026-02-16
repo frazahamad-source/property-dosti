@@ -4,19 +4,20 @@ import { useParams } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { MapPin, Phone, MessageSquare, Heart, Share2, ArrowLeft } from 'lucide-react';
+import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
 export default function PropertyDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const { properties, banner, addPropertyLead, likeProperty } = useStore();
+    const { properties, brokers, banner, addPropertyLead, likeProperty } = useStore();
 
     const property = properties.find(p => p.id === id);
+    const broker = useMemo(() => brokers.find(b => b.id === property?.brokerId), [property, brokers]);
 
     const [leadForm, setLeadForm] = useState({
         name: '',
@@ -56,24 +57,27 @@ export default function PropertyDetailPage() {
         setLeadForm({ name: '', phone: '', message: 'I am interested in this property. Please contact me.' });
     };
 
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const whatsappShareMsg = `Check out this property on Property Dosti: "${property.title}" - ${property.price.toLocaleString('en-IN')} INR in ${property.location}. View details: ${shareUrl}`;
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
             {/* Top Banner Promotion */}
-            <div className="bg-primary text-white py-3">
+            <div className="bg-gradient-to-r from-primary to-indigo-700 text-white py-3 shadow-md">
                 <div className="container px-4 flex justify-between items-center text-sm font-medium">
                     <span className="flex items-center gap-2">
-                        <Badge variant="secondary" className="bg-white/20 text-white border-none">NEW</Badge>
+                        <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse">PROMO</Badge>
                         {banner.title}
                     </span>
-                    <Link href="/signup" className="underline underline-offset-4 hover:text-white/80">
-                        Join as Broker
+                    <Link href="/signup" className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full hover:bg-white/20 transition-colors">
+                        Join Network <ExternalLink className="h-3 w-3" />
                     </Link>
                 </div>
             </div>
 
             <div className="container px-4 py-8">
                 <div className="mb-6">
-                    <Button variant="ghost" size="sm" asChild className="-ml-2">
+                    <Button variant="ghost" size="sm" asChild className="-ml-2 hover:bg-transparent hover:text-primary transition-colors">
                         <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Listings</Link>
                     </Button>
                 </div>
@@ -83,133 +87,200 @@ export default function PropertyDetailPage() {
                     <div className="lg:col-span-2 space-y-8">
                         {/* Image Gallery */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="md:col-span-2 aspect-[16/9] overflow-hidden rounded-2xl border shadow-sm">
+                            <div className="md:col-span-2 aspect-[16/9] overflow-hidden rounded-2xl border-4 border-white shadow-xl relative group">
                                 <img
                                     src={property.images[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     alt={property.title}
                                 />
+                                <div className="absolute top-4 left-4">
+                                    <Badge className="bg-black/50 backdrop-blur-md border-none px-3 py-1">
+                                        {property.images.length} Photos
+                                    </Badge>
+                                </div>
                             </div>
-                            {property.images.slice(1).map((img, idx) => (
-                                <div key={idx} className="aspect-[4/3] overflow-hidden rounded-xl border shadow-sm">
-                                    <img src={img} className="w-full h-full object-cover" alt={`${property.title} ${idx + 2}`} />
+                            {property.images.slice(1, 3).map((img, idx) => (
+                                <div key={idx} className="aspect-[4/3] overflow-hidden rounded-xl border-4 border-white shadow-lg group">
+                                    <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={`${property.title} ${idx + 2}`} />
                                 </div>
                             ))}
                         </div>
 
                         {/* Title and Info */}
-                        <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border shadow-sm">
-                            <div className="flex justify-between items-start mb-4">
+                        <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border shadow-sm ring-1 ring-black/5">
+                            <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                                 <div>
-                                    <Badge className="mb-2">{property.type === 'sale' ? 'For Sale' : 'For Rent'}</Badge>
-                                    <h1 className="text-3xl font-bold mb-2">{property.title}</h1>
-                                    <div className="flex items-center text-muted-foreground">
-                                        <MapPin className="h-5 w-5 mr-2 text-primary" />
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors uppercase tracking-wider text-[10px] font-bold">
+                                            {property.type === 'sale' ? 'For Sale' : 'For Rent'}
+                                        </Badge>
+                                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider">
+                                            {property.category}
+                                        </Badge>
+                                    </div>
+                                    <h1 className="text-3xl md:text-4xl font-black mb-2 text-gray-900 dark:text-white tracking-tight leading-tight">{property.title}</h1>
+                                    <div className="flex items-center text-muted-foreground font-medium">
+                                        <MapPin className="h-5 w-5 mr-1 text-primary" />
                                         {property.location}, {property.district}
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-3xl font-bold text-primary">₹{property.price.toLocaleString('en-IN')}</div>
-                                    <div className="text-sm text-muted-foreground mt-1 capitalize">{property.category}</div>
+                                <div className="text-left md:text-right bg-primary/5 p-4 rounded-xl border border-primary/10 min-w-[200px]">
+                                    <div className="text-3xl font-black text-primary">₹{property.price.toLocaleString('en-IN')}</div>
+                                    <div className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">Total Price</div>
                                 </div>
                             </div>
 
-                            <div className="flex gap-4 py-6 border-y my-6">
+                            <div className="flex flex-wrap gap-4 py-6 border-y border-gray-100 my-6">
                                 <Button
                                     variant="outline"
-                                    className="flex-1 gap-2 text-pink-600 border-pink-100"
+                                    className={`flex-1 min-w-[140px] gap-2 transition-all ${property.likes > 0 ? 'bg-pink-50 text-pink-600 border-pink-200' : 'hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200'}`}
                                     onClick={() => {
                                         likeProperty(property.id);
                                         toast.success('Liked!');
                                     }}
                                 >
-                                    <Heart className={property.likes > 0 ? 'fill-current' : ''} /> {property.likes} Likes
+                                    <Heart className={property.likes > 0 ? 'fill-current' : ''} size={18} /> {property.likes} Likes
                                 </Button>
                                 <Button
                                     variant="outline"
-                                    className="flex-1 gap-2 text-blue-600 border-blue-100"
+                                    className="flex-1 min-w-[140px] gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
                                     onClick={() => {
-                                        navigator.clipboard.writeText(window.location.href);
+                                        navigator.clipboard.writeText(shareUrl);
                                         toast.success('Link copied!');
                                     }}
                                 >
-                                    <Share2 /> Share Property
+                                    <Share2 size={18} /> Copy Link
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 min-w-[140px] gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-all"
+                                    asChild
+                                >
+                                    <a href={`https://wa.me/?text=${encodeURIComponent(whatsappShareMsg)}`} target="_blank">
+                                        <MessageSquare size={18} /> Share WhatsApp
+                                    </a>
                                 </Button>
                             </div>
 
-                            <div className="prose dark:prose-invert max-w-none">
-                                <h3 className="text-xl font-bold mb-4">Description</h3>
-                                <p className="text-gray-600 dark:text-gray-300 whitespace-pre-line">
-                                    {property.description}
-                                </p>
+                            <div className="space-y-8">
+                                <div>
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <span className="w-8 h-1 bg-primary rounded-full"></span>
+                                        Description
+                                    </h3>
+                                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line text-lg">
+                                        {property.description}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <span className="w-8 h-1 bg-primary rounded-full"></span>
+                                        Amenities
+                                    </h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                        {property.amenities.map((amenity, idx) => (
+                                            <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 transition-all hover:shadow-md hover:border-primary/20">
+                                                <div className="bg-primary/10 p-2 rounded-lg">
+                                                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                                                </div>
+                                                <span className="text-sm font-semibold">{amenity}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Right Column: Inquiry Form & Ad */}
                     <div className="space-y-8">
-                        <Card className="sticky top-8 shadow-xl border-primary/10 overflow-hidden">
-                            <div className="bg-primary/5 p-4 border-b border-primary/10">
-                                <h3 className="font-bold flex items-center gap-2">
-                                    <MessageSquare className="h-4 w-4 text-primary" />
-                                    Inquire Now
+                        <Card className="sticky top-8 shadow-2xl border-primary/20 overflow-hidden ring-1 ring-primary/10">
+                            <div className="bg-gradient-to-br from-primary to-indigo-600 p-6 text-white">
+                                <h3 className="text-xl font-black flex items-center gap-2">
+                                    <MessageSquare className="h-5 w-5 fill-white/20" />
+                                    Instant Inquiry
                                 </h3>
+                                <p className="text-white/80 text-xs mt-2 font-medium">Professional service via Property Dosti verified brokers</p>
                             </div>
-                            <CardContent className="pt-6">
-                                <form onSubmit={handleLeadSubmit} className="space-y-4">
+                            <CardContent className="pt-8">
+                                <form onSubmit={handleLeadSubmit} className="space-y-5">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Your Name</label>
+                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Your Name</label>
                                         <Input
-                                            placeholder="John Doe"
+                                            className="bg-gray-50 border-gray-100 h-12 focus:bg-white transition-all"
+                                            placeholder="Enter your full name"
                                             value={leadForm.name}
                                             onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Phone Number</label>
+                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Phone Number</label>
                                         <Input
+                                            className="bg-gray-50 border-gray-100 h-12 focus:bg-white transition-all"
                                             placeholder="+91 XXXXX XXXXX"
                                             value={leadForm.phone}
                                             onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Message</label>
+                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Message</label>
                                         <textarea
-                                            className="w-full flex min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                            placeholder="Your message..."
+                                            className="w-full flex min-h-[100px] rounded-xl border border-gray-100 bg-gray-50 px-3 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground"
+                                            placeholder="Tell the broker what you're looking for..."
                                             value={leadForm.message}
                                             onChange={(e) => setLeadForm({ ...leadForm, message: e.target.value })}
                                         />
                                     </div>
-                                    <Button type="submit" className="w-full shadow-lg shadow-primary/30 py-6 text-lg font-bold">
+                                    <Button type="submit" className="w-full shadow-xl shadow-primary/40 h-14 text-lg font-black tracking-tight hover:scale-[1.02] transition-transform">
                                         Send Inquiry
                                     </Button>
                                 </form>
 
-                                <div className="mt-6 pt-6 border-t font-medium text-center">
-                                    <p className="text-sm text-muted-foreground mb-4">Or contact via WhatsApp</p>
-                                    <Button variant="outline" className="w-full text-green-600 border-green-200 hover:bg-green-50 font-bold" asChild>
-                                        <a
-                                            href={`https://wa.me/91${property.id === '1' ? '9876543210' : '9988776655'}?text=Hi, I am interested in your property on Property Dosti: "${property.title}"`}
-                                            target="_blank"
-                                        >
-                                            Chat on WhatsApp
-                                        </a>
-                                    </Button>
+                                <div className="mt-8 pt-8 border-t border-dashed border-gray-200 font-medium text-center">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4">Direct Communication</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Button variant="outline" className="gap-2 font-bold border-green-200 text-green-700 hover:bg-green-50 rounded-xl" asChild>
+                                            <a
+                                                href={`https://wa.me/91${broker?.phone || '9876543210'}?text=${encodeURIComponent(`Hi, I am interested in your property on Property Dosti: "${property.title}". Please share more details.`)}`}
+                                                target="_blank"
+                                            >
+                                                <MessageSquare className="h-4 w-4" /> WhatsApp
+                                            </a>
+                                        </Button>
+                                        <Button variant="outline" className="gap-2 font-bold bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100 rounded-xl" asChild>
+                                            <a href={`tel:${broker?.phone || '9876543210'}`}>
+                                                <Phone className="h-4 w-4" /> Call Broker
+                                            </a>
+                                        </Button>
+                                    </div>
+                                    {broker && (
+                                        <div className="mt-4 flex items-center justify-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">
+                                                {broker.name.charAt(0)}
+                                            </div>
+                                            <div className="text-left">
+                                                <div className="text-xs font-black">{broker.name}</div>
+                                                <div className="text-[10px] text-muted-foreground">Verified Broker ({broker.brokerCode})</div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Property Dosti Brand Ad */}
-                        <div className="p-6 rounded-2xl bg-gradient-to-br from-primary to-indigo-600 text-white shadow-xl relative overflow-hidden group">
-                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform" />
-                            <h3 className="text-xl font-bold mb-2 relative z-10">Property Dosti</h3>
-                            <p className="text-sm text-white/80 mb-6 relative z-10">
-                                Verify your profile today and join the most elite network of real estate professionals in Karnataka.
+                        <div className="p-8 rounded-3xl bg-gradient-to-br from-indigo-900 via-blue-900 to-primary text-white shadow-2xl relative overflow-hidden group border border-white/10">
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors" />
+                            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
+
+                            <Badge className="mb-4 bg-white/20 border-none text-[10px] font-bold tracking-widest">ECOSYSTEM</Badge>
+                            <h3 className="text-2xl font-black mb-3 relative z-10 tracking-tight">Expand Your Reach</h3>
+                            <p className="text-sm text-white/70 mb-8 relative z-10 leading-relaxed">
+                                Join our network of over 5,000 professional brokers across Karnataka. Get access to exclusive listings and high-quality leads.
                             </p>
-                            <Button variant="secondary" className="w-full font-bold relative z-10" asChild>
-                                <Link href="/signup">Join Network Now</Link>
+                            <Button variant="secondary" className="w-full h-12 font-black shadow-lg hover:bg-white transition-colors relative z-10 rounded-xl" asChild>
+                                <Link href="/signup">Join Property Dosti</Link>
                             </Button>
                         </div>
                     </div>

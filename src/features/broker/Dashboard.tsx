@@ -93,6 +93,7 @@ export function BrokerDashboard() {
             isActive: true,
             likes: 0,
             leadsCount: 0,
+            amenities: [],
         };
 
         addProperty(newProperty);
@@ -150,6 +151,11 @@ export function BrokerDashboard() {
                                 }`}
                         >
                             <span className="capitalize">{tab === 'explore' ? 'Explore Global' : tab === 'listings' ? 'My Listings' : 'Responses'}</span>
+                            {tab === 'responses' && myLeads.length > 0 && (
+                                <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px] h-4 min-w-[1rem] flex items-center justify-center font-bold">
+                                    {myLeads.length}
+                                </Badge>
+                            )}
                             {activeTab === tab && (
                                 <motion.div
                                     layoutId="activeTab"
