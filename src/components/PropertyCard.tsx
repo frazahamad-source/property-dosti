@@ -2,10 +2,11 @@
 import { Property } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { MapPin, Clock, Heart, Share2 } from 'lucide-react';
+import { MapPin, Heart, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
 
 interface PropertyCardProps {
     property: Property;
@@ -13,7 +14,26 @@ interface PropertyCardProps {
 
 export function PropertyCard({ property }: PropertyCardProps) {
     const { likeProperty } = useStore();
-    const daysLeft = Math.ceil((new Date(property.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+    const handleLike = async () => {
+        const { error } = await supabase.rpc('increment_likes', { row_id: property.id });
+
+        // If RPC isn't available, fallback to simple update (though RPC is safer for concurrency)
+        if (error) {
+            const { error: updateError } = await supabase
+                .from('properties')
+                .update({ likes: property.likes + 1 })
+                .eq('id', property.id);
+
+            if (updateError) {
+                toast.error('Failed to like property');
+                return;
+            }
+        }
+
+        likeProperty(property.id);
+        toast.success('Property liked!');
+    };
 
     return (
         <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
@@ -61,10 +81,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                         variant={"outline" as any}
                         size={"sm" as any}
                         className="flex-1 h-9 text-pink-600 border-pink-100 hover:bg-pink-50 hover:text-pink-700 font-bold"
-                        onClick={() => {
-                            likeProperty(property.id);
-                            toast.success('Property liked!');
-                        }}
+                        onClick={handleLike}
                     >
                         <Heart className={`h-4 w-4 mr-2 ${property.likes > 0 ? 'fill-current' : ''}`} />
                         {property.likes}
@@ -90,7 +107,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     asChild
                 >
                     <a
-                        href={`https://wa.me/91${property.id === '1' ? '9876543210' : '9988776655'}?text=Hi, I am interested in your property: "${property.title}" in ${property.location}. Is it still available?`}
+                        href={`https://wa.me/91${property.brokerPhone || '7760704400'}?text=Hi, I am interested in your property: "${property.title}" in ${property.location}. Is it still available?`}
                         target="_blank"
                     >
                         Inquire on WhatsApp

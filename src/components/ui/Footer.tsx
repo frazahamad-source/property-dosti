@@ -51,15 +51,15 @@ export function Footer() {
                         <ul className="space-y-3 text-sm">
                             <li className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-primary" />
-                                <span>+91 98765 43210</span>
+                                <span>+91 77 60 70 44 00</span>
                             </li>
                             <li className="flex items-center gap-2">
                                 <Mail className="h-4 w-4 text-primary" />
-                                <span>contact@propertydosti.com</span>
+                                <span>support@propertydosti.com</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <MapPin className="h-4 w-4 text-primary mt-1" />
-                                <span>123 Realty Tower, MG Road,<br />Bengaluru, Karnataka 560001</span>
+                                <span>Ground Floor, Kankanady Gate Building,<br />Kankanady Cross Road, Kankanady,<br />Mangaluru - 575002</span>
                             </li>
                         </ul>
                     </div>
@@ -82,9 +82,10 @@ export function Footer() {
 
                 <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
                     <p>© {new Date().getFullYear()} Property Dosti. All rights reserved.</p>
-                    <nav className="flex gap-4 sm:gap-6">
-                        <Link className="hover:underline underline-offset-4" href="#">Terms of Service</Link>
-                        <Link className="hover:underline underline-offset-4" href="#">Privacy Policy</Link>
+                    <nav className="flex flex-wrap justify-center md:justify-end gap-4 sm:gap-6">
+                        <Link className="hover:underline underline-offset-4" href="/terms">Terms of Service</Link>
+                        <Link className="hover:underline underline-offset-4" href="/privacy">Privacy Policy</Link>
+                        <Link className="hover:underline underline-offset-4" href="/refund">Refund Policy</Link>
                     </nav>
                 </div>
             </div>

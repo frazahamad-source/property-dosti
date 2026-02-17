@@ -7,9 +7,58 @@ import { ArrowRight, Building2, ShieldCheck, Users } from "lucide-react";
 
 import { useStore } from "@/lib/store";
 import { PropertyCard } from "@/components/PropertyCard";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { Property } from "@/lib/types";
 
 export default function Home() {
-  const { properties, banner } = useStore();
+  const { properties, setProperties, banner } = useStore();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select(`
+          *,
+          profiles (
+            phone
+          )
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching properties:', error);
+      } else if (data) {
+        const mappedProperties: Property[] = data.map((p: any) => ({
+          id: p.id,
+          brokerId: p.broker_id,
+          title: p.title,
+          description: p.description,
+          price: p.price,
+          district: p.district,
+          location: p.location,
+          type: p.type,
+          category: p.category,
+          images: p.images,
+          createdAt: p.created_at,
+          updatedAt: p.updated_at,
+          expiresAt: p.expires_at,
+          isActive: p.is_active,
+          likes: p.likes,
+          leadsCount: p.leads_count,
+          amenities: p.amenities,
+          brokerPhone: p.profiles?.phone,
+        }));
+        setProperties(mappedProperties);
+      }
+      setLoading(false);
+    };
+
+    fetchProperties();
+  }, [setProperties]);
+
   const hotProperties = properties.slice(0, 6);
 
   return (

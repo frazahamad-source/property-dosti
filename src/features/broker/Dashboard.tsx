@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { SubscriptionDashboard } from '@/features/subscription/SubscriptionDashboard';
 import { ChatWindow } from '@/features/chat/ChatWindow';
+import { supabase } from '@/lib/supabaseClient';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,11 +38,12 @@ export function BrokerDashboard() {
     const [searchTerm, setSearchTerm] = useState('');
     const [uploadedImages, setUploadedImages] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState<'explore' | 'listings' | 'responses'>('explore');
+    const [isLoading, setIsLoading] = useState(false);
 
     const broker = user && 'subscriptionExpiry' in user ? user : null;
     const isSubscriptionExpired = broker ? new Date(broker.subscriptionExpiry) < new Date() : false;
 
-    const { propertyLeads } = useStore();
+    const { propertyLeads, setProperties } = useStore();
     const myProperties = properties.filter(p => p.brokerId === user?.id);
     const myLeads = propertyLeads.filter(l => l.brokerId === user?.id);
 
@@ -52,55 +54,149 @@ export function BrokerDashboard() {
         }
     });
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Fetch properties from Supabase
+    useEffect(() => {
+        const fetchProperties = async () => {
+            const { data, error } = await supabase
+                .from('properties')
+                .select(`
+                    *,
+                    profiles (
+                        phone
+                    )
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching properties:', error);
+            } else if (data) {
+                // Map snake_case to camelCase if necessary (matching the Property interface)
+                const mappedProperties: Property[] = data.map((p: any) => ({
+                    id: p.id,
+                    brokerId: p.broker_id,
+                    title: p.title,
+                    description: p.description,
+                    price: p.price,
+                    district: p.district,
+                    location: p.location,
+                    type: p.type,
+                    category: p.category,
+                    images: p.images,
+                    createdAt: p.created_at,
+                    updatedAt: p.updated_at,
+                    expiresAt: p.expires_at,
+                    isActive: p.is_active,
+                    likes: p.likes,
+                    leadsCount: p.leads_count,
+                    amenities: p.amenities,
+                    brokerPhone: p.profiles?.phone,
+                }));
+                setProperties(mappedProperties);
+            }
+        };
+
+        fetchProperties();
+    }, [setProperties]);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (files.length + uploadedImages.length > 3) {
             toast.error('You can only upload up to 3 images.');
             return;
         }
 
-        files.forEach(file => {
-            if (file.size > 512000) { // 500KB limit
-                toast.error(`${file.name} is too large. Please use low resolution images (< 500KB).`);
-                return;
+        setIsLoading(true);
+        const newImageUrls: string[] = [];
+
+        for (const file of files) {
+            if (file.size > 1024 * 1024) { // 1MB limit for Supabase
+                toast.error(`${file.name} is too large. Please use images < 1MB.`);
+                continue;
             }
 
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setUploadedImages(prev => [...prev, reader.result as string]);
-            };
-            reader.readAsDataURL(file);
-        });
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+                const filePath = `${user?.id}/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('property-images')
+                    .upload(filePath, file);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('property-images')
+                    .getPublicUrl(filePath);
+
+                newImageUrls.push(publicUrl);
+            } catch (error: any) {
+                console.error('Error uploading image:', error);
+                toast.error(`Failed to upload ${file.name}`);
+            }
+        }
+
+        setUploadedImages(prev => [...prev, ...newImageUrls]);
+        setIsLoading(false);
     };
 
-    const onSubmit = (data: PropertyFormValues) => {
+    const onSubmit = async (data: PropertyFormValues) => {
         if (!user) return;
+        setIsLoading(true);
 
-        const newProperty: Property = {
-            id: `prop-${Date.now()}`,
-            brokerId: user.id,
-            title: data.title,
-            description: data.description,
-            price: data.price,
-            district: data.district,
-            location: data.location,
-            type: data.type,
-            category: data.category,
-            images: uploadedImages,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
-            isActive: true,
-            likes: 0,
-            leadsCount: 0,
-            amenities: [],
-        };
+        try {
+            const { data: propertyData, error: propertyError } = await supabase
+                .from('properties')
+                .insert({
+                    broker_id: user.id,
+                    title: data.title,
+                    description: data.description,
+                    price: data.price,
+                    district: data.district,
+                    location: data.location,
+                    type: data.type,
+                    category: data.category,
+                    images: uploadedImages,
+                    amenities: [],
+                })
+                .select()
+                .single();
 
-        addProperty(newProperty);
-        toast.success('Property listed successfully!');
-        setIsAddModalOpen(false);
-        setUploadedImages([]);
-        reset();
+            if (propertyError) throw propertyError;
+
+            // Update local state by adding the new property at the top
+            const p = propertyData;
+            const newProperty: Property = {
+                id: p.id,
+                brokerId: p.broker_id,
+                title: p.title,
+                description: p.description,
+                price: p.price,
+                district: p.district,
+                location: p.location,
+                type: p.type,
+                category: p.category,
+                images: p.images,
+                createdAt: p.created_at,
+                updatedAt: p.updated_at,
+                expiresAt: p.expires_at,
+                isActive: p.is_active,
+                likes: p.likes,
+                leadsCount: p.leads_count,
+                amenities: p.amenities,
+            };
+
+            addProperty(newProperty);
+            toast.success('Property listed successfully!');
+            setIsAddModalOpen(false);
+            setUploadedImages([]);
+            reset();
+        } catch (error: any) {
+            console.error('Error adding property:', error);
+            toast.error(error.message || 'Failed to list property.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const filteredProperties = properties.filter(p =>

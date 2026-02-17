@@ -242,14 +242,14 @@ export default function PropertyDetailPage() {
                                     <div className="grid grid-cols-2 gap-3">
                                         <Button variant="outline" className="gap-2 font-bold border-green-200 text-green-700 hover:bg-green-50 rounded-xl" asChild>
                                             <a
-                                                href={`https://wa.me/91${broker?.phone || '9876543210'}?text=${encodeURIComponent(`Hi, I am interested in your property on Property Dosti: "${property.title}". Please share more details.`)}`}
+                                                href={`https://wa.me/91${broker?.phone || '7760704400'}?text=${encodeURIComponent(`Hi, I am interested in your property on Property Dosti: "${property.title}". Please share more details.`)}`}
                                                 target="_blank"
                                             >
                                                 <MessageSquare className="h-4 w-4" /> WhatsApp
                                             </a>
                                         </Button>
                                         <Button variant="outline" className="gap-2 font-bold bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100 rounded-xl" asChild>
-                                            <a href={`tel:${broker?.phone || '9876543210'}`}>
+                                            <a href={`tel:${broker?.phone || '7760704400'}`}>
                                                 <Phone className="h-4 w-4" /> Call Broker
                                             </a>
                                         </Button>

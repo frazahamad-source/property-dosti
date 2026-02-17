@@ -6,15 +6,22 @@ import { useStore } from '@/lib/store';
 import { BrokerDashboard } from '@/features/broker/Dashboard';
 
 export default function DashboardPage() {
-    const { user } = useStore();
+    const { user, hasHydrated } = useStore();
     const router = useRouter();
 
     useEffect(() => {
-        // Simple client-side protection
-        if (!user) {
+        if (hasHydrated && !user) {
             router.push('/login');
         }
-    }, [user, router]);
+    }, [user, hasHydrated, router]);
+
+    if (!hasHydrated) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     if (!user) return null;
 

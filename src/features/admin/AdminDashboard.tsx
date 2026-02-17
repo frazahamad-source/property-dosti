@@ -10,39 +10,199 @@ import { Check, X, User, Edit2, Phone, Mail, MapPin, MessageSquare, Megaphone, S
 import { useState, useEffect } from 'react';
 import { Broker, Banner } from '@/lib/types';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient'; // Assuming supabase client is imported here
 
 export function AdminDashboard() {
-    const { brokers, approveBroker, rejectBroker, updateBroker, banner, updateBanner, deleteBroker } = useStore();
+    const { brokers, setBrokers, approveBroker, rejectBroker, updateBroker, banner, updateBanner, deleteBroker, properties, setProperties, updateProperty } = useStore();
     const [editingBroker, setEditingBroker] = useState<Broker | null>(null);
     const [tempBanner, setTempBanner] = useState<Banner>(banner);
     const [mounted, setMounted] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
+    // Fetch brokers from Supabase
+    // Fetch brokers and properties from Supabase
     useEffect(() => {
+        const fetchData = async () => {
+            // Fetch Brokers
+            const { data: brokerData, error: brokerError } = await supabase
+                .from('profiles')
+                .select('*')
+                .order('registered_at', { ascending: false });
+
+            if (brokerError) {
+                console.error('Error fetching brokers:', brokerError);
+            } else if (brokerData) {
+                const mappedBrokers: Broker[] = brokerData.map((b: any) => ({
+                    id: b.id,
+                    name: b.name,
+                    email: b.email,
+                    phone: b.phone,
+                    brokerCode: b.broker_code,
+                    reraNumber: b.rera_number,
+                    districts: b.districts || [],
+                    city: b.city,
+                    village: b.village,
+                    status: b.status,
+                    registeredAt: b.registered_at,
+                    subscriptionExpiry: b.subscription_expiry,
+                    referralCode: b.referral_code,
+                    referredBy: b.referred_by,
+                    referralsCount: b.referrals_count,
+                }));
+                setBrokers(mappedBrokers);
+            }
+
+            // Fetch Properties
+            const { data: propertyData, error: propertyError } = await supabase
+                .from('properties')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (propertyError) {
+                console.error('Error fetching properties:', propertyError);
+            } else if (propertyData) {
+                const mappedProperties: any[] = propertyData.map((p: any) => ({
+                    id: p.id,
+                    brokerId: p.broker_id,
+                    title: p.title,
+                    description: p.description,
+                    price: p.price,
+                    district: p.district,
+                    location: p.location,
+                    type: p.type,
+                    category: p.category,
+                    images: p.images,
+                    createdAt: p.created_at,
+                    updatedAt: p.updated_at,
+                    expiresAt: p.expires_at,
+                    isActive: p.is_active,
+                    likes: p.likes,
+                    leadsCount: p.leads_count,
+                    amenities: p.amenities,
+                }));
+                setProperties(mappedProperties);
+            }
+
+            setIsLoading(false);
+        };
+
+        fetchData();
         setMounted(true);
-    }, []);
+    }, [setBrokers, setProperties]);
 
     if (!mounted) return null;
 
     const pendingBrokers = brokers.filter(b => b.status === 'pending');
     const approvedBrokers = brokers.filter(b => b.status === 'approved');
 
-    const handleApprove = (id: string, name: string) => {
-        approveBroker(id);
-        toast.success(`Approved broker ${name}`);
+    const handleApprove = async (id: string, name: string) => {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ status: 'approved' })
+            .eq('id', id);
+
+        if (error) {
+            toast.error(`Failed to approve ${name}: ${error.message}`);
+        } else {
+            approveBroker(id);
+            toast.success(`Approved broker ${name}`);
+        }
     };
 
-    const handleReject = (id: string, name: string) => {
-        rejectBroker(id);
-        toast.info(`Rejected broker ${name}`);
+    const handleReject = async (id: string, name: string) => {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ status: 'rejected' })
+            .eq('id', id);
+
+        if (error) {
+            toast.error(`Failed to reject ${name}: ${error.message}`);
+        } else {
+            rejectBroker(id);
+            toast.info(`Rejected broker ${name}`);
+        }
     };
 
-    const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!editingBroker) return;
 
-        updateBroker(editingBroker.id, editingBroker);
-        toast.success(`Updated broker ${editingBroker.name}`);
-        setEditingBroker(null);
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                name: editingBroker.name,
+                phone: editingBroker.phone,
+                rera_number: editingBroker.reraNumber,
+                city: editingBroker.city,
+                village: editingBroker.village,
+            })
+            .eq('id', editingBroker.id);
+
+        if (error) {
+            toast.error(`Failed to update ${editingBroker.name}: ${error.message}`);
+        } else {
+            updateBroker(editingBroker.id, editingBroker);
+            toast.success(`Updated broker ${editingBroker.name}`);
+            setEditingBroker(null);
+        }
+    };
+
+    const handleDelete = async (id: string, name: string) => {
+        if (!confirm(`Are you sure you want to permanently delete ${name}?`)) return;
+
+        // Note: Real deletion would also require deleting the auth user, which requires admin service role
+        // For now, we delete from profiles (which has ON DELETE CASCADE if configured correctly)
+        // Actually, deleting from profiles is enough if auth.users is handled elsewhere or if it's just profile deletion
+        const { error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            toast.error(`Failed to delete ${name}: ${error.message}`);
+        } else {
+            deleteBroker(id);
+        }
+    };
+    const handleDeleteProperty = async (id: string, title: string) => {
+        if (!confirm(`Are you sure you want to delete property "${title}"?`)) return;
+
+        const { error } = await supabase
+            .from('properties')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            toast.error(`Failed to delete property: ${error.message}`);
+        } else {
+            setProperties(properties.filter(p => p.id !== id));
+            toast.success(`Deleted property "${title}"`);
+        }
+    };
+
+    const handleClearData = async () => {
+        const password = confirm("CRITICAL: You are about to clear ALL property and broker data. This cannot be undone.");
+        if (!password) return;
+
+        const confirmation = prompt("Please type 'CLEARDATA' to proceed:");
+        if (confirmation !== 'CLEARDATA') {
+            toast.error("Cleanup cancelled. Confirmation text did not match.");
+            return;
+        }
+
+        toast.loading("Clearing data...");
+
+        // Delete all properties first
+        const { error: propError } = await supabase.from('properties').delete().neq('id', '0');
+        if (propError) console.error("Error clearing properties:", propError);
+
+        // Delete all non-admin profiles
+        const { error: profileError } = await supabase.from('profiles').delete().neq('id', '0');
+        if (profileError) console.error("Error clearing profiles:", profileError);
+
+        toast.dismiss();
+        toast.success("All data has been cleared.");
+        window.location.reload();
     };
 
     return (
@@ -171,12 +331,7 @@ export function AdminDashboard() {
                                                 variant={"outline" as any}
                                                 className="flex-1 text-red-600 border-red-100 hover:bg-red-50"
                                                 size={"sm" as any}
-                                                onClick={() => {
-                                                    if (confirm(`Are you sure you want to permanently delete ${broker.name}?`)) {
-                                                        deleteBroker(broker.id);
-                                                        toast.success(`Deleted broker ${broker.name}`);
-                                                    }
-                                                }}
+                                                onClick={() => handleDelete(broker.id, broker.name)}
                                             >
                                                 <Trash2 className="w-4 h-4 mr-1" /> Delete
                                             </Button>
@@ -254,12 +409,7 @@ export function AdminDashboard() {
                                             variant={"outline" as any}
                                             size={"sm" as any}
                                             className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
-                                            onClick={() => {
-                                                if (confirm(`Are you sure you want to permanently delete ${broker.name}?`)) {
-                                                    deleteBroker(broker.id);
-                                                    toast.success(`Deleted broker ${broker.name}`);
-                                                }
-                                            }}
+                                            onClick={() => handleDelete(broker.id, broker.name)}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
@@ -268,6 +418,74 @@ export function AdminDashboard() {
                             ))
                         )}
                     </div>
+                </section>
+                <section>
+                    <h2 className="text-xl font-semibold mb-4">Properties Management ({properties.length})</h2>
+                    <div className="rounded-md border bg-white dark:bg-gray-950 shadow-sm overflow-hidden">
+                        <div className="p-4 bg-muted/50 text-xs font-medium grid grid-cols-5 gap-4 border-b">
+                            <div className="col-span-2">Property Details</div>
+                            <div>Price</div>
+                            <div>Location</div>
+                            <div className="text-right">Actions</div>
+                        </div>
+                        {properties.length === 0 ? (
+                            <div className="p-8 text-center text-muted-foreground">No properties listed yet.</div>
+                        ) : (
+                            properties.map((prop) => (
+                                <div key={prop.id} className="p-4 text-sm grid grid-cols-5 gap-4 items-center border-b last:border-0 hover:bg-muted/20 transition-colors">
+                                    <div className="col-span-2 flex gap-3 items-center">
+                                        <div className="h-10 w-10 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                                            <img src={prop.images[0]} alt="" className="h-full w-full object-cover" />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-gray-900 dark:text-white line-clamp-1">{prop.title}</div>
+                                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{prop.category} • {prop.type}</div>
+                                        </div>
+                                    </div>
+                                    <div className="font-bold text-primary">₹{prop.price.toLocaleString('en-IN')}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {prop.location}, {prop.district}
+                                    </div>
+                                    <div className="text-right flex justify-end gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
+                                            onClick={() => handleDeleteProperty(prop.id, prop.title)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </section>
+
+                <section className="mt-8 pt-8 border-t border-red-100">
+                    <div className="flex items-center gap-2 mb-4 text-red-600">
+                        <Trash2 className="h-6 w-6" />
+                        <h2 className="text-xl font-bold">System Maintenance</h2>
+                    </div>
+                    <Card className="border-red-200 bg-red-50/30">
+                        <CardHeader>
+                            <CardTitle className="text-red-700">Danger Zone</CardTitle>
+                            <CardDescription>Actions here are permanent and cannot be reversed.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-gray-600 mb-6 font-medium">
+                                Clearing all data will remove all property listings and broker profiles from the database.
+                                This is typically used after a testing phase before going live.
+                            </p>
+                            <Button
+                                variant="destructive"
+                                onClick={handleClearData}
+                                className="bg-red-600 hover:bg-red-700 font-bold"
+                            >
+                                Clear All Application Data
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </section>
             </div>
 

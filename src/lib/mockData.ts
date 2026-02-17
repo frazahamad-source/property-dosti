@@ -6,7 +6,7 @@ export const MOCK_BROKERS: Broker[] = [
         id: "broker-1",
         name: "Ramesh Shetty",
         email: "ramesh@example.com",
-        phone: "9876543210",
+        phone: "7760704400",
         brokerCode: "PD-001",
         reraNumber: "AG-12345",
         districts: ["Udupi", "Dakshina Kannada"],

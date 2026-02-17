@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
 
 const loginSchema = z.object({
     email: z.string().email(),
@@ -31,33 +32,50 @@ export function LoginForm() {
 
     const onSubmit = async (data: LoginFormValues) => {
         setIsLoading(true);
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        // Check for admin
-        if (data.email === 'admin@propertydosti.com' && data.password === 'admin123') {
-            login({ id: 'admin', email: data.email, password: '' }, true);
-            toast.success('Welcome Admin');
-            router.push('/admin');
-            return;
-        }
-
-        // Check for broker
-        const broker = brokers.find((b) => b.email === data.email && b.password === data.password);
-
-        if (broker) {
-            if (broker.status !== 'approved') {
-                toast.error('Your account is pending approval.');
-                setIsLoading(false);
+        try {
+            // Check for admin (keeping hardcoded for simplicity as per existing logic, or could use Supabase)
+            if (data.email === 'admin@propertydosti.com' && data.password === 'admin123') {
+                login({ id: 'admin', email: data.email, password: '' } as any, true);
+                toast.success('Welcome Admin');
+                router.push('/admin');
                 return;
             }
-            login(broker, false);
+
+            // 1. Sign in with Supabase
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: data.email,
+                password: data.password,
+            });
+
+            if (authError) throw authError;
+            if (!authData.user) throw new Error('Login failed');
+
+            // 2. Fetch profile from public.profiles
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', authData.user.id)
+                .single();
+
+            if (profileError) throw profileError;
+
+            if (profile.status !== 'approved') {
+                toast.error('Your account is pending approval.');
+                await supabase.auth.signOut();
+                return;
+            }
+
+            // 3. Update local store
+            login(profile as any, false);
             toast.success('Welcome back!');
             router.push('/dashboard');
-        } else {
-            toast.error('Invalid credentials');
+        } catch (error: any) {
+            console.error('Login error:', error);
+            toast.error(error.message || 'Invalid credentials');
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     return (

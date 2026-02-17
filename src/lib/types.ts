@@ -52,6 +52,7 @@ export interface Property {
     isActive: boolean;
     likes: number;
     leadsCount: number;
+    brokerPhone?: string;
 }
 
 export interface PropertyLead {

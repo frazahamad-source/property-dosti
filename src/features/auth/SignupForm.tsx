@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useStore } from '@/lib/store';
 import { DISTRICTS } from '@/lib/types';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
 
 const signupSchema = z.object({
     name: z.string().min(2, "Name is required"),
@@ -45,61 +47,85 @@ export function SignupForm() {
 
     const onSubmit = async (data: SignupFormValues) => {
         setIsLoading(true);
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const brokerId = `broker-${Date.now()}`;
-        registerBroker({
-            id: brokerId,
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            brokerCode: `PD-${Math.floor(Math.random() * 1000)}`,
-            reraNumber: data.reraNumber,
-            districts: [data.districts],
-            city: data.city,
-            village: data.village,
-            status: 'pending',
-            password: data.password,
-            registeredAt: '', // Initialized in store
-            subscriptionExpiry: '', // Initialized in store
-            referralCode: '', // Initialized in store
-            referralsCount: 0,
-        });
-
-        if (data.referralCode) {
-            useStore.getState().applyReferral(data.referralCode, brokerId);
-        }
-
-        // Google Form Integration Logic
-        const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc62jS8QUvNLoK0knj-THJzLd6zeH6tBcT2VD906FYbtH3Reg/formResponse";
-        const formFields = {
-            "entry.2005620554": data.name,
-            "entry.1045798835": data.email,
-            "entry.1168172671": data.phone,
-            "entry.1166974658": data.city,
-            "entry.839337160": data.village,
-        };
-
-        const formData = new FormData();
-        Object.entries(formFields).forEach(([key, value]) => {
-            formData.append(key, value);
-        });
 
         try {
+            // 1. Sign up user in Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: data.email,
+                password: data.password,
+                options: {
+                    data: {
+                        name: data.name,
+                        phone: data.phone,
+                    }
+                }
+            });
+
+            if (authError) throw authError;
+            if (!authData.user) throw new Error('Signup failed');
+
+            const userId = authData.user.id;
+            const brokerCode = `PD-${Math.floor(1000 + Math.random() * 9000)}`;
+            const now = new Date();
+            const trialExpiry = new Date(now);
+            trialExpiry.setDate(trialExpiry.getDate() + 45);
+
+            // 2. Create profile in public.profiles table
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({
+                    id: userId,
+                    name: data.name,
+                    phone: data.phone,
+                    broker_code: brokerCode,
+                    rera_number: data.reraNumber,
+                    districts: [data.districts],
+                    city: data.city,
+                    village: data.village,
+                    status: 'pending',
+                    registered_at: now.toISOString(),
+                    subscription_expiry: trialExpiry.toISOString(),
+                    referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                });
+
+            if (profileError) throw profileError;
+
+            // 3. Handle Referral if applicable
+            if (data.referralCode) {
+                // We'll need a way to check if referral code is valid in Supabase
+                // For now, let's just log it or handle it in a separate function
+                console.log('Referral code provided:', data.referralCode);
+            }
+
+            // Google Form Integration Logic (Keeping it as requested previously)
+            const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc62jS8QUvNLoK0knj-THJzLd6zeH6tBcT2VD906FYbtH3Reg/formResponse";
+            const formFields = {
+                "entry.2005620554": data.name,
+                "entry.1045798835": data.email,
+                "entry.1168172671": data.phone,
+                "entry.1166974658": data.city,
+                "entry.839337160": data.village,
+            };
+
+            const formData = new FormData();
+            Object.entries(formFields).forEach(([key, value]) => {
+                formData.append(key, value);
+            });
+
             await fetch(GOOGLE_FORM_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 body: formData
             });
-            console.log('Successfully logged to Google Form');
-        } catch (error) {
-            console.error('Error logging to Google Form:', error);
-        }
 
-        toast.success('Registration successful! Please wait for admin approval.');
-        router.push('/login');
-        setIsLoading(false);
+            toast.success('Registration successful! Please wait for admin approval.');
+            router.push('/login');
+        } catch (error: any) {
+            console.error('Signup error:', error);
+            toast.error(error.message || 'Registration failed. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -180,7 +206,47 @@ export function SignupForm() {
                         <Input id="referralCode" {...register('referralCode')} placeholder="Enter code for bonus" />
                     </div>
 
-                    <Button type="submit" className="w-full" isLoading={isLoading}>
+                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Legal Agreements</p>
+
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="terms"
+                                required
+                                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
+                                I agree to the <Link href="/terms" target="_blank" className="text-primary hover:underline font-semibold">Terms of Service</Link>
+                            </label>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="privacy"
+                                required
+                                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="privacy" className="text-sm text-muted-foreground leading-tight">
+                                I acknowledge the <Link href="/privacy" target="_blank" className="text-primary hover:underline font-semibold">Privacy Policy</Link> and my rights under DPDPA 2023
+                            </label>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="refund"
+                                required
+                                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="refund" className="text-sm text-muted-foreground leading-tight">
+                                I accept the <Link href="/refund" target="_blank" className="text-primary hover:underline font-semibold">Refund & Cancellation Policy</Link>
+                            </label>
+                        </div>
+                    </div>
+
+                    <Button type="submit" className="w-full h-12 text-lg font-black tracking-tight" isLoading={isLoading}>
                         Register
                     </Button>
                 </form>

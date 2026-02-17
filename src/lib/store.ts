@@ -10,6 +10,8 @@ interface AppState {
     brokers: Broker[];
     banner: Banner;
     propertyLeads: PropertyLead[];
+    setProperties: (properties: Property[]) => void;
+    setBrokers: (brokers: Broker[]) => void;
     login: (user: Broker | Admin, isAdmin: boolean) => void;
     logout: () => void;
     addProperty: (property: Property) => void;
@@ -26,15 +28,17 @@ interface AppState {
     chatMessages: ChatMessage[];
     addChatMessage: (msg: ChatMessage) => void;
     applyReferral: (code: string, newBrokerId: string) => void;
+    hasHydrated: boolean;
+    setHasHydrated: (state: boolean) => void;
 }
 
 export const useStore = create<AppState>()(
     persist(
         (set) => ({
-            user: null, // Start with no logged in user
+            user: null,
             isAdmin: false,
-            properties: MOCK_PROPERTIES,
-            brokers: MOCK_BROKERS,
+            properties: [],
+            brokers: [],
             propertyLeads: [],
             banner: {
                 title: "Grow Your Business with Property Dosti",
@@ -42,7 +46,11 @@ export const useStore = create<AppState>()(
                 buttonText: "Join Premium Network",
                 buttonLink: "/signup",
             },
+            hasHydrated: false,
+            setHasHydrated: (state) => set({ hasHydrated: state }),
 
+            setProperties: (properties) => set({ properties }),
+            setBrokers: (brokers) => set({ brokers }),
             login: (user, isAdmin) => set({ user, isAdmin }),
             logout: () => set({ user: null, isAdmin: false }),
 
@@ -158,6 +166,9 @@ export const useStore = create<AppState>()(
         }),
         {
             name: 'property-dosti-storage',
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
+            },
         }
     )
 );
