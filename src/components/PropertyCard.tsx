@@ -104,14 +104,17 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 <Button
                     variant={"primary" as any}
                     className="w-full mt-3 font-bold shadow-md shadow-primary/20"
-                    asChild
+                    onClick={() => {
+                        const phone = `91${property.brokerPhone || '7760704400'}`;
+                        const msg = encodeURIComponent(`Hi, I am interested in your property: "${property.title}" in ${property.location}. Is it still available?`);
+                        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                        const url = isMobile
+                            ? `whatsapp://send?phone=${phone}&text=${msg}`
+                            : `https://wa.me/${phone}?text=${msg}`;
+                        window.open(url, '_blank');
+                    }}
                 >
-                    <a
-                        href={`https://wa.me/91${property.brokerPhone || '7760704400'}?text=Hi, I am interested in your property: "${property.title}" in ${property.location}. Is it still available?`}
-                        target="_blank"
-                    >
-                        Inquire on WhatsApp
-                    </a>
+                    Inquire on WhatsApp
                 </Button>
             </CardContent>
         </Card>

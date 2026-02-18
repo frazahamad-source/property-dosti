@@ -154,11 +154,16 @@ export default function PropertyDetailPage() {
                                 <Button
                                     variant="outline"
                                     className="flex-1 min-w-[140px] gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-all"
-                                    asChild
+                                    onClick={() => {
+                                        const msg = encodeURIComponent(whatsappShareMsg);
+                                        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                                        const url = isMobile
+                                            ? `whatsapp://send?text=${msg}`
+                                            : `https://wa.me/?text=${msg}`;
+                                        window.open(url, '_blank');
+                                    }}
                                 >
-                                    <a href={`https://wa.me/?text=${encodeURIComponent(whatsappShareMsg)}`} target="_blank">
-                                        <MessageSquare size={18} /> Share WhatsApp
-                                    </a>
+                                    <MessageSquare size={18} /> Share WhatsApp
                                 </Button>
                             </div>
 
@@ -240,13 +245,20 @@ export default function PropertyDetailPage() {
                                 <div className="mt-8 pt-8 border-t border-dashed border-gray-200 font-medium text-center">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4">Direct Communication</p>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <Button variant="outline" className="gap-2 font-bold border-green-200 text-green-700 hover:bg-green-50 rounded-xl" asChild>
-                                            <a
-                                                href={`https://wa.me/91${broker?.phone || '7760704400'}?text=${encodeURIComponent(`Hi, I am interested in your property on Property Dosti: "${property.title}". Please share more details.`)}`}
-                                                target="_blank"
-                                            >
-                                                <MessageSquare className="h-4 w-4" /> WhatsApp
-                                            </a>
+                                        <Button
+                                            variant="outline"
+                                            className="gap-2 font-bold border-green-200 text-green-700 hover:bg-green-50 rounded-xl"
+                                            onClick={() => {
+                                                const msg = encodeURIComponent(`Hi, I am interested in your property on Property Dosti: "${property.title}". Please share more details.`);
+                                                const phone = `91${broker?.phone || '7760704400'}`;
+                                                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                                                const url = isMobile
+                                                    ? `whatsapp://send?phone=${phone}&text=${msg}`
+                                                    : `https://wa.me/${phone}?text=${msg}`;
+                                                window.open(url, '_blank');
+                                            }}
+                                        >
+                                            <MessageSquare className="h-4 w-4" /> WhatsApp
                                         </Button>
                                         <Button variant="outline" className="gap-2 font-bold bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100 rounded-xl" asChild>
                                             <a href={`tel:${broker?.phone || '7760704400'}`}>

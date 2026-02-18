@@ -212,9 +212,9 @@ export function AdminDashboard() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const allowed = ['image/jpeg', 'image/jpg', 'image/gif'];
+        const allowed = ['image/jpeg', 'image/jpg', 'image/gif', 'image/png'];
         if (!allowed.includes(file.type)) {
-            toast.error('Only JPEG and GIF files are accepted.');
+            toast.error('Only JPEG, PNG and GIF files are accepted.');
             e.target.value = '';
             return;
         }
@@ -312,7 +312,7 @@ export function AdminDashboard() {
                                             <input
                                                 ref={bannerFileRef}
                                                 type="file"
-                                                accept="image/jpeg,image/jpg,image/gif"
+                                                accept="image/jpeg,image/jpg,image/gif,image/png"
                                                 className="hidden"
                                                 onChange={handleBannerFileUpload}
                                             />
@@ -331,7 +331,7 @@ export function AdminDashboard() {
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
                                             <ImageIcon className="h-3.5 w-3.5 shrink-0" />
-                                            <span><strong>Accepted formats:</strong> JPEG and GIF only. Recommended size: 1920×600 px.</span>
+                                            <span><strong>Accepted formats:</strong> JPEG, PNG and GIF only. Recommended size: 1920×600 px.</span>
                                         </div>
                                     </div>
                                 </div>
