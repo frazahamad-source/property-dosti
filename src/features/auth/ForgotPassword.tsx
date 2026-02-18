@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const forgotPasswordSchema = z.object({
     email: z.string().email("Please enter a valid email"),
@@ -27,13 +28,25 @@ export function ForgotPasswordForm() {
 
     const onSubmit = async (data: ForgotPasswordValues) => {
         setIsLoading(true);
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+                redirectTo: `${window.location.origin}/update-password`,
+            });
 
-        console.log('Password reset requested for:', data.email);
-        setIsSubmitted(true);
-        toast.success('Check your email for reset instructions.');
-        setIsLoading(false);
+            if (error) {
+                // For security, Supabase might always return 200 even if email doesn't exist,
+                // but if there's a config error (like SMTP), it will throw here.
+                throw error;
+            }
+
+            setIsSubmitted(true);
+            toast.success('Check your email for reset instructions.');
+        } catch (error: any) {
+            console.error('Reset password error:', error);
+            toast.error(error.message || 'Failed to send reset email.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     if (isSubmitted) {
