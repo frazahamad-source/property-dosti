@@ -16,6 +16,7 @@ export interface Broker {
     referralCode: string;
     referredBy?: string;
     referralsCount: number;
+    isAdmin?: boolean;
 }
 
 export interface ChatMessage {

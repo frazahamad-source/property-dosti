@@ -14,6 +14,8 @@ import { useStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 
+import { Eye, EyeOff } from 'lucide-react';
+
 const loginSchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
@@ -25,6 +27,7 @@ export function LoginForm() {
     const router = useRouter();
     const { brokers, login } = useStore();
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -34,14 +37,6 @@ export function LoginForm() {
         setIsLoading(true);
 
         try {
-            // Check for admin (keeping hardcoded for simplicity as per existing logic, or could use Supabase)
-            if (data.email === 'admin@propertydosti.com' && data.password === 'admin123') {
-                login({ id: 'admin', email: data.email, password: '' } as any, true);
-                toast.success('Welcome Admin');
-                router.push('/admin');
-                return;
-            }
-
             // 1. Sign in with Supabase
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email: data.email,
@@ -59,6 +54,15 @@ export function LoginForm() {
                 .single();
 
             if (profileError) throw profileError;
+
+            // Check if user is admin based on DB flag
+            if (profile.is_admin) {
+                // Admin login
+                login({ ...profile, isAdmin: true } as any, true);
+                toast.success('Welcome Admin');
+                router.push('/admin');
+                return;
+            }
 
             if (profile.status !== 'approved') {
                 toast.error('Your account is pending approval.');
@@ -98,12 +102,36 @@ export function LoginForm() {
                                 Forgot password?
                             </Link>
                         </div>
-                        <Input id="password" type="password" {...register('password')} />
+                        <div className="relative">
+                            <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                {...register('password')}
+                                className="pr-10"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                                {showPassword ? (
+                                    <EyeOff className="h-4 w-4" />
+                                ) : (
+                                    <Eye className="h-4 w-4" />
+                                )}
+                            </button>
+                        </div>
                         {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
                     </div>
                     <Button type="submit" className="w-full" isLoading={isLoading}>
                         Login
                     </Button>
+                    <div className="text-center text-sm">
+                        Don&apos;t have an account?{" "}
+                        <Link href="/signup" className="text-primary hover:underline">
+                            Sign up
+                        </Link>
+                    </div>
                 </form>
             </CardContent>
         </Card>

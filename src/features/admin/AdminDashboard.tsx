@@ -151,20 +151,20 @@ export function AdminDashboard() {
     };
 
     const handleDelete = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to permanently delete ${name}?`)) return;
+        if (!confirm(`Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) return;
 
-        // Note: Real deletion would also require deleting the auth user, which requires admin service role
-        // For now, we delete from profiles (which has ON DELETE CASCADE if configured correctly)
-        // Actually, deleting from profiles is enough if auth.users is handled elsewhere or if it's just profile deletion
+        // Try to delete from profiles. RLS policies must allow this for admins.
         const { error } = await supabase
             .from('profiles')
             .delete()
             .eq('id', id);
 
         if (error) {
-            toast.error(`Failed to delete ${name}: ${error.message}`);
+            console.error("Delete error:", error);
+            toast.error(`Failed to delete ${name}: ${error.message || 'Check if you have admin privileges.'}`);
         } else {
             deleteBroker(id);
+            toast.success(`Successfully deleted broker ${name}`);
         }
     };
     const handleDeleteProperty = async (id: string, title: string) => {
@@ -223,11 +223,16 @@ export function AdminDashboard() {
         try {
             const ext = file.name.split('.').pop();
             const fileName = `banner_${Date.now()}.${ext}`;
+
+            // Upload to 'banners' folder. RLS must allow this for admins.
             const { error: uploadError } = await supabase.storage
                 .from('property-images')
                 .upload(`banners/${fileName}`, file, { upsert: true });
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                console.error("Banner upload error:", uploadError);
+                throw new Error(uploadError.message || "Upload failed. Check admin permissions.");
+            }
 
             const { data: urlData } = supabase.storage
                 .from('property-images')
@@ -491,7 +496,7 @@ export function AdminDashboard() {
                 <section>
                     <h2 className="text-xl font-semibold mb-4">Properties Management ({properties.length})</h2>
                     <div className="rounded-md border bg-white dark:bg-gray-950 shadow-sm overflow-hidden">
-                        <div className="p-4 bg-muted/50 text-xs font-medium grid grid-cols-5 gap-4 border-b">
+                        <div className="hidden md:grid p-4 bg-muted/50 text-xs font-medium grid-cols-5 gap-4 border-b">
                             <div className="col-span-2">Property Details</div>
                             <div>Price</div>
                             <div>Location</div>
@@ -501,21 +506,57 @@ export function AdminDashboard() {
                             <div className="p-8 text-center text-muted-foreground">No properties listed yet.</div>
                         ) : (
                             properties.map((prop) => (
-                                <div key={prop.id} className="p-4 text-sm grid grid-cols-5 gap-4 items-center border-b last:border-0 hover:bg-muted/20 transition-colors">
-                                    <div className="col-span-2 flex gap-3 items-center">
-                                        <div className="h-10 w-10 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                                            <img src={prop.images[0]} alt="" className="h-full w-full object-cover" />
+                                <div key={prop.id} className="p-4 text-sm flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-4 md:items-center border-b last:border-0 hover:bg-muted/20 transition-colors">
+                                    {/* Property Details (Image + Title) */}
+                                    <div className="md:col-span-2 flex gap-3 items-center w-full">
+                                        <div className="h-10 w-10 rounded overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center border">
+                                            {prop.images && prop.images.length > 0 ? (
+                                                <img
+                                                    src={prop.images[0]}
+                                                    alt={prop.title}
+                                                    className="h-full w-full object-cover"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = 'none';
+                                                        e.currentTarget.parentElement?.classList.add('bg-gray-200');
+                                                    }}
+                                                />
+                                            ) : (
+                                                <ImageIcon className="h-5 w-5 text-gray-400" />
+                                            )}
                                         </div>
-                                        <div>
-                                            <div className="font-bold text-gray-900 dark:text-white line-clamp-1">{prop.title}</div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-bold text-gray-900 dark:text-white line-clamp-1 break-all">{prop.title}</div>
                                             <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{prop.category} • {prop.type}</div>
                                         </div>
+                                        {/* Mobile Action (Visible only on mobile) */}
+                                        <div className="md:hidden">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
+                                                onClick={() => handleDeleteProperty(prop.id, prop.title)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <div className="font-bold text-primary">₹{prop.price.toLocaleString('en-IN')}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                        {prop.location}, {prop.district}
+
+                                    {/* Price & Location (Stacked on Mobile, Columns on Desktop) */}
+                                    <div className="flex justify-between md:contents">
+                                        <div className="flex flex-col md:block">
+                                            <span className="md:hidden text-[10px] text-muted-foreground">Price</span>
+                                            <span className="font-bold text-primary">₹{prop.price.toLocaleString('en-IN')}</span>
+                                        </div>
+                                        <div className="flex flex-col md:block text-right md:text-left">
+                                            <span className="md:hidden text-[10px] text-muted-foreground">Location</span>
+                                            <span className="text-xs text-muted-foreground block md:truncate">
+                                                {prop.location}, {prop.district}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="text-right flex justify-end gap-2">
+
+                                    {/* Desktop Action (Hidden on mobile) */}
+                                    <div className="hidden md:flex text-right justify-end gap-2">
                                         <Button
                                             variant="outline"
                                             size="sm"

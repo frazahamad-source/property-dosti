@@ -50,6 +50,13 @@ export function SignupForm() {
 
         try {
             // 1. Sign up user in Supabase Auth
+            const now = new Date();
+            const trialExpiry = new Date(now);
+            trialExpiry.setDate(trialExpiry.getDate() + 45);
+            const brokerCode = `PD-${Math.floor(1000 + Math.random() * 9000)}`;
+            const myReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+            // 1. Sign up user in Supabase Auth (Profile created via Trigger)
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: data.email,
                 password: data.password,
@@ -57,6 +64,15 @@ export function SignupForm() {
                     data: {
                         name: data.name,
                         phone: data.phone,
+                        broker_code: brokerCode,
+                        rera_number: data.reraNumber || null,
+                        primary_district: data.districts, // SQL Trigger uses this key
+                        city: data.city,
+                        village: data.village,
+                        registered_at: now.toISOString(),
+                        subscription_expiry: trialExpiry.toISOString(),
+                        referral_code: myReferralCode,
+                        referred_by: data.referralCode || null, // The code they entered
                     }
                 }
             });
@@ -64,31 +80,7 @@ export function SignupForm() {
             if (authError) throw authError;
             if (!authData.user) throw new Error('Signup failed');
 
-            const userId = authData.user.id;
-            const brokerCode = `PD-${Math.floor(1000 + Math.random() * 9000)}`;
-            const now = new Date();
-            const trialExpiry = new Date(now);
-            trialExpiry.setDate(trialExpiry.getDate() + 45);
-
-            // 2. Create profile in public.profiles table
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .insert({
-                    id: userId,
-                    name: data.name,
-                    phone: data.phone,
-                    broker_code: brokerCode,
-                    rera_number: data.reraNumber,
-                    districts: [data.districts],
-                    city: data.city,
-                    village: data.village,
-                    status: 'pending',
-                    registered_at: now.toISOString(),
-                    subscription_expiry: trialExpiry.toISOString(),
-                    referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(),
-                });
-
-            if (profileError) throw profileError;
+            // Note: Manual insert into 'profiles' is removed because the SQL Trigger 'on_auth_user_created' handles it.
 
             // 3. Handle Referral if applicable
             if (data.referralCode) {
@@ -112,11 +104,16 @@ export function SignupForm() {
                 formData.append(key, value);
             });
 
-            await fetch(GOOGLE_FORM_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: formData
-            });
+            try {
+                await fetch(GOOGLE_FORM_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: formData
+                });
+            } catch (formError) {
+                console.warn('Google Form submission failed:', formError);
+                // Do not throw, allow registration to proceed
+            }
 
             toast.success('Registration successful! Please wait for admin approval.');
             router.push('/login');
