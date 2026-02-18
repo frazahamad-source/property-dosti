@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { Check, X, User, Edit2, Phone, Mail, MapPin, MessageSquare, Megaphone, Save, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Check, X, User, Edit2, Phone, Mail, MapPin, MessageSquare, Megaphone, Save, Trash2, Upload, ImageIcon } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { Broker, Banner } from '@/lib/types';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient'; // Assuming supabase client is imported here
@@ -18,6 +18,9 @@ export function AdminDashboard() {
     const [tempBanner, setTempBanner] = useState<Banner>(banner);
     const [mounted, setMounted] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [bannerUploading, setBannerUploading] = useState(false);
+    const [bannerPreview, setBannerPreview] = useState<string | null>(banner.backgroundImage || null);
+    const bannerFileRef = useRef<HTMLInputElement>(null);
 
     // Fetch brokers from Supabase
     // Fetch brokers and properties from Supabase
@@ -205,6 +208,42 @@ export function AdminDashboard() {
         window.location.reload();
     };
 
+    const handleBannerFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const allowed = ['image/jpeg', 'image/jpg', 'image/gif'];
+        if (!allowed.includes(file.type)) {
+            toast.error('Only JPEG and GIF files are accepted.');
+            e.target.value = '';
+            return;
+        }
+
+        setBannerUploading(true);
+        try {
+            const ext = file.name.split('.').pop();
+            const fileName = `banner_${Date.now()}.${ext}`;
+            const { error: uploadError } = await supabase.storage
+                .from('property-images')
+                .upload(`banners/${fileName}`, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: urlData } = supabase.storage
+                .from('property-images')
+                .getPublicUrl(`banners/${fileName}`);
+
+            const publicUrl = urlData.publicUrl;
+            setBannerPreview(publicUrl);
+            setTempBanner(prev => ({ ...prev, backgroundImage: publicUrl }));
+            toast.success('Banner image uploaded! Click "Save Banner Changes" to apply.');
+        } catch (err: any) {
+            toast.error(`Upload failed: ${err.message}`);
+        } finally {
+            setBannerUploading(false);
+        }
+    };
+
     return (
         <div className="container py-8 px-4">
             <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
@@ -255,13 +294,46 @@ export function AdminDashboard() {
                                         placeholder="e.g. /signup"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Background Image (Optional)</label>
-                                    <Input
-                                        value={tempBanner.backgroundImage || ''}
-                                        onChange={(e) => setTempBanner({ ...tempBanner, backgroundImage: e.target.value })}
-                                        placeholder="URL for custom background"
-                                    />
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-sm font-medium">Banner Background Image</label>
+                                    <div className="flex flex-col gap-3">
+                                        {bannerPreview && (
+                                            <div className="relative rounded-lg overflow-hidden border h-32 bg-gray-100">
+                                                <img src={bannerPreview} alt="Banner preview" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                    <span className="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded">Current Banner</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div
+                                            className="border-2 border-dashed border-primary/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/60 hover:bg-primary/5 transition-colors"
+                                            onClick={() => bannerFileRef.current?.click()}
+                                        >
+                                            <input
+                                                ref={bannerFileRef}
+                                                type="file"
+                                                accept="image/jpeg,image/jpg,image/gif"
+                                                className="hidden"
+                                                onChange={handleBannerFileUpload}
+                                            />
+                                            {bannerUploading ? (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                                    <span className="text-sm text-muted-foreground">Uploading...</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <Upload className="h-8 w-8 text-primary/50" />
+                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Click to upload banner image</span>
+                                                    <span className="text-xs text-muted-foreground">or drag and drop</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
+                                            <ImageIcon className="h-3.5 w-3.5 shrink-0" />
+                                            <span><strong>Accepted formats:</strong> JPEG and GIF only. Recommended size: 1920×600 px.</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="mt-6 flex justify-end">
@@ -345,79 +417,76 @@ export function AdminDashboard() {
 
                 <section>
                     <h2 className="text-xl font-semibold mb-4">Approved Brokers ({approvedBrokers.length})</h2>
-                    <div className="rounded-md border bg-white dark:bg-gray-950 shadow-sm overflow-hidden">
-                        <div className="p-4 bg-muted/50 text-xs font-medium grid grid-cols-5 gap-4 border-b">
-                            <div>Name & Contact</div>
-                            <div>Districts</div>
-                            <div>City/Village</div>
-                            <div>Status</div>
-                            <div className="text-right">Actions</div>
+                    {approvedBrokers.length === 0 ? (
+                        <div className="p-8 text-center text-muted-foreground border rounded-md bg-white dark:bg-gray-950">No approved brokers yet.</div>
+                    ) : (
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            {approvedBrokers.map((broker) => (
+                                <Card key={broker.id} className="overflow-hidden">
+                                    <CardHeader className="pb-3 bg-green-50/50 dark:bg-green-900/10 border-b">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+                                                    <User className="h-5 w-5 text-green-700 dark:text-green-400" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="font-bold text-gray-900 dark:text-white truncate">{broker.name}</div>
+                                                    <Badge variant="success" className="text-[10px] mt-0.5">Active</Badge>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-1 shrink-0">
+                                                <Button
+                                                    variant={"outline" as any}
+                                                    size={"sm" as any}
+                                                    className="h-8 w-8 p-0 text-green-600 border-green-200"
+                                                    asChild
+                                                >
+                                                    <a
+                                                        href={`https://wa.me/91${broker.phone}?text=Hi ${broker.name}, this is Property Dosti Admin. I have a question regarding your account.`}
+                                                        target="_blank"
+                                                    >
+                                                        <MessageSquare className="h-4 w-4" />
+                                                    </a>
+                                                </Button>
+                                                <Button
+                                                    variant={"outline" as any}
+                                                    size={"sm" as any}
+                                                    className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
+                                                    onClick={() => handleDelete(broker.id, broker.name)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="pt-4 space-y-3 text-sm">
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                            <Mail className="h-3.5 w-3.5 shrink-0 text-primary" />
+                                            <span className="truncate">{broker.email}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                            <Phone className="h-3.5 w-3.5 shrink-0 text-primary" />
+                                            <span>{broker.phone}</span>
+                                        </div>
+                                        <div className="flex items-start gap-2 text-muted-foreground">
+                                            <MapPin className="h-3.5 w-3.5 shrink-0 text-primary mt-0.5" />
+                                            <span>{broker.city || 'N/A'}, {broker.village || 'N/A'}</span>
+                                        </div>
+                                        <div className="pt-2 border-t">
+                                            <div className="flex flex-wrap gap-1 mb-2">
+                                                {broker.districts.map(d => (
+                                                    <Badge key={d} variant="outline" className="text-[10px]">{d}</Badge>
+                                                ))}
+                                            </div>
+                                            <div className="font-mono text-[10px] text-primary bg-primary/5 px-2 py-1 rounded">
+                                                Referral Code: {broker.referralCode || 'N/A'}
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </div>
-                        {approvedBrokers.length === 0 ? (
-                            <div className="p-8 text-center text-muted-foreground">No approved brokers yet.</div>
-                        ) : (
-                            approvedBrokers.map((broker) => (
-                                <div key={broker.id} className="p-4 text-sm grid grid-cols-5 gap-4 items-center border-b last:border-0 hover:bg-muted/20 transition-colors">
-                                    <div>
-                                        <div className="font-bold text-gray-900 dark:text-white">{broker.name}</div>
-                                        <div className="text-xs text-muted-foreground flex items-center mt-1">
-                                            <Mail className="h-3 w-3 mr-1" /> {broker.email}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground flex items-center mt-0.5">
-                                            <Phone className="h-3 w-3 mr-1" /> {broker.phone}
-                                        </div>
-                                    </div>
-                                    <div className="text-xs">
-                                        <div className="flex flex-wrap gap-1">
-                                            {broker.districts.slice(0, 2).map(d => (
-                                                <Badge key={d} className="text-[10px] scale-90 origin-left">
-                                                    {d}
-                                                </Badge>
-                                            ))}
-                                            {broker.districts.length > 2 && <span className="text-[10px] text-muted-foreground">+{broker.districts.length - 2}</span>}
-                                        </div>
-                                        <div className="mt-2 font-mono text-[10px] text-primary">
-                                            Code: {broker.referralCode}
-                                        </div>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
-                                        <div className="flex items-start">
-                                            <MapPin className="h-3 w-3 mr-1 mt-0.5 shrink-0" />
-                                            <span>
-                                                {broker.city || 'N/A'}, {broker.village || 'N/A'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <Badge variant="success" className="text-[10px]">Active</Badge>
-                                    </div>
-                                    <div className="text-right flex justify-end gap-2">
-                                        <Button
-                                            variant={"outline" as any}
-                                            size={"sm" as any}
-                                            className="h-8 w-8 p-0 text-green-600 border-green-200"
-                                            asChild
-                                        >
-                                            <a
-                                                href={`https://wa.me/91${broker.phone}?text=Hi ${broker.name}, this is Property Dosti Admin. I have a question regarding your account.`}
-                                                target="_blank"
-                                            >
-                                                <MessageSquare className="h-4 w-4" />
-                                            </a>
-                                        </Button>
-                                        <Button
-                                            variant={"outline" as any}
-                                            size={"sm" as any}
-                                            className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
-                                            onClick={() => handleDelete(broker.id, broker.name)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
+                    )}
                 </section>
                 <section>
                     <h2 className="text-xl font-semibold mb-4">Properties Management ({properties.length})</h2>
