@@ -263,36 +263,12 @@ export function SignupForm() {
                         <div className="flex items-start gap-3">
                             <input
                                 type="checkbox"
-                                id="terms"
+                                id="legalAgreement"
                                 required
                                 className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                             />
-                            <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
-                                I agree to the <Link href="/terms" target="_blank" className="text-primary hover:underline font-semibold">Terms of Service</Link>
-                            </label>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <input
-                                type="checkbox"
-                                id="privacy"
-                                required
-                                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <label htmlFor="privacy" className="text-sm text-muted-foreground leading-tight">
-                                I acknowledge the <Link href="/privacy" target="_blank" className="text-primary hover:underline font-semibold">Privacy Policy</Link> and my rights under DPDPA 2023
-                            </label>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <input
-                                type="checkbox"
-                                id="refund"
-                                required
-                                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <label htmlFor="refund" className="text-sm text-muted-foreground leading-tight">
-                                I accept the <Link href="/refund" target="_blank" className="text-primary hover:underline font-semibold">Refund & Cancellation Policy</Link>
+                            <label htmlFor="legalAgreement" className="text-sm text-muted-foreground leading-tight">
+                                I agree to the <Link href="/terms" target="_blank" className="text-primary hover:underline font-semibold">Terms of Service</Link>, <Link href="/privacy" target="_blank" className="text-primary hover:underline font-semibold">Privacy Policy</Link>, and <Link href="/refund" target="_blank" className="text-primary hover:underline font-semibold">Refund & Cancellation Policy</Link>.
                             </label>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
+import { FileText, ArrowLeft, CheckCircle2, AlertCircle, Scale, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
@@ -23,6 +23,43 @@ export default function TermsOfService() {
                     </div>
 
                     <p className="text-muted-foreground mb-8 font-medium">Last Updated: February 17, 2026</p>
+
+                    {/* Key Highlights Section */}
+                    <div className="bg-primary/5 rounded-2xl p-6 mb-12 border border-primary/10">
+                        <h2 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                            <Scale className="h-5 w-5" />
+                            Key Terms at a Glance
+                        </h2>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Shield className="h-4 w-4 text-primary" />
+                                    Eligibility
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    You must be a verified broker with valid RERA registration (where applicable) to list properties.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Users className="h-4 w-4 text-primary" />
+                                    Conduct
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Zero tolerance for fraudulent listings, misleading information, or unprofessional behavior check.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4 text-primary" />
+                                    No Liability
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Property Dosti is a connector platform. We are not a party to real estate transactions or disputes.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
                     <div className="space-y-10 prose prose-gray dark:prose-invert max-w-none">
                         <section>

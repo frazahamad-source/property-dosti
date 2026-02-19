@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, ShieldCheck, Lock, Eye, FileText, ArrowLeft } from "lucide-react";
+import { Building2, ShieldCheck, Lock, Eye, FileText, ArrowLeft, Database, UserCheck, Globe } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
@@ -23,6 +23,43 @@ export default function PrivacyPolicy() {
                     </div>
 
                     <p className="text-muted-foreground mb-8 font-medium">Last Updated: February 17, 2026</p>
+
+                    {/* Key Highlights Section */}
+                    <div className="bg-primary/5 rounded-2xl p-6 mb-12 border border-primary/10">
+                        <h2 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                            <Lock className="h-5 w-5" />
+                            Privacy at a Glance
+                        </h2>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Database className="h-4 w-4 text-primary" />
+                                    Data Collection
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    We collect only essential info: Name, Contact, RERA Detais, and Property data to run the service.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <UserCheck className="h-4 w-4 text-primary" />
+                                    Your Rights
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Full control under DPDPA 2023. Access, correct, or erasure your data anytime.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Globe className="h-4 w-4 text-primary" />
+                                    No Third-Party Sell
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    We never sell your personal contact data to third-party ad networks.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
                     <div className="space-y-10 prose prose-gray dark:prose-invert max-w-none">
                         <section>

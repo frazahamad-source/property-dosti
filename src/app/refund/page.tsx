@@ -1,6 +1,6 @@
 'use client';
 
-import { RefreshCw, ArrowLeft, Clock, CreditCard, Ban } from "lucide-react";
+import { RefreshCw, ArrowLeft, Clock, CreditCard, Ban, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
@@ -23,6 +23,43 @@ export default function RefundPolicy() {
                     </div>
 
                     <p className="text-muted-foreground mb-8 font-medium">Last Updated: February 17, 2026</p>
+
+                    {/* Key Highlights Section */}
+                    <div className="bg-primary/5 rounded-2xl p-6 mb-12 border border-primary/10">
+                        <h2 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                            <CreditCard className="h-5 w-5" />
+                            Refund Rules Simplified
+                        </h2>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Ban className="h-4 w-4 text-red-500" />
+                                    No Refunds
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Subscriptions are non-refundable once activated, as access to data is immediate.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-primary" />
+                                    Cancellation
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Cancel anytime to stop future billing. Access continues until the current period ends.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <HelpCircle className="h-4 w-4 text-primary" />
+                                    Exceptions
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Refunds may be considered only for technical double-charges or platform errors.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
                     <div className="space-y-10 prose prose-gray dark:prose-invert max-w-none">
                         <section>
