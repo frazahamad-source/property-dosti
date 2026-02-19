@@ -57,7 +57,10 @@ export const useStore = create<AppState>()(
             logout: () => set({ user: null, isAdmin: false }),
 
             fetchBanner: async () => {
-                const { data, error } = await import('@/lib/supabaseClient').then(m => m.supabase)
+                const module = await import('@/lib/supabaseClient');
+                const supabase = module.supabase;
+
+                const { data, error } = await supabase
                     .from('site_settings')
                     .select('value')
                     .eq('key', 'banner_config')
@@ -73,7 +76,10 @@ export const useStore = create<AppState>()(
                 set({ banner: newBanner });
 
                 // Persist to DB
-                await import('@/lib/supabaseClient').then(m => m.supabase)
+                const module = await import('@/lib/supabaseClient');
+                const supabase = module.supabase;
+
+                await supabase
                     .from('site_settings')
                     .upsert({
                         key: 'banner_config',

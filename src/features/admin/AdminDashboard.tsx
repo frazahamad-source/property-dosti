@@ -142,6 +142,8 @@ export function AdminDashboard() {
                 rera_number: editingBroker.reraNumber,
                 city: editingBroker.city,
                 village: editingBroker.village,
+                company_name: editingBroker.companyName,
+                designation: editingBroker.designation,
             })
             .eq('id', editingBroker.id);
 
@@ -442,14 +444,25 @@ export function AdminDashboard() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {pendingBrokers.map((broker) => (
                                 <Card key={broker.id}>
-                                    <CardHeader className="flex flex-row items-center gap-4">
-                                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <User className="h-6 w-6 text-primary" />
+                                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                                <User className="h-6 w-6 text-primary" />
+                                            </div>
+                                            <div>
+                                                <CardTitle className="text-lg">{broker.name}</CardTitle>
+                                                <CardDescription>{broker.email}</CardDescription>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <CardTitle className="text-lg">{broker.name}</CardTitle>
-                                            <CardDescription>{broker.email}</CardDescription>
-                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                                            onClick={() => setEditingBroker(broker)}
+                                        >
+                                            <Edit2 className="h-4 w-4" />
+                                            <span className="sr-only">Edit</span>
+                                        </Button>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-2 text-sm mb-4">
@@ -527,6 +540,14 @@ export function AdminDashboard() {
                                                 </div>
                                             </div>
                                             <div className="flex gap-1 shrink-0">
+                                                <Button
+                                                    variant={"outline" as any}
+                                                    size={"sm" as any}
+                                                    className="h-8 w-8 p-0 text-gray-500 border-gray-200 hover:text-primary"
+                                                    onClick={() => setEditingBroker(broker)}
+                                                >
+                                                    <Edit2 className="h-4 w-4" />
+                                                </Button>
                                                 <Button
                                                     variant={"outline" as any}
                                                     size={"sm" as any}
@@ -723,6 +744,22 @@ export function AdminDashboard() {
                                     type="email"
                                     value={editingBroker.email}
                                     onChange={(e) => setEditingBroker({ ...editingBroker, email: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Company Name</label>
+                                <Input
+                                    value={editingBroker.companyName || ''}
+                                    onChange={(e) => setEditingBroker({ ...editingBroker, companyName: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Designation</label>
+                                <Input
+                                    value={editingBroker.designation || ''}
+                                    onChange={(e) => setEditingBroker({ ...editingBroker, designation: e.target.value })}
                                 />
                             </div>
                         </div>
