@@ -4,11 +4,15 @@ export interface Broker {
     name: string;
     email: string;
     phone: string;
-    brokerCode: string; // Unique, auto-generated
+
+    broker_code: string; // Unique, auto-generated
     reraNumber?: string;
     districts: string[]; // Dakshina Kannada, Moodbidri, Puttur, Udupi
     city?: string;
     village?: string;
+    companyName?: string;
+    designation?: string;
+    role: 'broker';
     status: 'pending' | 'approved' | 'rejected';
     password?: string; // In real app, this would be hashed
     registeredAt: string; // ISO date

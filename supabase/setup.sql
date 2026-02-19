@@ -14,6 +14,7 @@ CREATE TABLE profiles (
     referral_code TEXT,
     referred_by TEXT,
     referrals_count INTEGER DEFAULT 0,
+    is_admin BOOLEAN DEFAULT FALSE,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

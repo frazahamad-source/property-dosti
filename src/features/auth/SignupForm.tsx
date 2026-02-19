@@ -21,6 +21,8 @@ const signupSchema = z.object({
     name: z.string().min(2, "Name is required"),
     email: z.string().email(),
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
+    companyName: z.string().optional(),
+    designation: z.string().optional(),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
     reraNumber: z.string().optional(),
@@ -68,6 +70,8 @@ export function SignupForm() {
                     data: {
                         name: data.name,
                         phone: data.phone,
+                        company_name: data.companyName,
+                        designation: data.designation,
                         broker_code: brokerCode,
                         rera_number: data.reraNumber || null,
                         primary_district: data.districts, // SQL Trigger uses this key
@@ -147,6 +151,16 @@ export function SignupForm() {
                         <label htmlFor="email">Email</label>
                         <Input id="email" type="email" {...register('email')} />
                         {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                        <label htmlFor="companyName">Company / Agency Name (Optional)</label>
+                        <Input id="companyName" {...register('companyName')} placeholder="e.g. Property Dosti Realtors" />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label htmlFor="designation">Designation (Optional)</label>
+                        <Input id="designation" {...register('designation')} placeholder="e.g. Proprietor / Director" />
                     </div>
 
                     <div className="space-y-2">
