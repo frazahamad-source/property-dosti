@@ -120,14 +120,19 @@ export default function Home() {
           <div className="container px-4 md:px-6">
             {/* Dynamic Banner Section */}
             {banner.backgroundImage ? (
-              // IMAGE MODE: Clickable Image, No Overlay Text, Full Fit
+              // IMAGE MODE: Clickable Image, Fixed Aspect Ratio (1920/600 ~= 3.2), Drag Position
               <Link href={banner.buttonLink || '/'} className="block group w-full">
-                <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-primary/10 transition-transform transform hover:scale-[1.01]">
-                  <img
-                    src={banner.backgroundImage}
-                    alt={banner.title}
-                    className="w-full h-auto object-contain"
-                  />
+                <div
+                  className="w-full rounded-2xl shadow-xl overflow-hidden border border-primary/10 transition-transform transform hover:scale-[1.01]"
+                  style={{
+                    aspectRatio: '1920 / 600',
+                    backgroundImage: `url(${banner.backgroundImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: banner.backgroundPosition || '50% 50%',
+                    backgroundRepeat: 'no-repeat'
+                  }}
+                >
+                  <span className="sr-only">{banner.title}</span>
                 </div>
               </Link>
             ) : (

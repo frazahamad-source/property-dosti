@@ -315,11 +315,54 @@ export function AdminDashboard() {
                                         {bannerPreview && (
                                             <div className="space-y-3">
                                                 <div className="relative rounded-lg overflow-hidden border bg-gray-100 shadow-inner group">
-                                                    <img
-                                                        src={bannerPreview}
-                                                        alt="Preview"
-                                                        className="w-full h-auto object-contain max-h-[300px]"
-                                                    />
+                                                    {/* Interactive Preview Area */}
+                                                    <div
+                                                        className="w-full relative cursor-move"
+                                                        style={{
+                                                            aspectRatio: '1920 / 600',
+                                                            backgroundImage: `url(${bannerPreview})`,
+                                                            backgroundSize: 'cover',
+                                                            backgroundPosition: tempBanner.backgroundPosition || '50% 50%',
+                                                            backgroundRepeat: 'no-repeat'
+                                                        }}
+                                                        onMouseDown={(e) => {
+                                                            e.preventDefault();
+                                                            const startX = e.clientX;
+                                                            const startY = e.clientY;
+                                                            const startPos = tempBanner.backgroundPosition || '50% 50%';
+                                                            const [pX, pY] = startPos.split(' ').map(p => parseFloat(p)) || [50, 50];
+
+                                                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                                                                const deltaX = moveEvent.clientX - startX;
+                                                                const deltaY = moveEvent.clientY - startY;
+
+                                                                // Sensitivity: 1px movement = 0.2% shift (approx)
+                                                                const sensitivity = 0.2;
+                                                                let newX = Math.max(0, Math.min(100, pX - (deltaX * sensitivity)));
+                                                                let newY = Math.max(0, Math.min(100, pY - (deltaY * sensitivity)));
+
+                                                                setTempBanner(prev => ({
+                                                                    ...prev,
+                                                                    backgroundPosition: `${newX.toFixed(1)}% ${newY.toFixed(1)}%`
+                                                                }));
+                                                            };
+
+                                                            const handleMouseUp = () => {
+                                                                window.removeEventListener('mousemove', handleMouseMove);
+                                                                window.removeEventListener('mouseup', handleMouseUp);
+                                                            };
+
+                                                            window.addEventListener('mousemove', handleMouseMove);
+                                                            window.addEventListener('mouseup', handleMouseUp);
+                                                        }}
+                                                    >
+                                                        {/* Draggable Hint Overlay */}
+                                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
+                                                            <span className="bg-black/50 text-white text-xs px-2 py-1 rounded shadow backdrop-blur-sm">
+                                                                Drag to Reposition
+                                                            </span>
+                                                        </div>
+                                                    </div>
 
                                                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <Button
@@ -338,9 +381,9 @@ export function AdminDashboard() {
                                                 </div>
 
                                                 <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-center">
-                                                    <span className="font-semibold text-blue-700 dark:text-blue-400">Full Image Mode Active</span>
+                                                    <span className="font-semibold text-blue-700 dark:text-blue-400">Fixed Aspect Ratio Mode</span>
                                                     <br />
-                                                    The banner will display at its full original aspect ratio (1920x600 recommended). remove the image to use the Text & Button layout.
+                                                    The banner is fixed to 1920x600 ratio. <strong>Click and Drag</strong> the image above to adjust its position.
                                                 </div>
                                             </div>
                                         )}

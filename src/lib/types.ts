@@ -37,7 +37,7 @@ export interface Banner {
     buttonText: string;
     buttonLink: string;
     backgroundImage?: string;
-    backgroundPositionY?: number; // 0 to 100 percentage
+    backgroundPosition?: string; // e.g. "50% 50%"
 }
 
 export interface Property {
