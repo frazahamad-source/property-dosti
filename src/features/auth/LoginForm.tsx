@@ -38,13 +38,19 @@ export function LoginForm() {
 
         try {
             // 1. Sign in with Supabase
+            console.log('Attempting login with:', data.email);
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email: data.email,
                 password: data.password,
             });
 
-            if (authError) throw authError;
-            if (!authData.user) throw new Error('Login failed');
+            if (authError) {
+                console.error('Supabase Auth Error:', JSON.stringify(authError, null, 2));
+                throw authError; // This might be the empty object source if not serialized
+            }
+            console.log('Auth successful, User ID:', authData.user?.id);
+
+            if (!authData.user) throw new Error('Login failed: No user data returned');
 
             // 2. Fetch profile from public.profiles
             const { data: profile, error: profileError } = await supabase
@@ -53,10 +59,14 @@ export function LoginForm() {
                 .eq('id', authData.user.id)
                 .single();
 
-            if (profileError) throw profileError;
+            if (profileError) {
+                console.error('Profile Fetch Error:', JSON.stringify(profileError, null, 2));
+                throw profileError;
+            }
+            console.log('Profile fetched:', profile);
 
             // Check if user is admin based on DB flag
-            if (profile.is_admin) {
+            if (profile?.is_admin) {
                 // Admin login
                 login({ ...profile, isAdmin: true } as any, true);
                 toast.success('Welcome Admin');

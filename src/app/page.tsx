@@ -29,7 +29,8 @@ export default function Home() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching properties:', error);
+        console.error('Error fetching properties FULL:', JSON.stringify(error, null, 2));
+        // Also log to toast if possible, or just console for now
       } else if (data) {
         const mappedProperties: Property[] = data.map((p: any) => ({
           id: p.id,
