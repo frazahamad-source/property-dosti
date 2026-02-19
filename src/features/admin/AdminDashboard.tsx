@@ -40,7 +40,8 @@ export function AdminDashboard() {
                     name: b.name,
                     email: b.email,
                     phone: b.phone,
-                    brokerCode: b.broker_code,
+                    broker_code: b.broker_code,
+                    role: 'broker',
                     reraNumber: b.rera_number,
                     districts: b.districts || [],
                     city: b.city,
@@ -385,7 +386,7 @@ export function AdminDashboard() {
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Code:</span>
-                                                <span className="font-mono">{broker.brokerCode}</span>
+                                                <span className="font-mono">{broker.broker_code}</span>
                                             </div>
                                             <div className="flex flex-col gap-1 mt-2">
                                                 <span className="text-muted-foreground">Districts:</span>

@@ -273,7 +273,7 @@ export default function PropertyDetailPage() {
                                             </div>
                                             <div className="text-left">
                                                 <div className="text-xs font-black">{broker.name}</div>
-                                                <div className="text-[10px] text-muted-foreground">Verified Broker ({broker.brokerCode})</div>
+                                                <div className="text-[10px] text-muted-foreground">Verified Broker ({broker.broker_code})</div>
                                             </div>
                                         </div>
                                     )}
