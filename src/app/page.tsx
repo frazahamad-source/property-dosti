@@ -120,18 +120,14 @@ export default function Home() {
           <div className="container px-4 md:px-6">
             {/* Dynamic Banner Section */}
             {banner.backgroundImage ? (
-              // IMAGE MODE: Clickable Image, No Overlay Text
-              <Link href={banner.buttonLink || '/'} className="block group">
-                <div
-                  className="w-full h-[300px] md:h-[400px] rounded-2xl bg-gray-200 dark:bg-gray-800 shadow-xl overflow-hidden border border-primary/10 transition-transform transform hover:scale-[1.01]"
-                  style={{
-                    backgroundImage: `url(${banner.backgroundImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: `center ${banner.backgroundPositionY || 50}%`,
-                    backgroundRepeat: 'no-repeat'
-                  }}
-                >
-                  <span className="sr-only">{banner.title}</span>
+              // IMAGE MODE: Clickable Image, No Overlay Text, Full Fit
+              <Link href={banner.buttonLink || '/'} className="block group w-full">
+                <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-primary/10 transition-transform transform hover:scale-[1.01]">
+                  <img
+                    src={banner.backgroundImage}
+                    alt={banner.title}
+                    className="w-full h-auto object-contain"
+                  />
                 </div>
               </Link>
             ) : (

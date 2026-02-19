@@ -304,16 +304,14 @@ export function AdminDashboard() {
                                     <label className="text-sm font-medium">Banner Background Image</label>
                                     <div className="flex flex-col gap-3">
                                         {bannerPreview && (
-                                            <div className="space-y-2">
-                                                <div
-                                                    className="relative rounded-lg overflow-hidden border h-48 bg-gray-100 shadow-inner group"
-                                                    style={{
-                                                        backgroundImage: `url(${bannerPreview})`,
-                                                        backgroundSize: 'cover',
-                                                        backgroundPosition: `center ${tempBanner.backgroundPositionY || 50}%`
-                                                    }}
-                                                >
-                                                    {/* No text overlay in preview to match real site behavior */}
+                                            <div className="space-y-3">
+                                                <div className="relative rounded-lg overflow-hidden border bg-gray-100 shadow-inner group">
+                                                    <img
+                                                        src={bannerPreview}
+                                                        alt="Preview"
+                                                        className="w-full h-auto object-contain max-h-[300px]"
+                                                    />
+
                                                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <Button
                                                             variant="destructive"
@@ -325,28 +323,15 @@ export function AdminDashboard() {
                                                                 setTempBanner(prev => ({ ...prev, backgroundImage: undefined }));
                                                             }}
                                                         >
-                                                            <Trash2 className="h-4 w-4 mr-1" /> Remove
+                                                            <Trash2 className="h-4 w-4 mr-1" /> Remove Image
                                                         </Button>
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-medium flex justify-between">
-                                                        <span>Vertical Position</span>
-                                                        <span className="text-muted-foreground">{tempBanner.backgroundPositionY || 50}%</span>
-                                                    </label>
-                                                    <input
-                                                        type="range"
-                                                        min="0"
-                                                        max="100"
-                                                        step="1"
-                                                        value={tempBanner.backgroundPositionY || 50}
-                                                        onChange={(e) => setTempBanner({ ...tempBanner, backgroundPositionY: parseInt(e.target.value) })}
-                                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
-                                                    />
-                                                    <p className="text-[10px] text-muted-foreground text-right">
-                                                        Adjust to crop the image vertically (0% = Top, 50% = Center, 100% = Bottom)
-                                                    </p>
+                                                <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-center">
+                                                    <span className="font-semibold text-blue-700 dark:text-blue-400">Full Image Mode Active</span>
+                                                    <br />
+                                                    The banner will display at its full original aspect ratio (1920x600 recommended). remove the image to use the Text & Button layout.
                                                 </div>
                                             </div>
                                         )}
