@@ -45,6 +45,7 @@ export const useStore = create<AppState>()(
                 description: "Join 500+ verified brokers. Get exclusive leads and premium listing visibility across Karnataka districts.",
                 buttonText: "Join Premium Network",
                 buttonLink: "/signup",
+                backgroundPositionY: 50,
             },
             hasHydrated: false,
             setHasHydrated: (state) => set({ hasHydrated: state }),

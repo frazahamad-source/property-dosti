@@ -304,10 +304,37 @@ export function AdminDashboard() {
                                     <label className="text-sm font-medium">Banner Background Image</label>
                                     <div className="flex flex-col gap-3">
                                         {bannerPreview && (
-                                            <div className="relative rounded-lg overflow-hidden border h-32 bg-gray-100">
-                                                <img src={bannerPreview} alt="Banner preview" className="w-full h-full object-cover" />
-                                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                                    <span className="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded">Current Banner</span>
+                                            <div className="space-y-2">
+                                                <div
+                                                    className="relative rounded-lg overflow-hidden border h-48 bg-gray-100 shadow-inner"
+                                                    style={{
+                                                        backgroundImage: `url(${bannerPreview})`,
+                                                        backgroundSize: 'cover',
+                                                        backgroundPosition: `center ${tempBanner.backgroundPositionY || 50}%`
+                                                    }}
+                                                >
+                                                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+                                                        <span className="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded">Preview</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <label className="text-xs font-medium flex justify-between">
+                                                        <span>Vertical Position</span>
+                                                        <span className="text-muted-foreground">{tempBanner.backgroundPositionY || 50}%</span>
+                                                    </label>
+                                                    <input
+                                                        type="range"
+                                                        min="0"
+                                                        max="100"
+                                                        step="1"
+                                                        value={tempBanner.backgroundPositionY || 50}
+                                                        onChange={(e) => setTempBanner({ ...tempBanner, backgroundPositionY: parseInt(e.target.value) })}
+                                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                                                    />
+                                                    <p className="text-[10px] text-muted-foreground text-right">
+                                                        Adjust to crop the image vertically (0% = Top, 50% = Center, 100% = Bottom)
+                                                    </p>
                                                 </div>
                                             </div>
                                         )}

@@ -120,7 +120,11 @@ export default function Home() {
           <div className="container px-4 md:px-6">
             <div
               className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-primary/10 overflow-hidden relative"
-              style={banner.backgroundImage ? { backgroundImage: `url(${banner.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+              style={banner.backgroundImage ? {
+                backgroundImage: `url(${banner.backgroundImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: `center ${banner.backgroundPositionY || 50}%`
+              } : {}}
             >
               {banner.backgroundImage && <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 z-0" />}
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full -mr-16 -mt-16" />
