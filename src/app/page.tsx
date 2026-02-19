@@ -118,27 +118,43 @@ export default function Home() {
         {/* Dynamic Promotional Banner */}
         <section className="w-full bg-primary/10 py-6 border-y border-primary/20">
           <div className="container px-4 md:px-6">
-            <div
-              className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-primary/10 overflow-hidden relative"
-              style={banner.backgroundImage ? {
-                backgroundImage: `url(${banner.backgroundImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: `center ${banner.backgroundPositionY || 50}%`
-              } : {}}
-            >
-              {banner.backgroundImage && <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 z-0" />}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full -mr-16 -mt-16" />
-              <div className="relative z-10 flex-1">
-                <Badge className="mb-2 bg-primary text-white">PROMOTION</Badge>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{banner.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400">{banner.description}</p>
+            {/* Dynamic Banner Section */}
+            {banner.backgroundImage ? (
+              // IMAGE MODE: Clickable Image, No Overlay Text
+              <Link href={banner.buttonLink || '/'} className="block group">
+                <div
+                  className="w-full h-[300px] md:h-[400px] rounded-2xl bg-gray-200 dark:bg-gray-800 shadow-xl overflow-hidden border border-primary/10 transition-transform transform hover:scale-[1.01]"
+                  style={{
+                    backgroundImage: `url(${banner.backgroundImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: `center ${banner.backgroundPositionY || 50}%`,
+                    backgroundRepeat: 'no-repeat'
+                  }}
+                >
+                  <span className="sr-only">{banner.title}</span>
+                </div>
+              </Link>
+            ) : (
+              // TEXT MODE: Default Layout with CTA
+              <div
+                className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-primary/10 overflow-hidden relative"
+              >
+                {banner.backgroundImage && <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 z-0" />}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full -mr-16 -mt-16" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full -ml-16 -mb-16" />
+
+                <div className="relative z-10 flex-1">
+                  <Badge className="mb-2 bg-primary text-white">PROMOTION</Badge>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{banner.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-400">{banner.description}</p>
+                </div>
+                <div className="relative z-10">
+                  <Button className="font-bold shadow-lg shadow-primary/30" asChild>
+                    <Link href={banner.buttonLink}>{banner.buttonText}</Link>
+                  </Button>
+                </div>
               </div>
-              <div className="relative z-10">
-                <Button className="font-bold shadow-lg shadow-primary/30" asChild>
-                  <Link href={banner.buttonLink}>{banner.buttonText}</Link>
-                </Button>
-              </div>
-            </div>
+            )}
           </div>
         </section>
 

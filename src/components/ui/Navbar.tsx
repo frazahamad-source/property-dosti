@@ -29,10 +29,13 @@ export function Navbar() {
                 <div className="flex flex-1 items-center justify-end space-x-4">
                     {user || isAdmin ? (
                         <>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mr-4">
+                            <Link
+                                href={isAdmin ? "/admin" : "/dashboard"}
+                                className="flex items-center gap-2 text-sm text-muted-foreground mr-4 hover:text-primary transition-colors cursor-pointer"
+                            >
                                 <User className="h-4 w-4" />
                                 <span>{isAdmin ? "Admin" : (user as any)?.name}</span>
-                            </div>
+                            </Link>
                             <Button variant="ghost" size="sm" asChild className="mr-2">
                                 <Link href="/profile/change-password">
                                     <Settings className="mr-2 h-4 w-4" />

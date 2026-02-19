@@ -306,15 +306,27 @@ export function AdminDashboard() {
                                         {bannerPreview && (
                                             <div className="space-y-2">
                                                 <div
-                                                    className="relative rounded-lg overflow-hidden border h-48 bg-gray-100 shadow-inner"
+                                                    className="relative rounded-lg overflow-hidden border h-48 bg-gray-100 shadow-inner group"
                                                     style={{
                                                         backgroundImage: `url(${bannerPreview})`,
                                                         backgroundSize: 'cover',
                                                         backgroundPosition: `center ${tempBanner.backgroundPositionY || 50}%`
                                                     }}
                                                 >
-                                                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
-                                                        <span className="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded">Preview</span>
+                                                    {/* No text overlay in preview to match real site behavior */}
+                                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            className="h-8 px-2"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setBannerPreview(null);
+                                                                setTempBanner(prev => ({ ...prev, backgroundImage: undefined }));
+                                                            }}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 mr-1" /> Remove
+                                                        </Button>
                                                     </div>
                                                 </div>
 

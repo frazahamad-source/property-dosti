@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,9 +25,19 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
     const router = useRouter();
-    const { brokers, login } = useStore();
+    const { brokers, login, user, isAdmin, hasHydrated } = useStore();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    useEffect(() => {
+        if (hasHydrated && user) {
+            if (isAdmin) {
+                router.replace('/admin');
+            } else {
+                router.replace('/dashboard');
+            }
+        }
+    }, [hasHydrated, user, isAdmin, router]);
 
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
