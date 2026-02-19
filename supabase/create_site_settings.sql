@@ -11,12 +11,13 @@ ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 
 -- Policies
 -- 1. Public can READ everything (needed for homepage banner)
+DROP POLICY IF EXISTS "Public read access" ON public.site_settings;
 CREATE POLICY "Public read access" 
 ON public.site_settings FOR SELECT 
 USING (true);
 
 -- 2. Admins can INSERT/UPDATE
--- Using our safe is_admin() function if available, or manual check
+DROP POLICY IF EXISTS "Admins can manage settings" ON public.site_settings;
 CREATE POLICY "Admins can manage settings" 
 ON public.site_settings 
 FOR ALL 

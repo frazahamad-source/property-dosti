@@ -66,7 +66,9 @@ export const useStore = create<AppState>()(
                     .eq('key', 'banner_config')
                     .single();
 
-                if (data && data.value) {
+                if (error) {
+                    console.error('Error fetching banner:', error);
+                } else if (data && data.value) {
                     set({ banner: data.value });
                 }
             },
@@ -79,12 +81,17 @@ export const useStore = create<AppState>()(
                 const module = await import('@/lib/supabaseClient');
                 const supabase = module.supabase;
 
-                await supabase
+                const { error } = await supabase
                     .from('site_settings')
                     .upsert({
                         key: 'banner_config',
                         value: newBanner
-                    });
+                    }, { onConflict: 'key' }); // Fix: Specify conflict on the unique 'key' column
+
+                if (error) {
+                    console.error('Failed to save banner to DB:', error);
+                    // Revert? For now just log.
+                }
             },
 
             addProperty: (property) =>
