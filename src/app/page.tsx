@@ -12,10 +12,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { Property } from "@/lib/types";
 
 export default function Home() {
-  const { properties, setProperties, banner } = useStore();
+  const { properties, setProperties, banner, fetchBanner } = useStore();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetchBanner(); // Fetch global banner settings
     const fetchProperties = async () => {
       const { data, error } = await supabase
         .from('properties')
@@ -125,13 +126,17 @@ export default function Home() {
                 <div
                   className="w-full rounded-2xl shadow-xl overflow-hidden border border-primary/10 transition-transform transform hover:scale-[1.01]"
                   style={{
+                    // Desktop: Respect 1920x600 ratio exactly.
+                    // Mobile: Enforce min-height to avoid "tiny strip", allow cropping.
                     aspectRatio: '1920 / 600',
                     backgroundImage: `url(${banner.backgroundImage})`,
                     backgroundSize: 'cover',
                     backgroundPosition: banner.backgroundPosition || '50% 50%',
-                    backgroundRepeat: 'no-repeat'
+                    backgroundRepeat: 'no-repeat',
                   }}
                 >
+                  {/* Mobile Height Enforcer (Invisible strut) */}
+                  <div className="min-h-[180px] md:min-h-0 w-full"></div>
                   <span className="sr-only">{banner.title}</span>
                 </div>
               </Link>

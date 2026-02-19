@@ -24,7 +24,8 @@ interface AppState {
     registerBroker: (broker: Broker) => void;
     updateBroker: (id: string, updates: Partial<Broker>) => void;
     updateBrokerPassword: (email: string, newPassword: string) => void;
-    updateBanner: (banner: Banner) => void;
+    updateBanner: (banner: Banner) => Promise<void>;
+    fetchBanner: () => Promise<void>;
     chatMessages: ChatMessage[];
     addChatMessage: (msg: ChatMessage) => void;
     applyReferral: (code: string, newBrokerId: string) => void;
@@ -55,7 +56,30 @@ export const useStore = create<AppState>()(
             login: (user, isAdmin) => set({ user, isAdmin }),
             logout: () => set({ user: null, isAdmin: false }),
 
-            updateBanner: (banner) => set({ banner }),
+            fetchBanner: async () => {
+                const { data, error } = await import('@/lib/supabaseClient').then(m => m.supabase)
+                    .from('site_settings')
+                    .select('value')
+                    .eq('key', 'banner_config')
+                    .single();
+
+                if (data && data.value) {
+                    set({ banner: data.value });
+                }
+            },
+
+            updateBanner: async (newBanner) => {
+                // Optimistic update
+                set({ banner: newBanner });
+
+                // Persist to DB
+                await import('@/lib/supabaseClient').then(m => m.supabase)
+                    .from('site_settings')
+                    .upsert({
+                        key: 'banner_config',
+                        value: newBanner
+                    });
+            },
 
             addProperty: (property) =>
                 set((state) => ({

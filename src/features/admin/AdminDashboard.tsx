@@ -20,6 +20,7 @@ export function AdminDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [bannerUploading, setBannerUploading] = useState(false);
     const [bannerPreview, setBannerPreview] = useState<string | null>(banner.backgroundImage || null);
+    const [showMaintenance, setShowMaintenance] = useState(false);
     const bannerFileRef = useRef<HTMLInputElement>(null);
 
     // Fetch brokers from Supabase
@@ -658,30 +659,45 @@ export function AdminDashboard() {
                     </div>
                 </section>
 
-                <section className="mt-8 pt-8 border-t border-red-100">
-                    <div className="flex items-center gap-2 mb-4 text-red-600">
-                        <Trash2 className="h-6 w-6" />
-                        <h2 className="text-xl font-bold">System Maintenance</h2>
+                <section className="mt-12 pt-8 border-t">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <h2 className="text-lg font-semibold">System Settings</h2>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowMaintenance(!showMaintenance)}
+                            className="text-muted-foreground"
+                        >
+                            {showMaintenance ? "Hide Options" : "Show Advanced Options"}
+                        </Button>
                     </div>
-                    <Card className="border-red-200 bg-red-50/30">
-                        <CardHeader>
-                            <CardTitle className="text-red-700">Danger Zone</CardTitle>
-                            <CardDescription>Actions here are permanent and cannot be reversed.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-gray-600 mb-6 font-medium">
-                                Clearing all data will remove all property listings and broker profiles from the database.
-                                This is typically used after a testing phase before going live.
-                            </p>
-                            <Button
-                                variant="destructive"
-                                onClick={handleClearData}
-                                className="bg-red-600 hover:bg-red-700 font-bold"
-                            >
-                                Clear All Application Data
-                            </Button>
-                        </CardContent>
-                    </Card>
+
+                    {showMaintenance && (
+                        <Card className="border-red-200 bg-red-50/30 animate-in fade-in slide-in-from-top-2">
+                            <CardHeader>
+                                <div className="flex items-center gap-2 text-red-600 mb-2">
+                                    <Trash2 className="h-5 w-5" />
+                                    <CardTitle className="text-red-700 text-lg">Danger Zone</CardTitle>
+                                </div>
+                                <CardDescription>Actions here are permanent and cannot be reversed.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-gray-600 mb-6 font-medium">
+                                    Clearing all data will remove all property listings and broker profiles from the database.
+                                    This is typically used after a testing phase before going live.
+                                </p>
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleClearData}
+                                    className="bg-red-600 hover:bg-red-700 font-bold"
+                                >
+                                    Clear All Application Data
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )}
                 </section>
             </div>
 
