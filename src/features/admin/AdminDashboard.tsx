@@ -52,6 +52,8 @@ export function AdminDashboard() {
                     referralCode: b.referral_code,
                     referredBy: b.referred_by,
                     referralsCount: b.referrals_count,
+                    companyName: b.company_name,
+                    designation: b.designation,
                 }));
                 setBrokers(mappedBrokers);
             }
@@ -201,11 +203,18 @@ export function AdminDashboard() {
         if (propError) console.error("Error clearing properties:", propError);
 
         // Delete all non-admin profiles
-        const { error: profileError } = await supabase.from('profiles').delete().neq('id', '0');
+        // We delete users where is_admin is false or null. 
+        // Note: Supabase delete filters are limited, so simpler to delete by non-matching IDs if possible, 
+        // but 'neq' on is_admin true is safer.
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .delete()
+            .neq('is_admin', true); // Only delete non-admins
+
         if (profileError) console.error("Error clearing profiles:", profileError);
 
         toast.dismiss();
-        toast.success("All data has been cleared.");
+        toast.success("Client data cleared. Admin accounts preserved.");
         window.location.reload();
     };
 
@@ -420,6 +429,12 @@ export function AdminDashboard() {
                                                     ))}
                                                 </div>
                                             </div>
+                                            {broker.companyName && (
+                                                <div className="mt-2 pt-2 border-t text-xs">
+                                                    <span className="block font-semibold text-gray-700 dark:text-gray-300">{broker.companyName}</span>
+                                                    {broker.designation && <span className="text-muted-foreground">{broker.designation}</span>}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex gap-2">
                                             <Button
@@ -461,6 +476,9 @@ export function AdminDashboard() {
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div className="font-bold text-gray-900 dark:text-white truncate">{broker.name}</div>
+                                                    {broker.companyName && (
+                                                        <div className="text-xs text-muted-foreground truncate">{broker.companyName}</div>
+                                                    )}
                                                     <Badge variant="success" className="text-[10px] mt-0.5">Active</Badge>
                                                 </div>
                                             </div>
