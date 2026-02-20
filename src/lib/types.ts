@@ -79,8 +79,8 @@ export interface Property {
     location: string; // City/Area
     village?: string;
     type: 'sale' | 'rent';
-    category: 'residential' | 'commercial' | 'land';
-    structureType?: string; // Villa, Apartment, Farmhouse, Land
+    category: 'residential' | 'commercial' | 'land' | 'villa' | 'apartment' | 'offices' | 'farmhouse' | 'godown';
+    structureType?: string; // Villa, Apartment, Farmhouse, Land, Godown, Office, etc.
     landArea?: number;
     floorDetail?: string;
     parkingAllocated?: string;

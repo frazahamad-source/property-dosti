@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { SubscriptionDashboard } from '@/features/subscription/SubscriptionDashboard';
 import { ChatWindow } from '@/features/chat/ChatWindow';
+import { SmartSearchForm, SmartSearchFilters } from '@/components/SmartSearchForm';
 import { supabase } from '@/lib/supabaseClient';
 
 import { useForm } from 'react-hook-form';
@@ -41,7 +42,11 @@ type PropertyFormValues = z.infer<typeof propertySchema>;
 export function BrokerDashboard() {
     const { user, properties, addProperty, setProperties } = useStore();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchFilters, setSearchFilters] = useState<SmartSearchFilters>({
+        searchBy: 'city',
+        query: '',
+        propertyType: ''
+    });
     const [uploadedImages, setUploadedImages] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState<'explore' | 'listings' | 'responses'>('explore');
     const [isLoading, setIsLoading] = useState(false);
@@ -278,10 +283,21 @@ export function BrokerDashboard() {
         }
     };
 
-    const filteredProperties = properties.filter(p =>
-        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.location.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredProperties = properties.filter(p => {
+        const matchesQuery = !searchFilters.query || (
+            searchFilters.searchBy === 'city' ? p.location.toLowerCase().includes(searchFilters.query.toLowerCase()) :
+                searchFilters.searchBy === 'district' ? p.district.toLowerCase().includes(searchFilters.query.toLowerCase()) :
+                    searchFilters.searchBy === 'village' ? p.village?.toLowerCase().includes(searchFilters.query.toLowerCase()) :
+                        p.profiles?.name?.toLowerCase().includes(searchFilters.query.toLowerCase())
+        );
+
+        const matchesType = !searchFilters.propertyType || (
+            p.category.toLowerCase() === searchFilters.propertyType.toLowerCase() ||
+            p.structureType?.toLowerCase() === searchFilters.propertyType.toLowerCase()
+        );
+
+        return matchesQuery && matchesType;
+    });
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
@@ -350,13 +366,11 @@ export function BrokerDashboard() {
 
                 {activeTab === 'explore' && (
                     <>
-                        <div className="flex items-center space-x-2 mb-6">
-                            <Search className="h-5 w-5 text-muted-foreground" />
-                            <Input
-                                placeholder="Search properties by title or location..."
-                                className="max-w-md"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                        <div className="mb-10">
+                            <SmartSearchForm
+                                onSearch={(f) => setSearchFilters(f)}
+                                initialFilters={searchFilters}
+                                className="shadow-none border-none bg-transparent dark:bg-transparent"
                             />
                         </div>
 

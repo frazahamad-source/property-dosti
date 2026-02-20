@@ -10,31 +10,23 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Property } from "@/lib/types";
-import { PropertySearch, SearchFilters } from "@/components/PropertySearch";
+import { SmartSearchForm, SmartSearchFilters } from "@/components/SmartSearchForm";
 import { BannerSlider } from "@/components/BannerSlider";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const { properties, setProperties, bannerSlides, fetchBannerSlides, siteConfig, fetchSiteConfig } = useStore();
   const [loading, setLoading] = useState(true);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
 
-  const handleSearch = (filters: SearchFilters) => {
-    let filtered = [...properties];
+  const handleSearch = (filters: SmartSearchFilters) => {
+    const params = new URLSearchParams();
+    if (filters.searchBy) params.set('by', filters.searchBy);
+    if (filters.query) params.set('q', filters.query);
+    if (filters.propertyType) params.set('type', filters.propertyType);
 
-    if (filters.district) {
-      filtered = filtered.filter(p => p.district.toLowerCase().includes(filters.district.toLowerCase()));
-    }
-    if (filters.city) {
-      filtered = filtered.filter(p => p.location.toLowerCase().includes(filters.city.toLowerCase()));
-    }
-    if (filters.village) {
-      filtered = filtered.filter(p => p.village?.toLowerCase().includes(filters.village.toLowerCase()));
-    }
-    if (filters.agentName) {
-      filtered = filtered.filter(p => p.profiles?.name.toLowerCase().includes(filters.agentName.toLowerCase()));
-    }
-
-    setFilteredProperties(filtered);
+    router.push(`/properties?${params.toString()}`);
   };
 
   useEffect(() => {
@@ -156,8 +148,8 @@ export default function Home() {
         </section>
 
         {/* Search Section */}
-        <section className="container relative z-20 px-4 md:px-6">
-          <PropertySearch onSearch={handleSearch} />
+        <section className="container relative z-20 px-4 md:px-6 -mt-16 md:-mt-24">
+          <SmartSearchForm onSearch={handleSearch} />
         </section>
 
         {/* Dynamic Promotional Banner Slider */}
@@ -192,8 +184,8 @@ export default function Home() {
               )}
             </div>
             <div className="mt-12 text-center">
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/login">View All Properties</Link>
+              <Button size="lg" variant="outline" asChild className="rounded-full px-8">
+                <Link href="/properties">View All Properties</Link>
               </Button>
             </div>
           </div>
