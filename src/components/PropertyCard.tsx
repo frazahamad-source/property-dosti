@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { useStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
+import { sanitizePhone } from '@/lib/utils';
 
 interface PropertyCardProps {
     property: Property;
@@ -120,10 +121,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     variant={"primary" as any}
                     className="w-full mt-3 font-bold shadow-md shadow-primary/20"
                     onClick={() => {
-                        let phone = property.brokerPhone || '7760704400';
-                        phone = phone.replace('+', '');
-                        if (!phone.startsWith('91')) phone = '91' + phone;
-
+                        const phone = sanitizePhone(property.brokerPhone || '7760704400');
                         const msg = encodeURIComponent(`Hi, I am interested in your property: "${property.title}" in ${property.location}. Is it still available?`);
                         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                         const url = isMobile
@@ -135,6 +133,6 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     Inquire on WhatsApp
                 </Button>
             </CardContent>
-        </Card>
+        </Card >
     );
 }

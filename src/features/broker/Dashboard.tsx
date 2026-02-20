@@ -5,6 +5,7 @@ import { useStore } from '@/lib/store';
 import { Property, Broker, Admin, DISTRICTS } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { PropertyCard } from '@/components/PropertyCard';
+import { sanitizePhone } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Plus, Search, MapPin, Clock, MessageSquare } from 'lucide-react';
@@ -38,7 +39,7 @@ const propertySchema = z.object({
 type PropertyFormValues = z.infer<typeof propertySchema>;
 
 export function BrokerDashboard() {
-    const { user, properties, addProperty } = useStore();
+    const { user, properties, addProperty, setProperties } = useStore();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -62,9 +63,10 @@ export function BrokerDashboard() {
     const broker = user && 'subscriptionExpiry' in user ? user : null;
     const isSubscriptionExpired = broker ? new Date(broker.subscriptionExpiry) < new Date() : false;
 
-    const { propertyLeads, setProperties } = useStore();
     const myProperties = properties.filter(p => p.brokerId === user?.id);
-    const myLeads = propertyLeads.filter(l => l.brokerId === user?.id);
+    const [propertyLeads, setPropertyLeads] = useState<any[]>([]); // Local state for leads
+    const myLeads = propertyLeads;
+    const unreadCount = myLeads.filter(l => l.status === 'new').length;
 
     // Fetch properties from Supabase
     useEffect(() => {
@@ -114,6 +116,40 @@ export function BrokerDashboard() {
 
         fetchProperties();
     }, [setProperties]);
+
+    // Fetch leads for the current broker
+    useEffect(() => {
+        const fetchLeads = async () => {
+            if (!user) return;
+            const { data, error } = await supabase
+                .from('property_leads')
+                .select('*')
+                .eq('broker_id', user.id)
+                .order('timestamp', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching leads:', error);
+            } else if (data) {
+                setPropertyLeads(data);
+            }
+        };
+
+        fetchLeads();
+    }, [user]);
+
+    const markLeadAsRead = async (leadId: string) => {
+        // Optimistic update
+        setPropertyLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: 'read' } : l));
+
+        const { error } = await supabase
+            .from('property_leads')
+            .update({ status: 'read' })
+            .eq('id', leadId);
+
+        if (error) {
+            console.error('Error marking lead strictly as read:', error);
+        }
+    };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -297,9 +333,9 @@ export function BrokerDashboard() {
                                 }`}
                         >
                             <span className="capitalize">{tab === 'explore' ? 'Explore Global' : tab === 'listings' ? 'My Listings' : 'Responses'}</span>
-                            {tab === 'responses' && myLeads.length > 0 && (
-                                <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px] h-4 min-w-[1rem] flex items-center justify-center font-bold">
-                                    {myLeads.length}
+                            {tab === 'responses' && unreadCount > 0 && (
+                                <Badge variant="secondary" className="ml-2 bg-red-100 text-red-600 border-none text-[10px] h-4 min-w-[1rem] flex items-center justify-center font-bold animate-pulse">
+                                    {unreadCount}
                                 </Badge>
                             )}
                             {activeTab === tab && (
@@ -369,7 +405,14 @@ export function BrokerDashboard() {
                                                     <td className="p-4">
                                                         <div className="flex gap-3 text-xs">
                                                             <span className="flex items-center gap-1"><Badge variant="outline" className="text-[10px]">{p.likes} Likes</Badge></span>
-                                                            <span className="flex items-center gap-1"><Badge variant="outline" className="text-[10px]">{p.leadsCount} Leads</Badge></span>
+                                                            <span className="flex items-center gap-1">
+                                                                <Badge variant="outline" className={`text-[10px] ${myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0 ? 'border-blue-500 text-blue-600' : ''}`}>
+                                                                    {p.leadsCount} Leads
+                                                                    {myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0 &&
+                                                                        ` (${myLeads.filter(l => l.property_id === p.id && l.status === 'new').length} new)`
+                                                                    }
+                                                                </Badge>
+                                                            </span>
                                                         </div>
                                                     </td>
                                                     <td className="p-4">
@@ -403,26 +446,41 @@ export function BrokerDashboard() {
                         ) : (
                             <div className="grid gap-4">
                                 {myLeads.map((lead) => (
-                                    <Card key={lead.id}>
+                                    <Card key={lead.id} className={`transition-colors ${lead.status === 'new' ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : ''}`}>
                                         <CardContent className="pt-6">
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
-                                                    <h4 className="font-bold text-lg">{lead.name}</h4>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="font-bold text-lg">{lead.name}</h4>
+                                                        {lead.status === 'new' && <Badge className="bg-blue-500 hover:bg-blue-600 text-[10px]">New</Badge>}
+                                                    </div>
                                                     <p className="text-sm text-muted-foreground">{lead.phone}</p>
                                                 </div>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {new Date(lead.timestamp).toLocaleDateString()}
-                                                </span>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {new Date(lead.timestamp).toLocaleDateString()}
+                                                    </span>
+                                                    {lead.status === 'new' && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-6 text-[10px] text-blue-600 hover:text-blue-800 p-0"
+                                                            onClick={() => markLeadAsRead(lead.id)}
+                                                        >
+                                                            Mark as Read
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
                                             <p className="text-sm border-l-2 pl-4 italic bg-muted/20 py-2 rounded">
                                                 "{lead.message}"
                                             </p>
                                             <div className="mt-4 flex gap-2">
-                                                <Button size="sm" className="h-8" asChild>
+                                                <Button size="sm" className="h-8" asChild onClick={() => markLeadAsRead(lead.id)}>
                                                     <a href={`tel:${lead.phone}`}>Call Now</a>
                                                 </Button>
-                                                <Button size="sm" variant="outline" className="h-8" asChild>
-                                                    <a href={`https://wa.me/91${lead.phone}`} target="_blank">WhatsApp</a>
+                                                <Button size="sm" variant="outline" className="h-8" asChild onClick={() => markLeadAsRead(lead.id)}>
+                                                    <a href={`https://wa.me/${sanitizePhone(lead.phone)}`} target="_blank">WhatsApp</a>
                                                 </Button>
                                             </div>
                                         </CardContent>

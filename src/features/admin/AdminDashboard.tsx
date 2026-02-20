@@ -1,599 +1,126 @@
 
 'use client';
 import { useStore } from '@/lib/store';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
-import { Modal } from '@/components/ui/Modal';
-import { Check, X, User, Edit2, Phone, Mail, MapPin, MessageSquare, Megaphone, Save, Trash2, Upload, ImageIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Users, Building2, CheckCircle2, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Broker } from '@/lib/types';
-import { toast } from 'sonner';
-import { supabase } from '@/lib/supabaseClient'; // Assuming supabase client is imported here
+import { BrokerManager } from './BrokerManager';
+import { PropertyManager } from './PropertyManager';
 
-export function AdminDashboard() {
-    const { brokers, setBrokers, approveBroker, rejectBroker, updateBroker, deleteBroker, properties, setProperties } = useStore();
-    const [editingBroker, setEditingBroker] = useState<Broker | null>(null);
+interface AdminDashboardProps {
+    view?: 'overview' | 'brokers' | 'properties';
+}
+
+export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
+    const { brokers, properties } = useStore();
     const [mounted, setMounted] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [showMaintenance, setShowMaintenance] = useState(false);
 
-    // Fetch brokers from Supabase
-    // Fetch brokers and properties from Supabase
     useEffect(() => {
-        const fetchData = async () => {
-            // Fetch Brokers
-            const { data: brokerData, error: brokerError } = await supabase
-                .from('profiles')
-                .select('*')
-                .order('registered_at', { ascending: false });
-
-            if (brokerError) {
-                console.error('Error fetching brokers:', brokerError);
-            } else if (brokerData) {
-                const mappedBrokers: Broker[] = brokerData.map((b: any) => ({
-                    id: b.id,
-                    name: b.name,
-                    email: b.email,
-                    phone: b.phone,
-                    broker_code: b.broker_code,
-                    role: 'broker',
-                    reraNumber: b.rera_number,
-                    districts: b.districts || [],
-                    city: b.city,
-                    village: b.village,
-                    status: b.status,
-                    registeredAt: b.registered_at,
-                    subscriptionExpiry: b.subscription_expiry,
-                    referralCode: b.referral_code,
-                    referredBy: b.referred_by,
-                    referralsCount: b.referrals_count,
-                    companyName: b.company_name,
-                    designation: b.designation,
-                }));
-                setBrokers(mappedBrokers);
-            }
-
-            // Fetch Properties
-            const { data: propertyData, error: propertyError } = await supabase
-                .from('properties')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (propertyError) {
-                console.error('Error fetching properties:', propertyError);
-            } else if (propertyData) {
-                const mappedProperties: any[] = propertyData.map((p: any) => ({
-                    id: p.id,
-                    brokerId: p.broker_id,
-                    title: p.title,
-                    description: p.description,
-                    price: p.price,
-                    district: p.district,
-                    location: p.location,
-                    type: p.type,
-                    category: p.category,
-                    images: p.images,
-                    createdAt: p.created_at,
-                    updatedAt: p.updated_at,
-                    expiresAt: p.expires_at,
-                    isActive: p.is_active,
-                    likes: p.likes,
-                    leadsCount: p.leads_count,
-                    amenities: p.amenities,
-                }));
-                setProperties(mappedProperties);
-            }
-
-            setIsLoading(false);
-        };
-
-        fetchData();
         setMounted(true);
-    }, [setBrokers, setProperties]);
+    }, []);
 
     if (!mounted) return null;
 
     const pendingBrokers = brokers.filter(b => b.status === 'pending');
     const approvedBrokers = brokers.filter(b => b.status === 'approved');
 
-    const handleApprove = async (id: string, name: string) => {
-        const { error } = await supabase
-            .from('profiles')
-            .update({ status: 'approved' })
-            .eq('id', id);
+    const stats = [
+        {
+            title: "Total Brokers",
+            value: brokers.length,
+            icon: Users,
+            description: "Registered across all districts",
+            color: "text-blue-600",
+            bgColor: "bg-blue-50"
+        },
+        {
+            title: "Approved Brokers",
+            value: approvedBrokers.length,
+            icon: CheckCircle2,
+            description: "Active members",
+            color: "text-green-600",
+            bgColor: "bg-green-50"
+        },
+        {
+            title: "Pending Approvals",
+            value: pendingBrokers.length,
+            icon: Clock,
+            description: "Waiting for review",
+            color: "text-amber-600",
+            bgColor: "bg-amber-50"
+        },
+        {
+            title: "Total Properties",
+            value: properties.length,
+            icon: Building2,
+            description: "Live listings",
+            color: "text-purple-600",
+            bgColor: "bg-purple-50"
+        }
+    ];
 
-        if (error) {
-            toast.error(`Failed to approve ${name}: ${error.message}`);
-        } else {
-            approveBroker(id);
-            toast.success(`Approved broker ${name}`);
+    const renderContent = () => {
+        switch (view) {
+            case 'brokers':
+                return <BrokerManager />;
+            case 'properties':
+                return <PropertyManager />;
+            default:
+                return (
+                    <>
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                            {stats.map((stat) => (
+                                <Card key={stat.title}>
+                                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                        <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                                        <div className={`${stat.bgColor} p-2 rounded-lg`}>
+                                            <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{stat.value}</div>
+                                        <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+
+                        <div className="mt-12 grid gap-8 md:grid-cols-2">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Recent Activity</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground">Recent actions will appear here.</p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>System Health</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                        <span className="text-sm font-medium">Database Connected</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-2">All systems operational.</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </>
+                );
         }
     };
-
-    const handleReject = async (id: string, name: string) => {
-        const { error } = await supabase
-            .from('profiles')
-            .update({ status: 'rejected' })
-            .eq('id', id);
-
-        if (error) {
-            toast.error(`Failed to reject ${name}: ${error.message}`);
-        } else {
-            rejectBroker(id);
-            toast.info(`Rejected broker ${name}`);
-        }
-    };
-
-    const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        if (!editingBroker) return;
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({
-                name: editingBroker.name,
-                phone: editingBroker.phone,
-                rera_number: editingBroker.reraNumber,
-                city: editingBroker.city,
-                village: editingBroker.village,
-                company_name: editingBroker.companyName,
-                designation: editingBroker.designation,
-            })
-            .eq('id', editingBroker.id);
-
-        if (error) {
-            toast.error(`Failed to update ${editingBroker.name}: ${error.message}`);
-        } else {
-            updateBroker(editingBroker.id, editingBroker);
-            toast.success(`Updated broker ${editingBroker.name}`);
-            setEditingBroker(null);
-        }
-    };
-
-    const handleDelete = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) return;
-
-        // Try to delete from profiles. RLS policies must allow this for admins.
-        const { error } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            console.error("Delete error:", error);
-            toast.error(`Failed to delete ${name}: ${error.message || 'Check if you have admin privileges.'}`);
-        } else {
-            deleteBroker(id);
-            toast.success(`Successfully deleted broker ${name}`);
-        }
-    };
-    const handleDeleteProperty = async (id: string, title: string) => {
-        if (!confirm(`Are you sure you want to delete property "${title}"?`)) return;
-
-        const { error } = await supabase
-            .from('properties')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            toast.error(`Failed to delete property: ${error.message}`);
-        } else {
-            setProperties(properties.filter(p => p.id !== id));
-            toast.success(`Deleted property "${title}"`);
-        }
-    };
-
-    const handleClearData = async () => {
-        const password = confirm("CRITICAL: You are about to clear ALL property and broker data. This cannot be undone.");
-        if (!password) return;
-
-        const confirmation = prompt("Please type 'CLEARDATA' to proceed:");
-        if (confirmation !== 'CLEARDATA') {
-            toast.error("Cleanup cancelled. Confirmation text did not match.");
-            return;
-        }
-
-        toast.loading("Clearing data...");
-
-        // Delete all properties first
-        const { error: propError } = await supabase.from('properties').delete().neq('id', '0');
-        if (propError) console.error("Error clearing properties:", propError);
-
-        // Delete all non-admin profiles
-        // We delete users where is_admin is false or null. 
-        // Note: Supabase delete filters are limited, so simpler to delete by non-matching IDs if possible, 
-        // but 'neq' on is_admin true is safer.
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .delete()
-            .neq('is_admin', true); // Only delete non-admins
-
-        if (profileError) console.error("Error clearing profiles:", profileError);
-
-        toast.dismiss();
-        toast.success("Client data cleared. Admin accounts preserved.");
-        window.location.reload();
-    };
-
 
     return (
         <div className="container py-8 px-4">
-            <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-8">
+                {view === 'overview' ? 'Admin Overview' :
+                    view === 'brokers' ? 'Broker Management' :
+                        'Property Management'}
+            </h1>
 
-            <div className="grid gap-8">
-                {/* Banner Management Section */}
-                <section>
-                    <h2 className="text-xl font-semibold mb-4">Pending Approvals ({pendingBrokers.length})</h2>
-                    {pendingBrokers.length === 0 ? (
-                        <p className="text-muted-foreground">No pending approvals.</p>
-                    ) : (
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {pendingBrokers.map((broker) => (
-                                <Card key={broker.id}>
-                                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                                <User className="h-6 w-6 text-primary" />
-                                            </div>
-                                            <div>
-                                                <CardTitle className="text-lg">{broker.name}</CardTitle>
-                                                <CardDescription>{broker.email}</CardDescription>
-                                            </div>
-                                        </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
-                                            onClick={() => setEditingBroker(broker)}
-                                        >
-                                            <Edit2 className="h-4 w-4" />
-                                            <span className="sr-only">Edit</span>
-                                        </Button>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-2 text-sm mb-4">
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Phone:</span>
-                                                <span>{broker.phone}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">RERA:</span>
-                                                <span>{broker.reraNumber || 'N/A'}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Code:</span>
-                                                <span className="font-mono">{broker.broker_code}</span>
-                                            </div>
-                                            <div className="flex flex-col gap-1 mt-2">
-                                                <span className="text-muted-foreground">Districts:</span>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {broker.districts.map(d => (
-                                                        <Badge key={d} variant="outline" className="text-xs">{d}</Badge>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            {broker.companyName && (
-                                                <div className="mt-2 pt-2 border-t text-xs">
-                                                    <span className="block font-semibold text-gray-700 dark:text-gray-300">{broker.companyName}</span>
-                                                    {broker.designation && <span className="text-muted-foreground">{broker.designation}</span>}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Button
-                                                className="flex-1 bg-green-600 hover:bg-green-700"
-                                                size={"sm" as any}
-                                                onClick={() => handleApprove(broker.id, broker.name)}
-                                            >
-                                                <Check className="w-4 h-4 mr-1" /> Approve
-                                            </Button>
-                                            <Button
-                                                variant={"outline" as any}
-                                                className="flex-1 text-red-600 border-red-100 hover:bg-red-50"
-                                                size={"sm" as any}
-                                                onClick={() => handleDelete(broker.id, broker.name)}
-                                            >
-                                                <Trash2 className="w-4 h-4 mr-1" /> Delete
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-                </section>
-
-                <section>
-                    <h2 className="text-xl font-semibold mb-4">Approved Brokers ({approvedBrokers.length})</h2>
-                    {approvedBrokers.length === 0 ? (
-                        <div className="p-8 text-center text-muted-foreground border rounded-md bg-white dark:bg-gray-950">No approved brokers yet.</div>
-                    ) : (
-                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                            {approvedBrokers.map((broker) => (
-                                <Card key={broker.id} className="overflow-hidden">
-                                    <CardHeader className="pb-3 bg-green-50/50 dark:bg-green-900/10 border-b">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
-                                                    <User className="h-5 w-5 text-green-700 dark:text-green-400" />
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <div className="font-bold text-gray-900 dark:text-white truncate">{broker.name}</div>
-                                                    {broker.companyName && (
-                                                        <div className="text-xs text-muted-foreground truncate">{broker.companyName}</div>
-                                                    )}
-                                                    <Badge variant="success" className="text-[10px] mt-0.5">Active</Badge>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-1 shrink-0">
-                                                <Button
-                                                    variant={"outline" as any}
-                                                    size={"sm" as any}
-                                                    className="h-8 w-8 p-0 text-gray-500 border-gray-200 hover:text-primary"
-                                                    onClick={() => setEditingBroker(broker)}
-                                                >
-                                                    <Edit2 className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant={"outline" as any}
-                                                    size={"sm" as any}
-                                                    className="h-8 w-8 p-0 text-green-600 border-green-200"
-                                                    asChild
-                                                >
-                                                    <a
-                                                        href={`https://wa.me/91${broker.phone}?text=Hi ${broker.name}, this is Property Dosti Admin. I have a question regarding your account.`}
-                                                        target="_blank"
-                                                    >
-                                                        <MessageSquare className="h-4 w-4" />
-                                                    </a>
-                                                </Button>
-                                                <Button
-                                                    variant={"outline" as any}
-                                                    size={"sm" as any}
-                                                    className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
-                                                    onClick={() => handleDelete(broker.id, broker.name)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="pt-4 space-y-3 text-sm">
-                                        <div className="flex items-center gap-2 text-muted-foreground">
-                                            <Mail className="h-3.5 w-3.5 shrink-0 text-primary" />
-                                            <span className="truncate">{broker.email}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-muted-foreground">
-                                            <Phone className="h-3.5 w-3.5 shrink-0 text-primary" />
-                                            <span>{broker.phone}</span>
-                                        </div>
-                                        <div className="flex items-start gap-2 text-muted-foreground">
-                                            <MapPin className="h-3.5 w-3.5 shrink-0 text-primary mt-0.5" />
-                                            <span>{broker.city || 'N/A'}, {broker.village || 'N/A'}</span>
-                                        </div>
-                                        <div className="pt-2 border-t">
-                                            <div className="flex flex-wrap gap-1 mb-2">
-                                                {broker.districts.map(d => (
-                                                    <Badge key={d} variant="outline" className="text-[10px]">{d}</Badge>
-                                                ))}
-                                            </div>
-                                            <div className="font-mono text-[10px] text-primary bg-primary/5 px-2 py-1 rounded">
-                                                Referral Code: {broker.referralCode || 'N/A'}
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-                </section>
-                <section>
-                    <h2 className="text-xl font-semibold mb-4">Properties Management ({properties.length})</h2>
-                    <div className="rounded-md border bg-white dark:bg-gray-950 shadow-sm overflow-hidden">
-                        <div className="hidden md:grid p-4 bg-muted/50 text-xs font-medium grid-cols-5 gap-4 border-b">
-                            <div className="col-span-2">Property Details</div>
-                            <div>Price</div>
-                            <div>Location</div>
-                            <div className="text-right">Actions</div>
-                        </div>
-                        {properties.length === 0 ? (
-                            <div className="p-8 text-center text-muted-foreground">No properties listed yet.</div>
-                        ) : (
-                            properties.map((prop) => (
-                                <div key={prop.id} className="p-4 text-sm flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-4 md:items-center border-b last:border-0 hover:bg-muted/20 transition-colors">
-                                    {/* Property Details (Image + Title) */}
-                                    <div className="md:col-span-2 flex gap-3 items-center w-full">
-                                        <div className="h-10 w-10 rounded overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center border">
-                                            {prop.images && prop.images.length > 0 ? (
-                                                <img
-                                                    src={prop.images[0]}
-                                                    alt={prop.title}
-                                                    className="h-full w-full object-cover"
-                                                    onError={(e) => {
-                                                        e.currentTarget.style.display = 'none';
-                                                        e.currentTarget.parentElement?.classList.add('bg-gray-200');
-                                                    }}
-                                                />
-                                            ) : (
-                                                <ImageIcon className="h-5 w-5 text-gray-400" />
-                                            )}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="font-bold text-gray-900 dark:text-white line-clamp-1 break-all">{prop.title}</div>
-                                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{prop.category} • {prop.type}</div>
-                                        </div>
-                                        {/* Mobile Action (Visible only on mobile) */}
-                                        <div className="md:hidden">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
-                                                onClick={() => handleDeleteProperty(prop.id, prop.title)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    {/* Price & Location (Stacked on Mobile, Columns on Desktop) */}
-                                    <div className="flex justify-between md:contents">
-                                        <div className="flex flex-col md:block">
-                                            <span className="md:hidden text-[10px] text-muted-foreground">Price</span>
-                                            <span className="font-bold text-primary">₹{prop.price.toLocaleString('en-IN')}</span>
-                                        </div>
-                                        <div className="flex flex-col md:block text-right md:text-left">
-                                            <span className="md:hidden text-[10px] text-muted-foreground">Location</span>
-                                            <span className="text-xs text-muted-foreground block md:truncate">
-                                                {prop.location}, {prop.district}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Desktop Action (Hidden on mobile) */}
-                                    <div className="hidden md:flex text-right justify-end gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
-                                            onClick={() => handleDeleteProperty(prop.id, prop.title)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </section>
-
-                <section className="mt-12 pt-8 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                            <h2 className="text-lg font-semibold">System Settings</h2>
-                        </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowMaintenance(!showMaintenance)}
-                            className="text-muted-foreground"
-                        >
-                            {showMaintenance ? "Hide Options" : "Show Advanced Options"}
-                        </Button>
-                    </div>
-
-                    {showMaintenance && (
-                        <Card className="border-red-200 bg-red-50/30 animate-in fade-in slide-in-from-top-2">
-                            <CardHeader>
-                                <div className="flex items-center gap-2 text-red-600 mb-2">
-                                    <Trash2 className="h-5 w-5" />
-                                    <CardTitle className="text-red-700 text-lg">Danger Zone</CardTitle>
-                                </div>
-                                <CardDescription>Actions here are permanent and cannot be reversed.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-gray-600 mb-6 font-medium">
-                                    Clearing all data will remove all property listings and broker profiles from the database.
-                                    This is typically used after a testing phase before going live.
-                                </p>
-                                <Button
-                                    variant="destructive"
-                                    onClick={handleClearData}
-                                    className="bg-red-600 hover:bg-red-700 font-bold"
-                                >
-                                    Clear All Application Data
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    )}
-                </section>
-            </div>
-
-            {/* Edit Broker Modal */}
-            <Modal
-                isOpen={!!editingBroker}
-                onClose={() => setEditingBroker(null)}
-                title="Edit Broker Information"
-            >
-                {editingBroker && (
-                    <form onSubmit={handleUpdate} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Name</label>
-                                <Input
-                                    value={editingBroker.name}
-                                    onChange={(e) => setEditingBroker({ ...editingBroker, name: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Email</label>
-                                <Input
-                                    type="email"
-                                    value={editingBroker.email}
-                                    onChange={(e) => setEditingBroker({ ...editingBroker, email: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Company Name</label>
-                                <Input
-                                    value={editingBroker.companyName || ''}
-                                    onChange={(e) => setEditingBroker({ ...editingBroker, companyName: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Designation</label>
-                                <Input
-                                    value={editingBroker.designation || ''}
-                                    onChange={(e) => setEditingBroker({ ...editingBroker, designation: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Phone</label>
-                                <Input
-                                    value={editingBroker.phone}
-                                    onChange={(e) => setEditingBroker({ ...editingBroker, phone: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">RERA Number</label>
-                                <Input
-                                    value={editingBroker.reraNumber || ''}
-                                    onChange={(e) => setEditingBroker({ ...editingBroker, reraNumber: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">City</label>
-                                <Input
-                                    value={editingBroker.city || ''}
-                                    onChange={(e) => setEditingBroker({ ...editingBroker, city: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Village</label>
-                                <Input
-                                    value={editingBroker.village || ''}
-                                    onChange={(e) => setEditingBroker({ ...editingBroker, village: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div className="pt-4 border-t sticky bottom-0 bg-white dark:bg-gray-900 flex gap-2">
-                            <Button type="button" variant={"outline" as any} className="flex-1" onClick={() => setEditingBroker(null)}>
-                                Cancel
-                            </Button>
-                            <Button type="submit" className="flex-1">
-                                Save Changes
-                            </Button>
-                        </div>
-                    </form>
-                )}
-            </Modal>
+            {renderContent()}
         </div>
     );
 }

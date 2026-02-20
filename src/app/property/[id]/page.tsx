@@ -13,6 +13,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { Property, Broker } from '@/lib/types';
+import { sanitizePhone } from '@/lib/utils';
 
 export default function PropertyDetailPage() {
     const params = useParams();
@@ -317,9 +318,7 @@ export default function PropertyDetailPage() {
                                             onClick={() => {
                                                 const msg = encodeURIComponent(`Hi, I am interested in your property on Property Dosti: "${property.title}". Please share more details.`);
                                                 // Sanitize phone number: remove + if present, ensure 91 prefix
-                                                let phone = broker?.phone || '7760704400';
-                                                phone = phone.replace('+', '');
-                                                if (!phone.startsWith('91')) phone = '91' + phone;
+                                                const phone = sanitizePhone(broker?.phone || '7760704400');
 
                                                 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                                                 const url = isMobile

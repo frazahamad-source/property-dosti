@@ -5,9 +5,10 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Save } from 'lucide-react';
+import { Save, Trash2 } from 'lucide-react';
 import { SiteConfig } from '@/lib/types';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function SettingsPage() {
     const { siteConfig, fetchSiteConfig, updateSiteConfig } = useStore();
@@ -48,6 +49,35 @@ export default function SettingsPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleClearData = async () => {
+        const password = confirm("CRITICAL: You are about to clear ALL property and broker data. This cannot be undone.");
+        if (!password) return;
+
+        const confirmation = prompt("Please type 'CLEARDATA' to proceed:");
+        if (confirmation !== 'CLEARDATA') {
+            toast.error("Cleanup cancelled. Confirmation text did not match.");
+            return;
+        }
+
+        toast.loading("Clearing data...");
+
+        // Delete all properties first
+        const { error: propError } = await supabase.from('properties').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (propError) console.error("Error clearing properties:", propError);
+
+        // Delete all non-admin profiles
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .delete()
+            .neq('is_admin', true);
+
+        if (profileError) console.error("Error clearing profiles:", profileError);
+
+        toast.dismiss();
+        toast.success("Client data cleared. Admin accounts preserved.");
+        window.location.reload();
     };
 
     if (!config) return <div className="p-8">Loading settings...</div>;
@@ -160,6 +190,27 @@ export default function SettingsPage() {
                                 placeholder="#"
                             />
                         </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border-red-200 bg-red-50/10">
+                    <CardHeader>
+                        <div className="flex items-center gap-2 text-red-600">
+                            <Trash2 className="h-5 w-5" />
+                            <CardTitle className="text-lg">Danger Zone</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Clearing all data will permanently remove all property listings and non-admin broker profiles.
+                        </p>
+                        <Button
+                            variant="destructive"
+                            onClick={handleClearData}
+                            className="bg-red-600 hover:bg-red-700 font-bold"
+                        >
+                            Reset Application Data
+                        </Button>
                     </CardContent>
                 </Card>
             </div>

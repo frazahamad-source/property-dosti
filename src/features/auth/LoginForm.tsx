@@ -71,6 +71,9 @@ export function LoginForm() {
 
             if (profileError) {
                 console.error('Profile Fetch Error:', JSON.stringify(profileError, null, 2));
+                if (profileError.code === 'PGRST116') {
+                    throw new Error('User profile not found. Please contact the administrator.');
+                }
                 throw profileError;
             }
             console.log('Profile fetched:', profile);

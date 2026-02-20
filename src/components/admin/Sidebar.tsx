@@ -6,24 +6,36 @@ import { cn } from '@/lib/utils';
 import { LayoutDashboard, Image as ImageIcon, Settings, Users, Building2, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useStore } from '@/lib/store';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const sidebarItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
-    { name: 'Brokers', href: '/admin/brokers', icon: Users },
-    { name: 'Properties', href: '/admin/properties', icon: Building2 },
+    { name: 'Brokers', href: '/admin?view=brokers', icon: Users },
+    { name: 'Properties', href: '/admin?view=properties', icon: Building2 },
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const currentView = searchParams.get('view');
     const { logout } = useStore();
     const router = useRouter();
 
     const handleLogout = () => {
         logout();
         router.push('/login');
+    };
+
+    const isActive = (item: any) => {
+        if (item.href === '/admin' && !currentView) {
+            return pathname === '/admin';
+        }
+        if (item.href.includes('view=')) {
+            return currentView === item.href.split('view=')[1];
+        }
+        return pathname === item.href;
     };
 
     return (
@@ -39,7 +51,7 @@ export function Sidebar() {
                         href={item.href}
                         className={cn(
                             "flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-gray-800 hover:text-white",
-                            pathname === item.href ? "bg-gray-800 text-white" : "text-gray-400"
+                            isActive(item) ? "bg-gray-800 text-white" : "text-gray-400"
                         )}
                     >
                         <item.icon className="mr-3 h-5 w-5" />

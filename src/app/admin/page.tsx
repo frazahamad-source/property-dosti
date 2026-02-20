@@ -1,13 +1,15 @@
-
 'use client';
+
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AdminDashboard } from '@/features/admin/AdminDashboard';
 
 export default function AdminPage() {
     const { isAdmin, hasHydrated } = useStore();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const view = (searchParams.get('view') as any) || 'overview';
 
     useEffect(() => {
         if (hasHydrated && !isAdmin) {
@@ -25,5 +27,5 @@ export default function AdminPage() {
 
     if (!isAdmin) return null;
 
-    return <AdminDashboard />;
+    return <AdminDashboard view={view} />;
 }
