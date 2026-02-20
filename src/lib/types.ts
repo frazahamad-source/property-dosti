@@ -50,6 +50,12 @@ export interface Property {
     location: string; // City/Area
     type: 'sale' | 'rent';
     category: 'residential' | 'commercial' | 'land';
+    structureType?: string; // Villa, Apartment, Farmhouse, Land
+    landArea?: number;
+    floorDetail?: string;
+    parkingAllocated?: string;
+    facilities?: string[];
+    googleMapLink?: string;
     images: string[];
     amenities: string[];
     createdAt: string; // ISO date

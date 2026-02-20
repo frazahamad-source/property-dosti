@@ -24,9 +24,15 @@ const propertySchema = z.object({
     description: z.string().min(10, "Description must be at least 10 characters"),
     price: z.coerce.number().min(1, "Price is required"),
     district: z.string().min(1, "District is mandatory"),
-    location: z.string().min(2, "City/Area is required"),
+    location: z.string().min(2, "Village/City/Area is required"),
     type: z.enum(['sale', 'rent']),
     category: z.enum(['residential', 'commercial', 'land']),
+    structureType: z.enum(['Villa', 'Apartment', 'Farmhouse', 'Land']).optional(),
+    landArea: z.coerce.number().optional(),
+    floorDetail: z.string().optional(),
+    parkingAllocated: z.string().optional(),
+    facilities: z.string().optional(), // Comma separated string for input
+    googleMapLink: z.string().url("Must be a valid URL").optional().or(z.literal('')),
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -34,11 +40,24 @@ type PropertyFormValues = z.infer<typeof propertySchema>;
 export function BrokerDashboard() {
     const { user, properties, addProperty } = useStore();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [isChatOpen, setIsChatOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [uploadedImages, setUploadedImages] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState<'explore' | 'listings' | 'responses'>('explore');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Form Watch for Conditional Logic
+    const { register, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm<PropertyFormValues>({
+        resolver: zodResolver(propertySchema) as any,
+        defaultValues: {
+            district: '',
+            structureType: 'Villa',
+            type: 'sale',
+            category: 'residential'
+        }
+    });
+
+    const structureType = watch('structureType');
+    const priceValue = watch('price');
 
     const broker = user && 'subscriptionExpiry' in user ? user : null;
     const isSubscriptionExpired = broker ? new Date(broker.subscriptionExpiry) < new Date() : false;
@@ -46,13 +65,6 @@ export function BrokerDashboard() {
     const { propertyLeads, setProperties } = useStore();
     const myProperties = properties.filter(p => p.brokerId === user?.id);
     const myLeads = propertyLeads.filter(l => l.brokerId === user?.id);
-
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<PropertyFormValues>({
-        resolver: zodResolver(propertySchema) as any,
-        defaultValues: {
-            district: '',
-        }
-    });
 
     // Fetch properties from Supabase
     useEffect(() => {
@@ -70,7 +82,6 @@ export function BrokerDashboard() {
             if (error) {
                 console.error('Error fetching properties:', error);
             } else if (data) {
-                // Map snake_case to camelCase if necessary (matching the Property interface)
                 const mappedProperties: Property[] = data.map((p: any) => ({
                     id: p.id,
                     brokerId: p.broker_id,
@@ -81,6 +92,12 @@ export function BrokerDashboard() {
                     location: p.location,
                     type: p.type,
                     category: p.category,
+                    structureType: p.structure_type,
+                    landArea: p.land_area,
+                    floorDetail: p.floor_detail,
+                    parkingAllocated: p.parking_allocated,
+                    facilities: p.facilities,
+                    googleMapLink: p.google_map_link,
                     images: p.images,
                     createdAt: p.created_at,
                     updatedAt: p.updated_at,
@@ -144,6 +161,20 @@ export function BrokerDashboard() {
         if (!user) return;
         setIsLoading(true);
 
+        // Process facilities from string to array
+        const facilitiesArray = data.facilities ? data.facilities.split(',').map(f => f.trim()).filter(f => f !== '') : [];
+
+        // Determine category based on structure type if needed
+        let finalCategory = data.category;
+        if (data.structureType === 'Land' && data.category) {
+            // Keep user selection for Land
+        } else {
+            // Default mapping
+            if (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '')) {
+                finalCategory = 'residential';
+            }
+        }
+
         try {
             const { data: propertyData, error: propertyError } = await supabase
                 .from('properties')
@@ -155,9 +186,15 @@ export function BrokerDashboard() {
                     district: data.district,
                     location: data.location,
                     type: data.type,
-                    category: data.category,
+                    category: finalCategory,
+                    structure_type: data.structureType,
+                    land_area: data.landArea || null,
+                    floor_detail: data.floorDetail,
+                    parking_allocated: data.parkingAllocated,
+                    facilities: facilitiesArray,
+                    google_map_link: data.googleMapLink,
                     images: uploadedImages,
-                    amenities: [],
+                    amenities: [], // Can extended similarly later
                 })
                 .select()
                 .single();
@@ -176,6 +213,12 @@ export function BrokerDashboard() {
                 location: p.location,
                 type: p.type,
                 category: p.category,
+                structureType: p.structure_type,
+                landArea: p.land_area,
+                floorDetail: p.floor_detail,
+                parkingAllocated: p.parking_allocated,
+                facilities: p.facilities,
+                googleMapLink: p.google_map_link,
                 images: p.images,
                 createdAt: p.created_at,
                 updatedAt: p.updated_at,
@@ -392,16 +435,96 @@ export function BrokerDashboard() {
 
                 <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Property">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+                        {/* 1. Structure Type (User requested this first) */}
+                        <div>
+                            <label className="text-sm font-medium">Property Type</label>
+                            <select
+                                {...register('structureType')}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                                <option value="Villa">Villa / Independent House</option>
+                                <option value="Apartment">Apartment / Flat</option>
+                                <option value="Farmhouse">Farmhouse</option>
+                                <option value="Land">Land / Plot</option>
+                            </select>
+                        </div>
+
+                        {/* 2. Conditional Fields based on Structure */}
+
+                        {/* Villa / Farmhouse Fields */}
+                        {(structureType === 'Villa' || structureType === 'Farmhouse') && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Land Area</label>
+                                    <Input
+                                        type="number"
+                                        {...register('landArea')}
+                                        placeholder="Sqft / Cents"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-medium">Facilities & Amenities</label>
+                                    <Input {...register('facilities')} placeholder="e.g. Garden, Pool (Comma separated)" />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Apartment Fields */}
+                        {structureType === 'Apartment' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Floor Detail</label>
+                                    <Input {...register('floorDetail')} placeholder="e.g. 3rd Floor" />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium">Parking</label>
+                                    <Input {...register('parkingAllocated')} placeholder="e.g. 1 Covered" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-medium">Facilities & Amenities</label>
+                                    <Input {...register('facilities')} placeholder="e.g. Gym, Lift (Comma separated)" />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Land Fields */}
+                        {structureType === 'Land' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Category</label>
+                                    <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                        <option value="residential">Residential</option>
+                                        <option value="commercial">Commercial</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium">Total Area</label>
+                                    <Input
+                                        type="number"
+                                        {...register('landArea')}
+                                        placeholder="Sqft / Cents"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         <div>
                             <label className="text-sm font-medium">Title</label>
-                            <Input {...register('title')} placeholder="e.g. Luxury Villa" />
+                            <Input {...register('title')} placeholder="e.g. Luxury 3BHK Villa" />
                             {errors.title?.message && <p className="text-xs text-red-500">{errors.title.message}</p>}
                         </div>
+
                         <div>
                             <label className="text-sm font-medium">Description</label>
-                            <Input {...register('description')} placeholder="Property details..." />
+                            <textarea
+                                {...register('description')}
+                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Write detailed description point by point..."
+                            />
                             {errors.description?.message && <p className="text-xs text-red-500">{errors.description.message}</p>}
                         </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="text-sm font-medium">District</label>
@@ -417,33 +540,39 @@ export function BrokerDashboard() {
                                 {errors.district?.message && <p className="text-xs text-red-500">{errors.district.message}</p>}
                             </div>
                             <div>
-                                <label className="text-sm font-medium">City/Area</label>
+                                <label className="text-sm font-medium">Village / City / Area</label>
                                 <Input {...register('location')} placeholder="e.g. Manipal" />
                                 {errors.location?.message && <p className="text-xs text-red-500">{errors.location.message}</p>}
                             </div>
                         </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="text-sm font-medium">Price (₹)</label>
                                 <Input type="number" {...register('price')} />
                                 {errors.price?.message && <p className="text-xs text-red-500">{errors.price.message}</p>}
+                                {priceValue > 0 && (
+                                    <p className="text-xs text-green-600 font-medium mt-1">
+                                        {priceValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                    </p>
+                                )}
                             </div>
                             <div>
-                                <label className="text-sm font-medium">Type</label>
-                                <select {...register('type')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="sale">Sale</option>
-                                    <option value="rent">Rent</option>
-                                </select>
+                                <label className="text-sm font-medium">Google Map Link (Optional)</label>
+                                <Input {...register('googleMapLink')} placeholder="https://maps.google.com/..." />
                             </div>
                         </div>
+
+                        {/* Hidden type field if structure selected automatically implies it, otherwise show it */}
+                        {/* We keep type as separate for Sale/Rent decision */}
                         <div>
-                            <label className="text-sm font-medium">Category</label>
-                            <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="residential">Residential</option>
-                                <option value="commercial">Commercial</option>
-                                <option value="land">Land</option>
+                            <label className="text-sm font-medium">Transaction Type</label>
+                            <select {...register('type')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                <option value="sale">For Sale</option>
+                                <option value="rent">For Rent</option>
                             </select>
                         </div>
+
                         <div>
                             <label className="text-sm font-medium">Property Photos (Max 3)</label>
                             <div className="mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 transition-colors hover:border-muted-foreground/50">

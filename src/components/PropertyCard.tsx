@@ -47,11 +47,15 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 ) : (
                     <div className="flex items-center justify-center h-full text-muted-foreground">No Image</div>
                 )}
-                <div className="absolute top-2 right-2">
-                    {/* @ts-ignore - variant string issue */}
+                <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
                     <Badge variant={property.type === 'sale' ? 'default' : 'secondary'}>
                         For {property.type === 'sale' ? 'Sale' : 'Rent'}
                     </Badge>
+                    {property.structureType && (
+                        <Badge variant="outline" className="bg-white/80 backdrop-blur text-black border-none text-[10px]">
+                            {property.structureType}
+                        </Badge>
+                    )}
                 </div>
             </div>
             <CardHeader>
@@ -59,21 +63,23 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     <div>
                         <CardTitle className="text-lg line-clamp-1">{property.title}</CardTitle>
                         <div className="flex items-center text-sm text-muted-foreground mt-1">
-                            <MapPin className="h-4 w-4 mr-1" /> {property.location}
+                            <MapPin className="h-4 w-4 mr-1 text-primary" />
+                            <span className="font-medium text-black dark:text-white">{property.location}</span>
+                            <span className="text-xs ml-1 opacity-70">({property.district})</span>
                         </div>
                     </div>
-                    <div className="text-lg font-bold text-primary whitespace-nowrap ml-2">
-                        ₹{property.price.toLocaleString('en-IN')}
-                    </div>
+                </div>
+                <div className="text-lg font-bold text-primary mt-1">
+                    ₹{property.price.toLocaleString('en-IN')}
                 </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col justify-between">
-                <p className="text-sm text-gray-600 line-clamp-2 mb-4">{property.description}</p>
+                <p className="text-sm text-gray-600 line-clamp-2 mb-4 whitespace-pre-line">{property.description}</p>
                 <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
-                    <span className="capitalize px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">{property.category}</span>
-                    <span className="flex items-center font-medium text-primary">
-                        <MapPin className="h-3 w-3 mr-1" /> {property.district}
-                    </span>
+                    <div className="flex gap-2">
+                        {property.landArea ? <span className="bg-gray-100 px-2 py-1 rounded">{property.landArea} Sqft</span> : null}
+                        {property.parkingAllocated ? <span className="bg-gray-100 px-2 py-1 rounded">Pkng: {property.parkingAllocated}</span> : null}
+                    </div>
                 </div>
 
                 <div className="flex gap-2 mt-4">
