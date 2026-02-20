@@ -7,21 +7,17 @@ import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Check, X, User, Edit2, Phone, Mail, MapPin, MessageSquare, Megaphone, Save, Trash2, Upload, ImageIcon } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
-import { Broker, Banner } from '@/lib/types';
+import { useState, useEffect } from 'react';
+import { Broker } from '@/lib/types';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient'; // Assuming supabase client is imported here
 
 export function AdminDashboard() {
-    const { brokers, setBrokers, approveBroker, rejectBroker, updateBroker, banner, updateBanner, deleteBroker, properties, setProperties, updateProperty } = useStore();
+    const { brokers, setBrokers, approveBroker, rejectBroker, updateBroker, deleteBroker, properties, setProperties } = useStore();
     const [editingBroker, setEditingBroker] = useState<Broker | null>(null);
-    const [tempBanner, setTempBanner] = useState<Banner>(banner);
     const [mounted, setMounted] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [bannerUploading, setBannerUploading] = useState(false);
-    const [bannerPreview, setBannerPreview] = useState<string | null>(banner.backgroundImage || null);
     const [showMaintenance, setShowMaintenance] = useState(false);
-    const bannerFileRef = useRef<HTMLInputElement>(null);
 
     // Fetch brokers from Supabase
     // Fetch brokers and properties from Supabase
@@ -221,46 +217,6 @@ export function AdminDashboard() {
         window.location.reload();
     };
 
-    const handleBannerFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const allowed = ['image/jpeg', 'image/jpg', 'image/gif', 'image/png'];
-        if (!allowed.includes(file.type)) {
-            toast.error('Only JPEG, PNG and GIF files are accepted.');
-            e.target.value = '';
-            return;
-        }
-
-        setBannerUploading(true);
-        try {
-            const ext = file.name.split('.').pop();
-            const fileName = `banner_${Date.now()}.${ext}`;
-
-            // Upload to 'banners' folder. RLS must allow this for admins.
-            const { error: uploadError } = await supabase.storage
-                .from('property-images')
-                .upload(`banners/${fileName}`, file, { upsert: true });
-
-            if (uploadError) {
-                console.error("Banner upload error:", uploadError);
-                throw new Error(uploadError.message || "Upload failed. Check admin permissions.");
-            }
-
-            const { data: urlData } = supabase.storage
-                .from('property-images')
-                .getPublicUrl(`banners/${fileName}`);
-
-            const publicUrl = urlData.publicUrl;
-            setBannerPreview(publicUrl);
-            setTempBanner(prev => ({ ...prev, backgroundImage: publicUrl }));
-            toast.success('Banner image uploaded! Click "Save Banner Changes" to apply.');
-        } catch (err: any) {
-            toast.error(`Upload failed: ${err.message}`);
-        } finally {
-            setBannerUploading(false);
-        }
-    };
 
     return (
         <div className="container py-8 px-4">
@@ -268,174 +224,6 @@ export function AdminDashboard() {
 
             <div className="grid gap-8">
                 {/* Banner Management Section */}
-                <section>
-                    <div className="flex items-center gap-2 mb-4">
-                        <Megaphone className="h-6 w-6 text-primary" />
-                        <h2 className="text-xl font-semibold">Banner Management</h2>
-                    </div>
-                    <Card className="border-primary/20 shadow-md">
-                        <CardHeader className="bg-primary/5">
-                            <CardTitle className="text-lg">Promotion Banner</CardTitle>
-                            <CardDescription>Update the landing page promotion banner (Standard size: 1920x600 px)</CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-6">
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Banner Title</label>
-                                    <Input
-                                        value={tempBanner.title}
-                                        onChange={(e) => setTempBanner({ ...tempBanner, title: e.target.value })}
-                                        placeholder="e.g. Grow Your Business"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Button Text</label>
-                                    <Input
-                                        value={tempBanner.buttonText}
-                                        onChange={(e) => setTempBanner({ ...tempBanner, buttonText: e.target.value })}
-                                        placeholder="e.g. Join Now"
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-2">
-                                    <label className="text-sm font-medium">Description</label>
-                                    <Input
-                                        value={tempBanner.description}
-                                        onChange={(e) => setTempBanner({ ...tempBanner, description: e.target.value })}
-                                        placeholder="Enter banner description..."
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Button Link</label>
-                                    <Input
-                                        value={tempBanner.buttonLink}
-                                        onChange={(e) => setTempBanner({ ...tempBanner, buttonLink: e.target.value })}
-                                        placeholder="e.g. /signup"
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-2">
-                                    <label className="text-sm font-medium">Banner Background Image</label>
-                                    <div className="flex flex-col gap-3">
-                                        {bannerPreview && (
-                                            <div className="space-y-3">
-                                                <div className="relative rounded-lg overflow-hidden border bg-gray-100 shadow-inner group">
-                                                    {/* Interactive Preview Area */}
-                                                    <div
-                                                        className="w-full relative cursor-move"
-                                                        style={{
-                                                            aspectRatio: '1920 / 600',
-                                                            backgroundImage: `url(${bannerPreview})`,
-                                                            backgroundSize: 'cover',
-                                                            backgroundPosition: tempBanner.backgroundPosition || '50% 50%',
-                                                            backgroundRepeat: 'no-repeat'
-                                                        }}
-                                                        onMouseDown={(e) => {
-                                                            e.preventDefault();
-                                                            const startX = e.clientX;
-                                                            const startY = e.clientY;
-                                                            const startPos = tempBanner.backgroundPosition || '50% 50%';
-                                                            const [pX, pY] = startPos.split(' ').map(p => parseFloat(p)) || [50, 50];
-
-                                                            const handleMouseMove = (moveEvent: MouseEvent) => {
-                                                                const deltaX = moveEvent.clientX - startX;
-                                                                const deltaY = moveEvent.clientY - startY;
-
-                                                                // Sensitivity: 1px movement = 0.2% shift (approx)
-                                                                const sensitivity = 0.2;
-                                                                let newX = Math.max(0, Math.min(100, pX - (deltaX * sensitivity)));
-                                                                let newY = Math.max(0, Math.min(100, pY - (deltaY * sensitivity)));
-
-                                                                setTempBanner(prev => ({
-                                                                    ...prev,
-                                                                    backgroundPosition: `${newX.toFixed(1)}% ${newY.toFixed(1)}%`
-                                                                }));
-                                                            };
-
-                                                            const handleMouseUp = () => {
-                                                                window.removeEventListener('mousemove', handleMouseMove);
-                                                                window.removeEventListener('mouseup', handleMouseUp);
-                                                            };
-
-                                                            window.addEventListener('mousemove', handleMouseMove);
-                                                            window.addEventListener('mouseup', handleMouseUp);
-                                                        }}
-                                                    >
-                                                        {/* Draggable Hint Overlay */}
-                                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
-                                                            <span className="bg-black/50 text-white text-xs px-2 py-1 rounded shadow backdrop-blur-sm">
-                                                                Drag to Reposition
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            className="h-8 px-2"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                setBannerPreview(null);
-                                                                setTempBanner(prev => ({ ...prev, backgroundImage: undefined }));
-                                                            }}
-                                                        >
-                                                            <Trash2 className="h-4 w-4 mr-1" /> Remove Image
-                                                        </Button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-center">
-                                                    <span className="font-semibold text-blue-700 dark:text-blue-400">Fixed Aspect Ratio Mode</span>
-                                                    <br />
-                                                    The banner is fixed to 1920x600 ratio. <strong>Click and Drag</strong> the image above to adjust its position.
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div
-                                            className="border-2 border-dashed border-primary/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/60 hover:bg-primary/5 transition-colors"
-                                            onClick={() => bannerFileRef.current?.click()}
-                                        >
-                                            <input
-                                                ref={bannerFileRef}
-                                                type="file"
-                                                accept="image/jpeg,image/jpg,image/gif,image/png"
-                                                className="hidden"
-                                                onChange={handleBannerFileUpload}
-                                            />
-                                            {bannerUploading ? (
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                                                    <span className="text-sm text-muted-foreground">Uploading...</span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <Upload className="h-8 w-8 text-primary/50" />
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Click to upload banner image</span>
-                                                    <span className="text-xs text-muted-foreground">or drag and drop</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
-                                            <ImageIcon className="h-3.5 w-3.5 shrink-0" />
-                                            <span><strong>Accepted formats:</strong> JPEG, PNG and GIF only. Recommended size: 1920×600 px.</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="mt-6 flex justify-end">
-                                <Button
-                                    onClick={() => {
-                                        updateBanner(tempBanner);
-                                        toast.success('Promotion banner updated successfully!');
-                                    }}
-                                    className="gap-2"
-                                >
-                                    <Save className="h-4 w-4" /> Save Banner Changes
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </section>
-
                 <section>
                     <h2 className="text-xl font-semibold mb-4">Pending Approvals ({pendingBrokers.length})</h2>
                     {pendingBrokers.length === 0 ? (

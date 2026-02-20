@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 import { Building2, Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { useStore } from "@/lib/store";
+import { useEffect } from "react";
 
 export function Footer() {
+    const { siteConfig, fetchSiteConfig } = useStore();
+
+    useEffect(() => {
+        fetchSiteConfig();
+    }, [fetchSiteConfig]);
+
     return (
         <footer className="bg-gray-900 text-gray-300 py-12 border-t border-gray-800">
             <div className="container px-4 md:px-6">
@@ -19,18 +27,26 @@ export function Footer() {
                             Connecting people with their dream properties through professional services.
                         </p>
                         <div className="flex space-x-4">
-                            <Link href="#" className="hover:text-primary transition-colors">
-                                <Facebook className="h-5 w-5" />
-                            </Link>
-                            <Link href="#" className="hover:text-primary transition-colors">
-                                <Instagram className="h-5 w-5" />
-                            </Link>
-                            <Link href="#" className="hover:text-primary transition-colors">
-                                <Twitter className="h-5 w-5" />
-                            </Link>
-                            <Link href="#" className="hover:text-primary transition-colors">
-                                <Linkedin className="h-5 w-5" />
-                            </Link>
+                            {siteConfig?.socialLinks.facebook && (
+                                <Link href={siteConfig.socialLinks.facebook} className="hover:text-primary transition-colors">
+                                    <Facebook className="h-5 w-5" />
+                                </Link>
+                            )}
+                            {siteConfig?.socialLinks.instagram && (
+                                <Link href={siteConfig.socialLinks.instagram} className="hover:text-primary transition-colors">
+                                    <Instagram className="h-5 w-5" />
+                                </Link>
+                            )}
+                            {siteConfig?.socialLinks.twitter && (
+                                <Link href={siteConfig.socialLinks.twitter} className="hover:text-primary transition-colors">
+                                    <Twitter className="h-5 w-5" />
+                                </Link>
+                            )}
+                            {siteConfig?.socialLinks.linkedin && (
+                                <Link href={siteConfig.socialLinks.linkedin} className="hover:text-primary transition-colors">
+                                    <Linkedin className="h-5 w-5" />
+                                </Link>
+                            )}
                         </div>
                     </div>
 
@@ -51,11 +67,11 @@ export function Footer() {
                         <ul className="space-y-3 text-sm">
                             <li className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-primary" />
-                                <span>+91 77 60 70 44 00</span>
+                                <span>{siteConfig?.contactPhone || '+91 77 60 70 44 00'}</span>
                             </li>
                             <li className="flex items-center gap-2">
                                 <Mail className="h-4 w-4 text-primary" />
-                                <span>support@propertydosti.com</span>
+                                <span>{siteConfig?.contactEmail || 'support@propertydosti.com'}</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <MapPin className="h-4 w-4 text-primary mt-1" />
@@ -81,7 +97,7 @@ export function Footer() {
                 </div>
 
                 <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-                    <p>© {new Date().getFullYear()} Property Dosti. All rights reserved.</p>
+                    <p>{siteConfig?.footerText || `© ${new Date().getFullYear()} Property Dosti. All rights reserved.`}</p>
                     <nav className="flex flex-wrap justify-center md:justify-end gap-4 sm:gap-6">
                         <Link className="hover:underline underline-offset-4" href="/terms">Terms of Service</Link>
                         <Link className="hover:underline underline-offset-4" href="/privacy">Privacy Policy</Link>

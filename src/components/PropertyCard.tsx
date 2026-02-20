@@ -64,7 +64,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
                         <CardTitle className="text-lg line-clamp-1">{property.title}</CardTitle>
                         <div className="flex items-center text-sm text-muted-foreground mt-1">
                             <MapPin className="h-4 w-4 mr-1 text-primary" />
-                            <span className="font-medium text-black dark:text-white">{property.location}</span>
+                            <span className="font-medium text-black dark:text-white">
+                                {property.village ? `${property.village}, ${property.location}` : property.location}
+                            </span>
                             <span className="text-xs ml-1 opacity-70">({property.district})</span>
                         </div>
                     </div>
@@ -98,8 +100,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
                         className="flex-1 h-9 text-blue-600 border-blue-100 hover:bg-blue-50 hover:text-blue-700 font-bold"
                         onClick={() => {
                             const url = `${window.location.origin}/property/${property.id}`;
-                            navigator.clipboard.writeText(url);
-                            toast.success('Link copied to clipboard!');
+                            const msg = encodeURIComponent(`Check out this property: ${property.title} - ${property.price.toLocaleString('en-IN')} INR. ${url}`);
+                            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                            const whatsappUrl = isMobile
+                                ? `whatsapp://send?text=${msg}`
+                                : `https://wa.me/?text=${msg}`;
+                            window.open(whatsappUrl, '_blank');
                         }}
                     >
                         <Share2 className="h-4 w-4 mr-2" />

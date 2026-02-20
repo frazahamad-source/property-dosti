@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Broker, Property, Admin, ChatMessage, Banner, PropertyLead } from './types';
+import { Broker, Property, Admin, ChatMessage, BannerSlide, PropertyLead, SiteConfig } from './types';
 import { MOCK_BROKERS, MOCK_PROPERTIES } from './mockData';
 
 interface AppState {
@@ -8,7 +8,8 @@ interface AppState {
     isAdmin: boolean;
     properties: Property[];
     brokers: Broker[];
-    banner: Banner;
+    bannerSlides: BannerSlide[];
+    siteConfig: SiteConfig;
     propertyLeads: PropertyLead[];
     setProperties: (properties: Property[]) => void;
     setBrokers: (brokers: Broker[]) => void;
@@ -24,8 +25,10 @@ interface AppState {
     registerBroker: (broker: Broker) => void;
     updateBroker: (id: string, updates: Partial<Broker>) => void;
     updateBrokerPassword: (email: string, newPassword: string) => void;
-    updateBanner: (banner: Banner) => Promise<void>;
-    fetchBanner: () => Promise<void>;
+    updateBannerSlides: (slides: BannerSlide[]) => Promise<void>;
+    fetchBannerSlides: () => Promise<void>;
+    updateSiteConfig: (config: SiteConfig) => Promise<void>;
+    fetchSiteConfig: () => Promise<void>;
     chatMessages: ChatMessage[];
     addChatMessage: (msg: ChatMessage) => void;
     applyReferral: (code: string, newBrokerId: string) => void;
@@ -41,12 +44,48 @@ export const useStore = create<AppState>()(
             properties: [],
             brokers: [],
             propertyLeads: [],
-            banner: {
-                title: "Grow Your Business with Property Dosti",
-                description: "Join 500+ verified brokers. Get exclusive leads and premium listing visibility across Karnataka districts.",
-                buttonText: "Join Premium Network",
-                buttonLink: "/signup",
-                backgroundPosition: '50% 50%',
+            bannerSlides: [
+                {
+                    id: '1',
+                    title: "Grow Your Business with Property Dosti",
+                    description: "Join 500+ verified brokers. Get exclusive leads and premium listing visibility across Karnataka districts.",
+                    buttonText: "Join Premium Network",
+                    buttonLink: "/signup",
+                    backgroundImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920',
+                    backgroundPosition: '50% 50%',
+                },
+                {
+                    id: '2',
+                    title: "Find Your Dream Home",
+                    description: "Browse thousands of properties verified by our trusted network.",
+                    buttonText: "Browse Properties",
+                    buttonLink: "/properties",
+                    backgroundImage: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1920',
+                    backgroundPosition: '50% 50%',
+                },
+                {
+                    id: '3',
+                    title: "Connect with Verified Brokers",
+                    description: "Get direct access to property owners and certified agents.",
+                    buttonText: "Contact Us",
+                    buttonLink: "/contact",
+                    backgroundImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1920',
+                    backgroundPosition: '50% 50%',
+                }
+            ],
+            siteConfig: {
+                heroTitle: 'Empowering Real Estate Brokers\nin Karnataka',
+                heroDescription: 'We are the first and most trusted network of verified brokers in all districts and villages in the state of Karnataka.',
+                heroBackgroundImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920',
+                footerText: '© 2024 Property Dosti. All rights reserved.',
+                socialLinks: {
+                    facebook: '#',
+                    twitter: '#',
+                    instagram: '#',
+                    linkedin: '#'
+                },
+                contactPhone: '+91 7760704400',
+                contactEmail: 'support@propertydosti.com'
             },
             hasHydrated: false,
             setHasHydrated: (state) => set({ hasHydrated: state }),
@@ -56,26 +95,26 @@ export const useStore = create<AppState>()(
             login: (user, isAdmin) => set({ user, isAdmin }),
             logout: () => set({ user: null, isAdmin: false }),
 
-            fetchBanner: async () => {
+            fetchBannerSlides: async () => {
                 const module = await import('@/lib/supabaseClient');
                 const supabase = module.supabase;
 
                 const { data, error } = await supabase
                     .from('site_settings')
                     .select('value')
-                    .eq('key', 'banner_config')
+                    .eq('key', 'banner_slides')
                     .single();
 
                 if (error) {
-                    console.error('Error fetching banner:', error);
+                    console.error('Error fetching banner slides:', error);
                 } else if (data && data.value) {
-                    set({ banner: data.value });
+                    set({ bannerSlides: data.value });
                 }
             },
 
-            updateBanner: async (newBanner) => {
+            updateBannerSlides: async (slides) => {
                 // Optimistic update
-                set({ banner: newBanner });
+                set({ bannerSlides: slides });
 
                 // Persist to DB
                 const module = await import('@/lib/supabaseClient');
@@ -84,13 +123,46 @@ export const useStore = create<AppState>()(
                 const { error } = await supabase
                     .from('site_settings')
                     .upsert({
-                        key: 'banner_config',
-                        value: newBanner
-                    }, { onConflict: 'key' }); // Fix: Specify conflict on the unique 'key' column
+                        key: 'banner_slides',
+                        value: slides
+                    }, { onConflict: 'key' });
 
                 if (error) {
-                    console.error('Failed to save banner to DB:', error);
-                    // Revert? For now just log.
+                    console.error('Failed to save banner slides to DB:', error);
+                }
+            },
+
+            fetchSiteConfig: async () => {
+                const module = await import('@/lib/supabaseClient');
+                const supabase = module.supabase;
+
+                const { data, error } = await supabase
+                    .from('site_settings')
+                    .select('value')
+                    .eq('key', 'site_config')
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching site config:', error);
+                } else if (data && data.value) {
+                    set({ siteConfig: data.value });
+                }
+            },
+
+            updateSiteConfig: async (config) => {
+                set({ siteConfig: config });
+                const module = await import('@/lib/supabaseClient');
+                const supabase = module.supabase;
+
+                const { error } = await supabase
+                    .from('site_settings')
+                    .upsert({
+                        key: 'site_config',
+                        value: config
+                    }, { onConflict: 'key' });
+
+                if (error) {
+                    console.error('Failed to save site config to DB:', error);
                 }
             },
 

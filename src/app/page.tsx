@@ -10,13 +10,52 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Property } from "@/lib/types";
+import { PropertySearch, SearchFilters } from "@/components/PropertySearch";
+import { BannerSlider } from "@/components/BannerSlider";
 
 export default function Home() {
-  const { properties, setProperties, banner, fetchBanner } = useStore();
+  const { properties, setProperties, bannerSlides, fetchBannerSlides, siteConfig, fetchSiteConfig } = useStore();
   const [loading, setLoading] = useState(true);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+
+  const handleSearch = (filters: SearchFilters) => {
+    let filtered = [...properties];
+
+    if (filters.district) {
+      filtered = filtered.filter(p => p.district.toLowerCase().includes(filters.district.toLowerCase()));
+    }
+    if (filters.city) {
+      filtered = filtered.filter(p => p.location.toLowerCase().includes(filters.city.toLowerCase()));
+    }
+    if (filters.village) {
+      filtered = filtered.filter(p => p.village?.toLowerCase().includes(filters.village.toLowerCase()));
+    }
+    if (filters.agentName) {
+      filtered = filtered.filter(p => p.profiles?.name.toLowerCase().includes(filters.agentName.toLowerCase()));
+    }
+
+    setFilteredProperties(filtered);
+  };
 
   useEffect(() => {
-    fetchBanner(); // Fetch global banner settings
+    if (properties.length > 0 && filteredProperties.length === 0) {
+      // Initial load or reset
+      setFilteredProperties(properties);
+    } else if (properties.length > 0 && filteredProperties.length !== properties.length) {
+      // Properties updated but we might have filters?
+      // Actually this logic is tricky. Let's just default to properties if NO search is active.
+      // But we don't track "search active" state here easily without more state.
+      // Simplest: Just use filteredProperties defaulting to properties on load.
+    }
+  }, [properties]);
+
+  useEffect(() => {
+    setFilteredProperties(properties);
+  }, [properties]);
+
+  useEffect(() => {
+    fetchSiteConfig();
+    fetchBannerSlides(); // Fetch global banner settings
     const fetchProperties = async () => {
       const { data, error } = await supabase
         .from('properties')
@@ -85,7 +124,7 @@ export default function Home() {
           <div
             className="absolute inset-0 z-0 bg-cover bg-center"
             style={{
-              backgroundImage: 'url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920")',
+              backgroundImage: `url("${siteConfig?.heroBackgroundImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920'}")`,
             }}
           />
           <div className="absolute inset-0 z-0 bg-black/50" /> {/* Dark Overlay */}
@@ -94,10 +133,10 @@ export default function Home() {
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none text-white whitespace-pre-line">
-                  Empowering Real Estate Brokers {"\n"}in Karnataka
+                  {siteConfig?.heroTitle || 'Empowering Real Estate Brokers \nin Karnataka'}
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-200 md:text-xl dark:text-gray-300">
-                  We are the first and most trusted network of verified brokers in all districts and villages in the state of Karnataka.
+                  {siteConfig?.heroDescription || 'We are the first and most trusted network of verified brokers in all districts and villages in the state of Karnataka.'}
                 </p>
               </div>
               <div className="space-x-4">
@@ -116,52 +155,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Dynamic Promotional Banner */}
-        <section className="w-full bg-primary/10 py-6 border-y border-primary/20">
-          <div className="container px-4 md:px-6">
-            {/* Dynamic Banner Section */}
-            {banner.backgroundImage ? (
-              // IMAGE MODE: Clickable Image, Fixed Aspect Ratio (1920/600 ~= 3.2), Drag Position
-              <Link href={banner.buttonLink || '/'} className="block group w-full">
-                <div
-                  className="w-full rounded-2xl shadow-xl overflow-hidden border border-primary/10 transition-transform transform hover:scale-[1.01]"
-                  style={{
-                    // Desktop: Respect 1920x600 ratio exactly.
-                    // Mobile: Enforce min-height to avoid "tiny strip", allow cropping.
-                    aspectRatio: '1920 / 600',
-                    backgroundImage: `url(${banner.backgroundImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: banner.backgroundPosition || '50% 50%',
-                    backgroundRepeat: 'no-repeat',
-                  }}
-                >
-                  {/* Mobile Height Enforcer (Invisible strut) */}
-                  <div className="min-h-[180px] md:min-h-0 w-full"></div>
-                  <span className="sr-only">{banner.title}</span>
-                </div>
-              </Link>
-            ) : (
-              // TEXT MODE: Default Layout with CTA
-              <div
-                className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-primary/10 overflow-hidden relative"
-              >
-                {banner.backgroundImage && <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 z-0" />}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full -mr-16 -mt-16" />
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full -ml-16 -mb-16" />
+        {/* Search Section */}
+        <section className="container relative z-20 px-4 md:px-6">
+          <PropertySearch onSearch={handleSearch} />
+        </section>
 
-                <div className="relative z-10 flex-1">
-                  <Badge className="mb-2 bg-primary text-white">PROMOTION</Badge>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{banner.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{banner.description}</p>
-                </div>
-                <div className="relative z-10">
-                  <Button className="font-bold shadow-lg shadow-primary/30" asChild>
-                    <Link href={banner.buttonLink}>{banner.buttonText}</Link>
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Dynamic Promotional Banner Slider */}
+        <section className="w-full bg-gray-900 border-y border-gray-800 p-0">
+          <BannerSlider slides={bannerSlides} />
         </section>
 
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50 dark:bg-gray-900">
@@ -174,14 +175,23 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {hotProperties.map((property) => (
-                <div key={property.id} className="h-full">
-                  <PropertyCard property={property} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {loading ? (
+                // Skeleton Loading
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-[400px] rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
+                ))
+              ) : filteredProperties.length > 0 ? (
+                filteredProperties.map((property) => (
+                  <PropertyCard key={property.id} property={property} />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12 text-gray-500">
+                  <p className="text-lg">No properties found matching your search.</p>
                 </div>
-              ))}
+              )}
             </div>
-            <div className="flex justify-center mt-10">
+            <div className="mt-12 text-center">
               <Button size="lg" variant="outline" asChild>
                 <Link href="/login">View All Properties</Link>
               </Button>

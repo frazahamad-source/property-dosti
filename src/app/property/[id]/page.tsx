@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink } from 'lucide-react';
+import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -14,7 +15,7 @@ import { toast } from 'sonner';
 export default function PropertyDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const { properties, brokers, banner, addPropertyLead, likeProperty } = useStore();
+    const { properties, brokers, bannerSlides, addPropertyLead, likeProperty } = useStore();
 
     const property = properties.find(p => p.id === id);
     const broker = useMemo(() => brokers.find(b => b.id === property?.brokerId), [property, brokers]);
@@ -67,7 +68,7 @@ export default function PropertyDetailPage() {
                 <div className="container px-4 flex justify-between items-center text-sm font-medium">
                     <span className="flex items-center gap-2">
                         <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse">PROMO</Badge>
-                        {banner.title}
+                        {bannerSlides[0]?.title || 'Property Dosti'}
                     </span>
                     <Link href="/signup" className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full hover:bg-white/20 transition-colors">
                         Join Network <ExternalLink className="h-3 w-3" />
@@ -86,25 +87,7 @@ export default function PropertyDetailPage() {
                     {/* Left Column: Property Details */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Image Gallery */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="md:col-span-2 aspect-[16/9] overflow-hidden rounded-2xl border-4 border-white shadow-xl relative group">
-                                <img
-                                    src={property.images[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    alt={property.title}
-                                />
-                                <div className="absolute top-4 left-4">
-                                    <Badge className="bg-black/50 backdrop-blur-md border-none px-3 py-1">
-                                        {property.images.length} Photos
-                                    </Badge>
-                                </div>
-                            </div>
-                            {property.images.slice(1, 3).map((img, idx) => (
-                                <div key={idx} className="aspect-[4/3] overflow-hidden rounded-xl border-4 border-white shadow-lg group">
-                                    <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={`${property.title} ${idx + 2}`} />
-                                </div>
-                            ))}
-                        </div>
+                        <PropertyImageGallery images={property.images} title={property.title} />
 
                         {/* Title and Info */}
                         <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border shadow-sm ring-1 ring-black/5">
@@ -121,7 +104,7 @@ export default function PropertyDetailPage() {
                                     <h1 className="text-3xl md:text-4xl font-black mb-2 text-gray-900 dark:text-white tracking-tight leading-tight">{property.title}</h1>
                                     <div className="flex items-center text-muted-foreground font-medium">
                                         <MapPin className="h-5 w-5 mr-1 text-primary" />
-                                        {property.location}, {property.district}
+                                        {property.village ? `${property.village}, ` : ''}{property.location}, {property.district}
                                     </div>
                                 </div>
                                 <div className="text-left md:text-right bg-primary/5 p-4 rounded-xl border border-primary/10 min-w-[200px]">
@@ -145,11 +128,15 @@ export default function PropertyDetailPage() {
                                     variant="outline"
                                     className="flex-1 min-w-[140px] gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
                                     onClick={() => {
-                                        navigator.clipboard.writeText(shareUrl);
-                                        toast.success('Link copied!');
+                                        const msg = encodeURIComponent(`Check out this property: ${property.title} - ${property.price.toLocaleString('en-IN')} INR. ${shareUrl}`);
+                                        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                                        const whatsappUrl = isMobile
+                                            ? `whatsapp://send?text=${msg}`
+                                            : `https://wa.me/?text=${msg}`;
+                                        window.open(whatsappUrl, '_blank');
                                     }}
                                 >
-                                    <Share2 size={18} /> Copy Link
+                                    <Share2 size={18} /> Share
                                 </Button>
                                 <Button
                                     variant="outline"

@@ -32,12 +32,32 @@ export interface ChatMessage {
 }
 
 export interface Banner {
+    slides: BannerSlide[];
+}
+
+export interface BannerSlide {
+    id: string;
     title: string;
     description: string;
     buttonText: string;
     buttonLink: string;
-    backgroundImage?: string;
+    backgroundImage: string;
     backgroundPosition?: string; // e.g. "50% 50%"
+}
+
+export interface SiteConfig {
+    heroTitle: string;
+    heroDescription: string;
+    heroBackgroundImage: string;
+    footerText: string;
+    socialLinks: {
+        facebook?: string;
+        twitter?: string;
+        instagram?: string;
+        linkedin?: string;
+    };
+    contactPhone: string;
+    contactEmail: string;
 }
 
 export interface Property {
@@ -48,6 +68,7 @@ export interface Property {
     price: number;
     district: string;
     location: string; // City/Area
+    village?: string;
     type: 'sale' | 'rent';
     category: 'residential' | 'commercial' | 'land';
     structureType?: string; // Villa, Apartment, Farmhouse, Land
@@ -57,8 +78,15 @@ export interface Property {
     facilities?: string[];
     googleMapLink?: string;
     images: string[];
+    profiles?: {
+        name: string;
+        company_name?: string;
+        phone?: string;
+        whatsapp_number?: string;
+        verified?: boolean;
+    };
     amenities: string[];
-    createdAt: string; // ISO date
+    createdAt: string;
     updatedAt: string; // ISO date
     expiresAt: string; // ISO date (45 days validity)
     isActive: boolean;
