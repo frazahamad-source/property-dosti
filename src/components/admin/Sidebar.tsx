@@ -3,18 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Image as ImageIcon, Settings, Users, Building2, LogOut } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, Settings, Users, Building2, LogOut, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useStore } from '@/lib/store';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-const sidebarItems = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
-    { name: 'Brokers', href: '/admin?view=brokers', icon: Users },
-    { name: 'Properties', href: '/admin?view=properties', icon: Building2 },
-];
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -39,16 +32,27 @@ export function Sidebar() {
     };
 
     return (
-        <div className="flex h-full flex-col bg-gray-900 text-white w-64 fixed left-0 top-0 bottom-0 overflow-y-auto z-50">
-            <div className="flex h-16 items-center px-6 border-b border-gray-800">
-                <Building2 className="mr-2 h-6 w-6 text-primary" />
-                <span className="text-xl font-bold">Admin Panel</span>
+        <div className={cn(
+            "flex h-full flex-col bg-gray-900 text-white w-64 fixed left-0 top-0 bottom-0 overflow-y-auto z-[60] transition-transform duration-300 ease-in-out lg:translate-x-0",
+            isOpen ? "translate-x-0" : "-translate-x-full"
+        )}>
+            <div className="flex h-16 items-center justify-between px-6 border-b border-gray-800">
+                <div className="flex items-center">
+                    <Building2 className="mr-2 h-6 w-6 text-primary" />
+                    <span className="text-xl font-bold">Admin Panel</span>
+                </div>
+                {onClose && (
+                    <Button variant="ghost" size="icon" onClick={onClose} className="lg:hidden text-gray-400 hover:text-white">
+                        <X className="h-6 w-6" />
+                    </Button>
+                )}
             </div>
             <div className="flex-1 py-6 px-3 space-y-1">
                 {sidebarItems.map((item) => (
                     <Link
                         key={item.href}
                         href={item.href}
+                        onClick={() => onClose?.()}
                         className={cn(
                             "flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-gray-800 hover:text-white",
                             isActive(item) ? "bg-gray-800 text-white" : "text-gray-400"

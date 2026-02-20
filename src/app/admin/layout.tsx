@@ -7,6 +7,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Broker } from '@/lib/types';
 import { Suspense } from 'react';
+import { Menu, Building2 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 
 export default function AdminLayout({
     children,
@@ -16,6 +19,7 @@ export default function AdminLayout({
     const { user, isAdmin, hasHydrated, setBrokers, setProperties } = useStore();
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -114,11 +118,34 @@ export default function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex">
-            <Suspense fallback={<div className="w-64 bg-gray-900" />}>
-                <Sidebar />
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex flex-col lg:flex-row">
+            {/* Mobile Header */}
+            <header className="lg:hidden bg-gray-900 text-white h-16 px-4 flex items-center justify-between sticky top-0 z-40">
+                <div className="flex items-center">
+                    <Building2 className="mr-2 h-6 w-6 text-primary" />
+                    <span className="text-lg font-bold">Admin Panel</span>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-gray-400 hover:text-white">
+                    <Menu className="h-6 w-6" />
+                </Button>
+            </header>
+
+            {/* Backdrop for mobile */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            <Suspense fallback={<div className="w-64 bg-gray-900 hidden lg:block" />}>
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             </Suspense>
-            <div className="flex-1 ml-64 p-8 overflow-y-auto h-screen">
+
+            <div className={cn(
+                "flex-1 p-4 md:p-8 overflow-y-auto h-screen transition-all duration-300",
+                "lg:ml-64" // Content push on desktop
+            )}>
                 <Suspense fallback={<div className="flex items-center justify-center h-full animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />}>
                     {children}
                 </Suspense>

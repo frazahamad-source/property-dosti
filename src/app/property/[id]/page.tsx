@@ -158,12 +158,12 @@ export default function PropertyDetailPage() {
                         <div className="absolute inset-0 bg-black/20" />
                     )}
 
-                    <div className="container px-4 flex justify-between items-center text-sm font-medium relative z-10">
-                        <span className="flex items-center gap-2">
-                            <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse uppercase text-[10px]">PROMO</Badge>
-                            {siteConfig.promoBanner?.text || 'Property Dosti'}
+                    <div className="container px-4 flex flex-col md:flex-row justify-between items-center gap-3 text-center md:text-left text-sm font-medium relative z-10">
+                        <span className="flex flex-col sm:flex-row items-center gap-2">
+                            <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse uppercase text-[10px] w-fit">PROMO</Badge>
+                            <span className="line-clamp-1">{siteConfig.promoBanner?.text || 'Property Dosti'}</span>
                         </span>
-                        <Link href={siteConfig.promoBanner?.buttonLink || "/signup"} className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full hover:bg-white/20 transition-colors shadow-sm">
+                        <Link href={siteConfig.promoBanner?.buttonLink || "/signup"} className="flex items-center gap-1 bg-white/10 px-4 py-1.5 rounded-full hover:bg-white/20 transition-colors shadow-sm whitespace-nowrap text-xs">
                             {siteConfig.promoBanner?.buttonText || 'Join Network'} <ExternalLink className="h-3 w-3" />
                         </Link>
                     </div>
