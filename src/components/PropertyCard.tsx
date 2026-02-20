@@ -1,4 +1,5 @@
 
+import Link from 'next/link';
 import { Property } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -38,16 +39,18 @@ export function PropertyCard({ property }: PropertyCardProps) {
     return (
         <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
             <div className="aspect-[16/9] relative bg-gray-200">
-                {property.images[0] ? (
-                    <img
-                        src={property.images[0]}
-                        alt={property.title}
-                        className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
-                    />
-                ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">No Image</div>
-                )}
-                <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                <Link href={`/property/${property.id}`} className="block w-full h-full cursor-pointer">
+                    {property.images[0] ? (
+                        <img
+                            src={property.images[0]}
+                            alt={property.title}
+                            className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+                        />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">No Image</div>
+                    )}
+                </Link>
+                <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
                     <Badge variant={property.type === 'sale' ? 'default' : 'secondary'}>
                         For {property.type === 'sale' ? 'Sale' : 'Rent'}
                     </Badge>
