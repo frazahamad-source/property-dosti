@@ -120,7 +120,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     variant={"primary" as any}
                     className="w-full mt-3 font-bold shadow-md shadow-primary/20"
                     onClick={() => {
-                        const phone = `91${property.brokerPhone || '7760704400'}`;
+                        let phone = property.brokerPhone || '7760704400';
+                        phone = phone.replace('+', '');
+                        if (!phone.startsWith('91')) phone = '91' + phone;
+
                         const msg = encodeURIComponent(`Hi, I am interested in your property: "${property.title}" in ${property.location}. Is it still available?`);
                         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                         const url = isMobile

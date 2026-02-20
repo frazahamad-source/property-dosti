@@ -9,22 +9,101 @@ import { Input } from '@/components/ui/Input';
 import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink } from 'lucide-react';
 import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
+import { Property, Broker } from '@/lib/types';
 
 export default function PropertyDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const { properties, brokers, bannerSlides, addPropertyLead, likeProperty } = useStore();
+    const { properties, brokers, bannerSlides, addPropertyLead, likeProperty, setProperties, setBrokers } = useStore();
 
-    const property = properties.find(p => p.id === id);
-    const broker = useMemo(() => brokers.find(b => b.id === property?.brokerId), [property, brokers]);
+    const [property, setProperty] = useState<Property | undefined>(properties.find(p => p.id === id));
+    const [broker, setBroker] = useState<Broker | undefined>(brokers.find(b => b.id === property?.brokerId));
+    const [loading, setLoading] = useState(!property);
+
+    // Fetch property if not in store (direct link access)
+    useEffect(() => {
+        const fetchProperty = async () => {
+            if (property) return;
+
+            const { data: propData, error: propError } = await supabase
+                .from('properties')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (propError) {
+                console.error('Error fetching property:', propError);
+                setLoading(false);
+                return;
+            }
+
+            if (propData) {
+                const mappedProperty: Property = {
+                    id: propData.id,
+                    brokerId: propData.broker_id,
+                    title: propData.title,
+                    description: propData.description,
+                    price: propData.price,
+                    district: propData.district,
+                    location: propData.location,
+                    village: propData.village,
+                    type: propData.type,
+                    category: propData.category,
+                    images: propData.images,
+                    createdAt: propData.created_at,
+                    updatedAt: propData.updated_at,
+                    expiresAt: propData.expires_at,
+                    isActive: propData.is_active,
+                    likes: propData.likes,
+                    leadsCount: propData.leads_count,
+                    amenities: propData.amenities,
+                    brokerPhone: propData.broker_phone // Assuming this might be joined or stored
+                };
+                setProperty(mappedProperty);
+
+                // Fetch Broker for this property
+                const { data: brokerData, error: brokerError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', propData.broker_id)
+                    .single();
+
+                if (brokerData) {
+                    const mappedBroker: Broker = {
+                        id: brokerData.id,
+                        name: brokerData.name,
+                        email: brokerData.email,
+                        phone: brokerData.phone,
+                        broker_code: brokerData.broker_code,
+                        role: 'broker',
+                        districts: brokerData.districts || [],
+                        status: brokerData.status,
+                        registeredAt: brokerData.registered_at,
+                        subscriptionExpiry: brokerData.subscription_expiry,
+                        referralCode: brokerData.referral_code,
+                        referralsCount: brokerData.referrals_count
+                    };
+                    setBroker(mappedBroker);
+                }
+            }
+            setLoading(false);
+        };
+
+        fetchProperty();
+    }, [id, property]);
 
     const [leadForm, setLeadForm] = useState({
         name: '',
         phone: '',
         message: 'I am interested in this property. Please contact me.'
     });
+
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center">Loading property details...</div>;
+    }
 
     if (!property) {
         return (
@@ -237,7 +316,11 @@ export default function PropertyDetailPage() {
                                             className="gap-2 font-bold border-green-200 text-green-700 hover:bg-green-50 rounded-xl"
                                             onClick={() => {
                                                 const msg = encodeURIComponent(`Hi, I am interested in your property on Property Dosti: "${property.title}". Please share more details.`);
-                                                const phone = `91${broker?.phone || '7760704400'}`;
+                                                // Sanitize phone number: remove + if present, ensure 91 prefix
+                                                let phone = broker?.phone || '7760704400';
+                                                phone = phone.replace('+', '');
+                                                if (!phone.startsWith('91')) phone = '91' + phone;
+
                                                 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                                                 const url = isMobile
                                                     ? `whatsapp://send?phone=${phone}&text=${msg}`

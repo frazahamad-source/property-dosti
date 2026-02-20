@@ -185,13 +185,37 @@ export const useStore = create<AppState>()(
                     ),
                 })),
 
-            addPropertyLead: (lead) =>
+            addPropertyLead: async (lead) => {
+                // Optimistic update
                 set((state) => ({
                     propertyLeads: [lead, ...state.propertyLeads],
                     properties: state.properties.map((p) =>
                         p.id === lead.propertyId ? { ...p, leadsCount: p.leadsCount + 1 } : p
                     ),
-                })),
+                }));
+
+                // Persist to DB
+                const module = await import('@/lib/supabaseClient');
+                const supabase = module.supabase;
+
+                const { error } = await supabase
+                    .from('property_leads')
+                    .insert({
+                        property_id: lead.propertyId,
+                        broker_id: lead.brokerId,
+                        name: lead.name,
+                        phone: lead.phone,
+                        message: lead.message,
+                        timestamp: lead.timestamp
+                    });
+
+                if (error) {
+                    console.error('Failed to save property lead:', error);
+                } else {
+                    // Update leads_count on property
+                    await supabase.rpc('increment_leads', { row_id: lead.propertyId });
+                }
+            },
 
             approveBroker: (brokerId) =>
                 set((state) => ({
