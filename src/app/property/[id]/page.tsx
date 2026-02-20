@@ -145,13 +145,25 @@ export default function PropertyDetailPage() {
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
             {/* Top Banner Promotion */}
             {siteConfig.promoBanner?.isVisible !== false && (
-                <div className="bg-gradient-to-r from-primary to-indigo-700 text-white py-3 shadow-md">
-                    <div className="container px-4 flex justify-between items-center text-sm font-medium">
+                <div
+                    className="relative text-white py-3 shadow-md overflow-hidden"
+                    style={{
+                        background: siteConfig.promoBanner?.backgroundImage
+                            ? `url(${siteConfig.promoBanner.backgroundImage}) center/cover no-repeat`
+                            : 'linear-gradient(to right, var(--primary), #4338ca)'
+                    }}
+                >
+                    {/* Overlay for readability if image is present */}
+                    {siteConfig.promoBanner?.backgroundImage && (
+                        <div className="absolute inset-0 bg-black/20" />
+                    )}
+
+                    <div className="container px-4 flex justify-between items-center text-sm font-medium relative z-10">
                         <span className="flex items-center gap-2">
-                            <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse">PROMO</Badge>
+                            <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse uppercase text-[10px]">PROMO</Badge>
                             {siteConfig.promoBanner?.text || 'Property Dosti'}
                         </span>
-                        <Link href={siteConfig.promoBanner?.buttonLink || "/signup"} className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full hover:bg-white/20 transition-colors">
+                        <Link href={siteConfig.promoBanner?.buttonLink || "/signup"} className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full hover:bg-white/20 transition-colors shadow-sm">
                             {siteConfig.promoBanner?.buttonText || 'Join Network'} <ExternalLink className="h-3 w-3" />
                         </Link>
                     </div>

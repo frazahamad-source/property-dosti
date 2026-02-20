@@ -184,6 +184,14 @@ export default function SettingsPage() {
                                 placeholder="Grow Your Business with Property Dosti"
                             />
                         </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Background Image URL (Optional)</label>
+                            <Input
+                                value={config.promoBanner?.backgroundImage || ''}
+                                onChange={(e) => handlePromoChange('backgroundImage', e.target.value)}
+                                placeholder="https://... (Recommended size: 1920x60)"
+                            />
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Button Text</label>

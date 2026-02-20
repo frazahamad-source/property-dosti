@@ -90,6 +90,7 @@ export const useStore = create<AppState>()(
                     text: 'Grow Your Business with Property Dosti',
                     buttonText: 'Join Network',
                     buttonLink: '/signup',
+                    backgroundImage: '',
                     isVisible: true
                 }
             },

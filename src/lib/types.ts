@@ -49,6 +49,7 @@ export interface PromoBanner {
     text: string;
     buttonText: string;
     buttonLink: string;
+    backgroundImage?: string;
     isVisible: boolean;
 }
 
