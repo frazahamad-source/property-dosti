@@ -8,8 +8,20 @@ import { Button } from '@/components/ui/Button';
 import { useStore } from '@/lib/store';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+const sidebarItems = [
+    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
+    { name: 'Brokers', href: '/admin?view=brokers', icon: Users },
+    { name: 'Properties', href: '/admin?view=properties', icon: Building2 },
+];
 
-export function Sidebar() {
+interface SidebarProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const currentView = searchParams.get('view');
@@ -33,7 +45,7 @@ export function Sidebar() {
 
     return (
         <div className={cn(
-            "flex h-full flex-col bg-gray-900 text-white w-64 fixed left-0 top-0 bottom-0 overflow-y-auto z-[60] transition-transform duration-300 ease-in-out lg:translate-x-0",
+            "fixed inset-y-0 left-0 z-[60] w-64 bg-gray-900 text-white transition-transform duration-300 ease-in-out lg:translate-x-0",
             isOpen ? "translate-x-0" : "-translate-x-full"
         )}>
             <div className="flex h-16 items-center justify-between px-6 border-b border-gray-800">

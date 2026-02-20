@@ -118,9 +118,9 @@ export default function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex flex-col lg:flex-row">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex flex-col">
             {/* Mobile Header */}
-            <header className="lg:hidden bg-gray-900 text-white h-16 px-4 flex items-center justify-between sticky top-0 z-40">
+            <header className="lg:hidden bg-gray-900 text-white h-16 px-4 flex items-center justify-between sticky top-0 z-[40] shadow-md">
                 <div className="flex items-center">
                     <Building2 className="mr-2 h-6 w-6 text-primary" />
                     <span className="text-lg font-bold">Admin Panel</span>
@@ -130,25 +130,29 @@ export default function AdminLayout({
                 </Button>
             </header>
 
-            {/* Backdrop for mobile */}
-            {isSidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-50 lg:hidden"
-                    onClick={() => setIsSidebarOpen(false)}
-                />
-            )}
+            <div className="flex flex-1 relative overflow-hidden">
+                {/* Backdrop for mobile */}
+                {isSidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/60 z-[50] lg:hidden backdrop-blur-sm transition-opacity"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
 
-            <Suspense fallback={<div className="w-64 bg-gray-900 hidden lg:block" />}>
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-            </Suspense>
-
-            <div className={cn(
-                "flex-1 p-4 md:p-8 overflow-y-auto h-screen transition-all duration-300",
-                "lg:ml-64" // Content push on desktop
-            )}>
-                <Suspense fallback={<div className="flex items-center justify-center h-full animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />}>
-                    {children}
+                <Suspense fallback={<div className="w-64 bg-gray-900 hidden lg:block" />}>
+                    <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
                 </Suspense>
+
+                <main className={cn(
+                    "flex-1 p-4 md:p-8 overflow-y-auto h-[calc(100vh-64px)] lg:h-screen transition-all duration-300",
+                    "lg:ml-64" // Content push on desktop
+                )}>
+                    <Suspense fallback={<div className="flex items-center justify-center h-full">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    </div>}>
+                        {children}
+                    </Suspense>
+                </main>
             </div>
         </div>
     );

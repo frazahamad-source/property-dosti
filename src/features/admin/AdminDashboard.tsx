@@ -113,7 +113,7 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
     };
 
     return (
-        <div className="container py-8 px-4">
+        <div className="container py-4 md:py-8 px-2 md:px-4">
             <h1 className="text-3xl font-bold mb-8">
                 {view === 'overview' ? 'Admin Overview' :
                     view === 'brokers' ? 'Broker Management' :

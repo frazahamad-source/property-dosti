@@ -38,13 +38,6 @@ export default function SettingsPage() {
         });
     };
 
-    const handlePromoChange = (field: keyof NonNullable<SiteConfig['promoBanner']>, value: any) => {
-        if (!config) return;
-        setConfig({
-            ...config,
-            promoBanner: { ...config.promoBanner!, [field]: value }
-        });
-    };
 
     const handleSave = async () => {
         if (!config) return;
@@ -161,57 +154,6 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Top Promo Banner (Property Details)</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <input
-                                type="checkbox"
-                                id="bannerVisible"
-                                checked={config.promoBanner?.isVisible ?? true}
-                                onChange={(e) => handlePromoChange('isVisible', e.target.checked)}
-                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <label htmlFor="bannerVisible" className="text-sm font-medium">Show Promo Banner on Property Detail Pages</label>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Banner Text</label>
-                            <Input
-                                value={config.promoBanner?.text || ''}
-                                onChange={(e) => handlePromoChange('text', e.target.value)}
-                                placeholder="Grow Your Business with Property Dosti"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Background Image URL (Optional)</label>
-                            <Input
-                                value={config.promoBanner?.backgroundImage || ''}
-                                onChange={(e) => handlePromoChange('backgroundImage', e.target.value)}
-                                placeholder="https://... (Recommended size: 1920x60)"
-                            />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Button Text</label>
-                                <Input
-                                    value={config.promoBanner?.buttonText || ''}
-                                    onChange={(e) => handlePromoChange('buttonText', e.target.value)}
-                                    placeholder="Join Network"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Button Link</label>
-                                <Input
-                                    value={config.promoBanner?.buttonLink || ''}
-                                    onChange={(e) => handlePromoChange('buttonLink', e.target.value)}
-                                    placeholder="/signup"
-                                />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
 
                 <Card>
                     <CardHeader>
