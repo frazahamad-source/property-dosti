@@ -18,7 +18,7 @@ import { sanitizePhone } from '@/lib/utils';
 export default function PropertyDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const { properties, brokers, siteConfig, addPropertyLead, likeProperty, setProperties, setBrokers } = useStore();
+    const { properties, brokers, siteConfig, addPropertyLead, likeProperty, setProperties, setBrokers, fetchSiteConfig } = useStore();
 
     const [property, setProperty] = useState<Property | undefined>(properties.find(p => p.id === id));
     const [broker, setBroker] = useState<Broker | undefined>(brokers.find(b => b.id === property?.brokerId));
@@ -27,6 +27,9 @@ export default function PropertyDetailPage() {
     // Fetch property if not in store (direct link access)
     useEffect(() => {
         const fetchProperty = async () => {
+            // Fetch site config as well
+            fetchSiteConfig();
+
             if (property) return;
 
             const { data: propData, error: propError } = await supabase
@@ -150,22 +153,37 @@ export default function PropertyDetailPage() {
                     style={{
                         background: siteConfig.promoBanner?.backgroundImage
                             ? `url(${siteConfig.promoBanner.backgroundImage}) center/cover no-repeat`
-                            : 'linear-gradient(to right, var(--primary), #4338ca)'
+                            : 'linear-gradient(to right, #1e293b, #0f172a)' // Dark professional slate fallback
                     }}
                 >
                     {/* Overlay for readability if image is present */}
                     {siteConfig.promoBanner?.backgroundImage && (
-                        <div className="absolute inset-0 bg-black/20" />
+                        <div className="absolute inset-0 bg-black/30" />
                     )}
 
                     <div className="container px-4 flex flex-col md:flex-row justify-between items-center gap-3 text-center md:text-left text-sm font-medium relative z-10">
-                        <span className="flex flex-col sm:flex-row items-center gap-2">
-                            <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse uppercase text-[10px] w-fit">PROMO</Badge>
-                            <span className="line-clamp-1">{siteConfig.promoBanner?.text || 'Property Dosti'}</span>
-                        </span>
-                        <Link href={siteConfig.promoBanner?.buttonLink || "/signup"} className="flex items-center gap-1 bg-white/10 px-4 py-1.5 rounded-full hover:bg-white/20 transition-colors shadow-sm whitespace-nowrap text-xs">
-                            {siteConfig.promoBanner?.buttonText || 'Join Network'} <ExternalLink className="h-3 w-3" />
-                        </Link>
+                        {/* If Admin has not configured custom text, show 'Advertise with Us' fallback */}
+                        {(!siteConfig.promoBanner?.text || siteConfig.promoBanner?.text === 'Grow Your Business with Property Dosti') ? (
+                            <>
+                                <span className="flex flex-col sm:flex-row items-center gap-2">
+                                    <Badge variant="secondary" className="bg-primary text-white border-none uppercase text-[10px] w-fit">ADVERTISE</Badge>
+                                    <span className="font-semibold">Put your brand here! Contact us for advertising opportunities.</span>
+                                </span>
+                                <Link href="https://wa.me/917760704400" target="_blank" className="flex items-center gap-1 bg-primary px-4 py-1.5 rounded-full hover:bg-primary/90 transition-colors shadow-sm whitespace-nowrap text-xs text-white">
+                                    Book Now <MessageSquare className="h-3 w-3" />
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <span className="flex flex-col sm:flex-row items-center gap-2">
+                                    <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse uppercase text-[10px] w-fit">PROMO</Badge>
+                                    <span className="line-clamp-1">{siteConfig.promoBanner.text}</span>
+                                </span>
+                                <Link href={siteConfig.promoBanner.buttonLink || "/signup"} className="flex items-center gap-1 bg-white/10 px-4 py-1.5 rounded-full hover:bg-white/20 transition-colors shadow-sm whitespace-nowrap text-xs">
+                                    {siteConfig.promoBanner.buttonText || 'Join Network'} <ExternalLink className="h-3 w-3" />
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
