@@ -45,6 +45,13 @@ export interface BannerSlide {
     backgroundPosition?: string; // e.g. "50% 50%"
 }
 
+export interface PromoBanner {
+    text: string;
+    buttonText: string;
+    buttonLink: string;
+    isVisible: boolean;
+}
+
 export interface SiteConfig {
     heroTitle: string;
     heroDescription: string;
@@ -58,6 +65,7 @@ export interface SiteConfig {
     };
     contactPhone: string;
     contactEmail: string;
+    promoBanner?: PromoBanner;
 }
 
 export interface Property {

@@ -85,7 +85,13 @@ export const useStore = create<AppState>()(
                     linkedin: '#'
                 },
                 contactPhone: '+91 7760704400',
-                contactEmail: 'support@propertydosti.com'
+                contactEmail: 'support@propertydosti.com',
+                promoBanner: {
+                    text: 'Grow Your Business with Property Dosti',
+                    buttonText: 'Join Network',
+                    buttonLink: '/signup',
+                    isVisible: true
+                }
             },
             hasHydrated: false,
             setHasHydrated: (state) => set({ hasHydrated: state }),

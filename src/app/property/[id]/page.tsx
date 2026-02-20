@@ -18,7 +18,7 @@ import { sanitizePhone } from '@/lib/utils';
 export default function PropertyDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const { properties, brokers, bannerSlides, addPropertyLead, likeProperty, setProperties, setBrokers } = useStore();
+    const { properties, brokers, siteConfig, addPropertyLead, likeProperty, setProperties, setBrokers } = useStore();
 
     const [property, setProperty] = useState<Property | undefined>(properties.find(p => p.id === id));
     const [broker, setBroker] = useState<Broker | undefined>(brokers.find(b => b.id === property?.brokerId));
@@ -144,17 +144,19 @@ export default function PropertyDetailPage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
             {/* Top Banner Promotion */}
-            <div className="bg-gradient-to-r from-primary to-indigo-700 text-white py-3 shadow-md">
-                <div className="container px-4 flex justify-between items-center text-sm font-medium">
-                    <span className="flex items-center gap-2">
-                        <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse">PROMO</Badge>
-                        {bannerSlides[0]?.title || 'Property Dosti'}
-                    </span>
-                    <Link href="/signup" className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full hover:bg-white/20 transition-colors">
-                        Join Network <ExternalLink className="h-3 w-3" />
-                    </Link>
+            {siteConfig.promoBanner?.isVisible !== false && (
+                <div className="bg-gradient-to-r from-primary to-indigo-700 text-white py-3 shadow-md">
+                    <div className="container px-4 flex justify-between items-center text-sm font-medium">
+                        <span className="flex items-center gap-2">
+                            <Badge variant="secondary" className="bg-white/20 text-white border-none animate-pulse">PROMO</Badge>
+                            {siteConfig.promoBanner?.text || 'Property Dosti'}
+                        </span>
+                        <Link href={siteConfig.promoBanner?.buttonLink || "/signup"} className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full hover:bg-white/20 transition-colors">
+                            {siteConfig.promoBanner?.buttonText || 'Join Network'} <ExternalLink className="h-3 w-3" />
+                        </Link>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="container px-4 py-8">
                 <div className="mb-6">
