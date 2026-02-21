@@ -30,7 +30,8 @@ interface AppState {
     updateSiteConfig: (config: SiteConfig) => Promise<void>;
     fetchSiteConfig: () => Promise<void>;
     chatMessages: ChatMessage[];
-    addChatMessage: (msg: ChatMessage) => void;
+    addChatMessage: (msg: ChatMessage) => Promise<void>;
+    fetchChatMessages: (userId: string) => Promise<void>;
     applyReferral: (code: string, newBrokerId: string) => void;
     hasHydrated: boolean;
     setHasHydrated: (state: boolean) => void;
@@ -276,8 +277,48 @@ export const useStore = create<AppState>()(
 
             // Chat Actions
             chatMessages: [] as ChatMessage[],
-            addChatMessage: (msg: ChatMessage) =>
-                set((state) => ({ chatMessages: [...state.chatMessages, msg] })),
+            fetchChatMessages: async (userId: string) => {
+                const { supabase } = await import('@/lib/supabaseClient');
+
+                const { data, error } = await supabase
+                    .from('chat_messages')
+                    .select('*')
+                    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+                    .order('timestamp', { ascending: true });
+
+                if (error) {
+                    console.error('Error fetching chat messages:', error);
+                } else if (data) {
+                    const mapped: ChatMessage[] = data.map((m: any) => ({
+                        id: m.id,
+                        senderId: m.sender_id,
+                        receiverId: m.receiver_id,
+                        text: m.text,
+                        timestamp: m.timestamp
+                    }));
+                    set({ chatMessages: mapped });
+                }
+            },
+            addChatMessage: async (msg: ChatMessage) => {
+                // Optimistic update
+                set((state) => ({ chatMessages: [...state.chatMessages, msg] }));
+
+                const { supabase } = await import('@/lib/supabaseClient');
+
+                // Only persist non-bot messages to DB (bot logic can stay in-memory or be server-side)
+                if (msg.senderId !== 'bot' && msg.receiverId !== 'bot') {
+                    const { error } = await supabase
+                        .from('chat_messages')
+                        .insert({
+                            sender_id: msg.senderId === 'anonymous' ? null : msg.senderId,
+                            receiver_id: msg.receiverId,
+                            text: msg.text,
+                            timestamp: msg.timestamp
+                        });
+
+                    if (error) console.error('Error persisting chat message:', error);
+                }
+            },
 
             // Referral Action
             applyReferral: (code: string, newBrokerId: string) =>

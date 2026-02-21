@@ -77,17 +77,45 @@ function PropertiesContent() {
         }
     }, [searchParams, properties]);
 
+    const normalizeLocation = (loc: string) => {
+        const lower = loc.toLowerCase().trim();
+        // Common aliases and spelling variations
+        const aliases: Record<string, string[]> = {
+            'mangaluru': ['mangalore', 'mangaluru', 'mng'],
+            'udupi': ['udupi', 'udipi'],
+            'bikkarnakatte': ['bikarnakatte', 'bikkarnakatte'],
+            'kankanady': ['kankanady', 'kankanadi'],
+            'moodbidri': ['moodabidri', 'moodbidri', 'mudbidri'],
+            'puttur': ['puttur', 'putur'],
+        };
+
+        for (const [canonical, variations] of Object.entries(aliases)) {
+            if (variations.some(v => lower.includes(v) || v.includes(lower))) {
+                return canonical;
+            }
+        }
+        return lower;
+    };
+
     const applyFilters = (allProps: Property[], filters: SmartSearchFilters) => {
         let filtered = [...allProps];
 
         if (filters.query) {
-            const q = filters.query.toLowerCase();
+            const q = filters.query.toLowerCase().trim();
+            const normalizedQ = normalizeLocation(q);
+
             if (filters.searchBy === 'city') {
-                filtered = filtered.filter(p => p.location.toLowerCase().includes(q));
+                filtered = filtered.filter(p => {
+                    const loc = p.location.toLowerCase();
+                    return loc.includes(q) || normalizeLocation(loc).includes(normalizedQ);
+                });
             } else if (filters.searchBy === 'district') {
                 filtered = filtered.filter(p => p.district.toLowerCase().includes(q));
             } else if (filters.searchBy === 'village') {
-                filtered = filtered.filter(p => p.village?.toLowerCase().includes(q));
+                filtered = filtered.filter(p => {
+                    const vil = p.village?.toLowerCase() || '';
+                    return vil.includes(q) || normalizeLocation(vil).includes(normalizedQ);
+                });
             } else if (filters.searchBy === 'agent') {
                 filtered = filtered.filter(p => p.profiles?.name.toLowerCase().includes(q));
             }

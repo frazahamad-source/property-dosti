@@ -46,9 +46,9 @@ export function SmartSearchForm({ onSearch, initialFilters, className = "" }: Sm
             onSubmit={handleSearch}
             className={`w-full max-w-5xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 p-2 md:p-3 ${className}`}
         >
-            <div className="flex flex-col md:flex-row items-stretch gap-2">
+            <div className="flex flex-col lg:flex-row items-stretch gap-2">
                 {/* Search By Dropdown */}
-                <div className="flex-[0.8] relative group">
+                <div className="flex-1 lg:flex-[0.8] relative group">
                     <label className="absolute left-3 top-1 text-[10px] font-bold text-gray-400 uppercase tracking-tight">Search by</label>
                     <select
                         value={filters.searchBy}
@@ -66,7 +66,7 @@ export function SmartSearchForm({ onSearch, initialFilters, className = "" }: Sm
                 </div>
 
                 {/* Query Input */}
-                <div className="flex-1 relative group">
+                <div className="flex-[2] relative group">
                     <label className="absolute left-3 top-1 text-[10px] font-bold text-gray-400 uppercase tracking-tight">Enter Details</label>
                     <Input
                         value={filters.query}
@@ -90,7 +90,7 @@ export function SmartSearchForm({ onSearch, initialFilters, className = "" }: Sm
                 </div>
 
                 {/* Property Type Dropdown */}
-                <div className="flex-[0.8] relative group">
+                <div className="flex-1 lg:flex-[0.8] relative group">
                     <label className="absolute left-3 top-1 text-[10px] font-bold text-gray-400 uppercase tracking-tight">Property Type</label>
                     <select
                         value={filters.propertyType}
@@ -110,7 +110,7 @@ export function SmartSearchForm({ onSearch, initialFilters, className = "" }: Sm
                 {/* Search Button */}
                 <Button
                     type="submit"
-                    className="h-14 px-8 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-lg shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="h-14 lg:px-8 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-lg shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] w-full lg:w-auto mt-2 lg:mt-0"
                 >
                     <Search className="h-5 w-5 mr-2" />
                     Search
