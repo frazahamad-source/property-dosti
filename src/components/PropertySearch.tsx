@@ -63,7 +63,7 @@ export function PropertySearch({ onSearch }: PropertySearchProps) {
                         </div>
                         <div className="md:col-span-1">
                             <Input
-                                placeholder="Village..."
+                                placeholder="Local Area/Village..."
                                 value={filters.village}
                                 onChange={(e) => handleChange('village', e.target.value)}
                                 className="bg-gray-50 border-gray-200"

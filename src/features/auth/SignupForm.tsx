@@ -28,7 +28,7 @@ const signupSchema = z.object({
     reraNumber: z.string().optional(),
     districts: z.string().min(1, "District selection is mandatory"),
     city: z.string().min(2, "City is required"),
-    village: z.string().min(2, "Village is required"),
+    village: z.string().min(2, "Local Area/Village is required"),
     referralCode: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -246,8 +246,8 @@ export function SignupForm() {
                             {errors.city && <p className="text-sm text-red-500">{errors.city.message}</p>}
                         </div>
                         <div className="space-y-2">
-                            <label htmlFor="village">Village</label>
-                            <Input id="village" {...register('village')} placeholder="Village/Area" />
+                            <label htmlFor="village">Local Area/Village</label>
+                            <Input id="village" {...register('village')} placeholder="Local Area/Village" />
                             {errors.village && <p className="text-sm text-red-500">{errors.village.message}</p>}
                         </div>
                     </div>

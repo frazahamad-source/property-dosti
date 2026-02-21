@@ -302,7 +302,7 @@ export function BrokerManager() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Village</label>
+                                <label className="text-sm font-medium">Local Area/Village</label>
                                 <Input
                                     value={editingBroker.village || ''}
                                     onChange={(e) => setEditingBroker({ ...editingBroker, village: e.target.value })}

@@ -57,7 +57,7 @@ export function SmartSearchForm({ onSearch, initialFilters, className = "" }: Sm
                     >
                         <option value="city">City / Town</option>
                         <option value="district">District</option>
-                        <option value="village">Village</option>
+                        <option value="village">Local Area / Village</option>
                         <option value="agent">Agent Name</option>
                     </select>
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
@@ -74,7 +74,7 @@ export function SmartSearchForm({ onSearch, initialFilters, className = "" }: Sm
                         placeholder={
                             filters.searchBy === 'city' ? "Which city?" :
                                 filters.searchBy === 'district' ? "Which district?" :
-                                    filters.searchBy === 'village' ? "Which village?" : "Agent name..."
+                                    filters.searchBy === 'village' ? "Which area/village?" : "Agent name..."
                         }
                         className="w-full h-14 pl-3 pt-4 bg-gray-50 dark:bg-gray-800/50 border-none rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary/20 transition-all"
                     />

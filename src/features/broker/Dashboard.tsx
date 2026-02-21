@@ -613,7 +613,7 @@ export function BrokerDashboard() {
                                 {errors.district?.message && <p className="text-xs text-red-500">{errors.district.message}</p>}
                             </div>
                             <div>
-                                <label className="text-sm font-medium">Village / City / Area</label>
+                                <label className="text-sm font-medium">Local Area / Village / City</label>
                                 <Input {...register('location')} placeholder="e.g. Manipal" />
                                 {errors.location?.message && <p className="text-xs text-red-500">{errors.location.message}</p>}
                             </div>
