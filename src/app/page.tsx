@@ -148,7 +148,7 @@ export default function Home() {
         </section>
 
         {/* Search Section */}
-        <section className="container relative z-20 px-4 md:px-6 -mt-16 md:-mt-24">
+        <section className="container relative z-20 px-4 md:px-6 -mt-8 md:-mt-24">
           <SmartSearchForm onSearch={handleSearch} />
         </section>
 

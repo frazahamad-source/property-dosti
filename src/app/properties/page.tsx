@@ -106,19 +106,22 @@ function PropertiesContent() {
 
             if (filters.searchBy === 'city') {
                 filtered = filtered.filter(p => {
-                    const loc = p.location.toLowerCase();
-                    return loc.includes(q) || normalizeLocation(loc).includes(normalizedQ);
+                    const loc = (p.location || '').toLowerCase().trim();
+                    const match = loc.includes(q) || normalizeLocation(loc).includes(normalizedQ);
+                    return match;
                 });
             } else if (filters.searchBy === 'district') {
-                filtered = filtered.filter(p => p.district.toLowerCase().includes(q));
+                filtered = filtered.filter(p => (p.district || '').toLowerCase().trim().includes(q));
             } else if (filters.searchBy === 'village') {
                 filtered = filtered.filter(p => {
-                    const vil = p.village?.toLowerCase() || '';
-                    return vil.includes(q) || normalizeLocation(vil).includes(normalizedQ);
+                    const vil = (p.village || '').toLowerCase().trim();
+                    const match = vil.includes(q) || normalizeLocation(vil).includes(normalizedQ);
+                    return match;
                 });
             } else if (filters.searchBy === 'agent') {
-                filtered = filtered.filter(p => p.profiles?.name.toLowerCase().includes(q));
+                filtered = filtered.filter(p => (p.profiles?.name || '').toLowerCase().trim().includes(q));
             }
+            console.log(`Search Results for ${filters.searchBy}="${q}" (normalized: "${normalizedQ}"): found ${filtered.length} matches`);
         }
 
         if (filters.propertyType) {

@@ -77,9 +77,10 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
     const activeMessages = useMemo(() => {
         if (!selectedUser) return [];
         const targetId = selectedUser === 'bot' ? 'bot' : selectedUser.id;
+        const myId = user?.id || 'anonymous';
         return chatMessages.filter(msg =>
-            (msg.senderId === user?.id && msg.receiverId === targetId) ||
-            (msg.senderId === targetId && msg.receiverId === user?.id)
+            (msg.senderId === myId && msg.receiverId === targetId) ||
+            (msg.senderId === targetId && msg.receiverId === myId)
         );
     }, [chatMessages, selectedUser, user]);
 
@@ -243,7 +244,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                                             </div>
                                         )}
                                         {activeMessages.map((msg) => {
-                                            const isMe = msg.senderId === user?.id;
+                                            const isMe = user ? msg.senderId === user.id : msg.senderId === 'anonymous';
                                             return (
                                                 <div
                                                     key={msg.id}
