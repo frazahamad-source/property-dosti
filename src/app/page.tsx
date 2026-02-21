@@ -30,19 +30,10 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (properties.length > 0 && filteredProperties.length === 0) {
-      // Initial load or reset
+    if (properties.length > 0) {
+      console.log('Home: Properties from store updated:', properties.length);
       setFilteredProperties(properties);
-    } else if (properties.length > 0 && filteredProperties.length !== properties.length) {
-      // Properties updated but we might have filters?
-      // Actually this logic is tricky. Let's just default to properties if NO search is active.
-      // But we don't track "search active" state here easily without more state.
-      // Simplest: Just use filteredProperties defaulting to properties on load.
     }
-  }, [properties]);
-
-  useEffect(() => {
-    setFilteredProperties(properties);
   }, [properties]);
 
   useEffect(() => {
@@ -57,8 +48,10 @@ export default function Home() {
             phone
           )
         `)
-        .eq('is_active', true)
+        // .eq('is_active', true) // Temporarily disabled to debug missing properties
         .order('created_at', { ascending: false });
+
+      console.log('Home: Fetched raw properties:', data?.length, 'Error:', error);
 
       if (error) {
         console.error('Error fetching properties FULL:', JSON.stringify(error, null, 2));
