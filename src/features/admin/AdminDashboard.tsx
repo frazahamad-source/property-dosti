@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { BrokerManager } from './BrokerManager';
 import { PropertyManager } from './PropertyManager';
 
+import { useRouter } from 'next/navigation';
+
 interface AdminDashboardProps {
     view?: 'overview' | 'brokers' | 'properties';
 }
@@ -14,6 +16,7 @@ interface AdminDashboardProps {
 export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
     const { brokers, properties } = useStore();
     const [mounted, setMounted] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         setMounted(true);
@@ -31,7 +34,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
             icon: Users,
             description: "Registered across all districts",
             color: "text-blue-600",
-            bgColor: "bg-blue-50"
+            bgColor: "bg-blue-50",
+            targetView: 'brokers'
         },
         {
             title: "Approved Brokers",
@@ -39,7 +43,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
             icon: CheckCircle2,
             description: "Active members",
             color: "text-green-600",
-            bgColor: "bg-green-50"
+            bgColor: "bg-green-50",
+            targetView: 'brokers'
         },
         {
             title: "Pending Approvals",
@@ -47,7 +52,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
             icon: Clock,
             description: "Waiting for review",
             color: "text-amber-600",
-            bgColor: "bg-amber-50"
+            bgColor: "bg-amber-50",
+            targetView: 'brokers'
         },
         {
             title: "Total Properties",
@@ -55,7 +61,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
             icon: Building2,
             description: "Live listings",
             color: "text-purple-600",
-            bgColor: "bg-purple-50"
+            bgColor: "bg-purple-50",
+            targetView: 'properties'
         }
     ];
 
@@ -70,10 +77,14 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
                     <>
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                             {stats.map((stat) => (
-                                <Card key={stat.title}>
+                                <Card
+                                    key={stat.title}
+                                    className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 active:scale-95 group"
+                                    onClick={() => router.push(`/admin?view=${stat.targetView}`)}
+                                >
                                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                        <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                                        <div className={`${stat.bgColor} p-2 rounded-lg`}>
+                                        <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">{stat.title}</CardTitle>
+                                        <div className={`${stat.bgColor} p-2 rounded-lg group-hover:scale-110 transition-transform`}>
                                             <stat.icon className={`h-4 w-4 ${stat.color}`} />
                                         </div>
                                     </CardHeader>

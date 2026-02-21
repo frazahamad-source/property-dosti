@@ -46,8 +46,9 @@ export default function AdminLayout({
                     .order('registered_at', { ascending: false });
 
                 if (brokerError) {
-                    console.error('Error fetching brokers:', brokerError);
+                    console.error('Error fetching brokers from Supabase:', brokerError);
                 } else if (brokerData) {
+                    console.log(`Fetched ${brokerData.length} brokers for Admin Panel`);
                     const mappedBrokers: Broker[] = brokerData.map((b: any) => ({
                         id: b.id,
                         name: b.name || 'Unknown',

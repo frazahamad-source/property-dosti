@@ -7,6 +7,7 @@
 
 -- [SECTION 1: SCHEMA UPDATES]
 ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS email TEXT,
 ADD COLUMN IF NOT EXISTS company_name TEXT,
 ADD COLUMN IF NOT EXISTS designation TEXT,
 ADD COLUMN IF NOT EXISTS city TEXT,
@@ -24,7 +25,7 @@ RETURNS trigger AS $$
 BEGIN
   INSERT INTO public.profiles (
       id,
-      email, -- Ensure email is stored if strictly needed, though usually in auth.users
+      email,
       name,
       phone,
       company_name,
@@ -66,13 +67,15 @@ BEGIN
   )
   ON CONFLICT (id) DO UPDATE
   SET
+      email = EXCLUDED.email,
       name = EXCLUDED.name,
       phone = EXCLUDED.phone,
       company_name = EXCLUDED.company_name,
       designation = EXCLUDED.designation,
       city = EXCLUDED.city,
       village = EXCLUDED.village,
-      districts = EXCLUDED.districts;
+      districts = EXCLUDED.districts,
+      status = 'pending'; -- Reset to pending on re-registration if record existed
       
   RETURN new;
 END;
