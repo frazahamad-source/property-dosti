@@ -107,15 +107,19 @@ function PropertiesContent() {
             if (filters.searchBy === 'city') {
                 filtered = filtered.filter(p => {
                     const loc = (p.location || '').toLowerCase().trim();
-                    const match = loc.includes(q) || normalizeLocation(loc).includes(normalizedQ);
+                    const vil = (p.village || '').toLowerCase().trim();
+                    const match = loc.includes(q) || normalizeLocation(loc).includes(normalizedQ) ||
+                        vil.includes(q) || normalizeLocation(vil).includes(normalizedQ);
                     return match;
                 });
             } else if (filters.searchBy === 'district') {
                 filtered = filtered.filter(p => (p.district || '').toLowerCase().trim().includes(q));
             } else if (filters.searchBy === 'village') {
                 filtered = filtered.filter(p => {
+                    const loc = (p.location || '').toLowerCase().trim();
                     const vil = (p.village || '').toLowerCase().trim();
-                    const match = vil.includes(q) || normalizeLocation(vil).includes(normalizedQ);
+                    const match = vil.includes(q) || normalizeLocation(vil).includes(normalizedQ) ||
+                        loc.includes(q) || normalizeLocation(loc).includes(normalizedQ);
                     return match;
                 });
             } else if (filters.searchBy === 'agent') {

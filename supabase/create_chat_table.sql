@@ -11,7 +11,11 @@ CREATE TABLE IF NOT EXISTS public.chat_messages (
 -- Enable RLS
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 
--- Policies
+-- Drop existing policies if they exist to avoid errors on re-run
+DROP POLICY IF EXISTS "Users can view their own messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "Users can insert their own messages" ON public.chat_messages;
+
+-- Create Policies
 CREATE POLICY "Users can view their own messages"
     ON public.chat_messages
     FOR SELECT
@@ -23,4 +27,15 @@ CREATE POLICY "Users can insert their own messages"
     WITH CHECK (auth.uid() = sender_id);
 
 -- Expose to realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+-- Note: This might fail if already added, but it's usually fine in Supabase SQL editor
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND schemaname = 'public' 
+        AND tablename = 'chat_messages'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+    END IF;
+END $$;

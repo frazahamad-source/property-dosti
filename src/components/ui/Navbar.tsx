@@ -16,7 +16,7 @@ export function Navbar() {
         router.push('/');
     };
 
-    if (pathname === '/') return null; // Don't show navbar on landing page (it has its own)
+    if (pathname === '/' || pathname?.startsWith('/admin')) return null; // Don't show navbar on landing page or admin panel
 
     return (
         <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -36,15 +36,15 @@ export function Navbar() {
                                 <User className="h-4 w-4" />
                                 <span>{isAdmin ? "Admin" : (user as any)?.name}</span>
                             </Link>
-                            <Button variant="ghost" size="sm" asChild className="mr-2">
+                            <Button variant="ghost" size="sm" asChild className="mr-1 md:mr-2">
                                 <Link href="/profile/change-password">
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    Change Password
+                                    <Settings className="md:mr-2 h-4 w-4" />
+                                    <span className="hidden md:inline">Change Password</span>
                                 </Link>
                             </Button>
                             <Button variant="ghost" size="sm" onClick={handleLogout}>
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Logout
+                                <LogOut className="md:mr-2 h-4 w-4" />
+                                <span className="hidden md:inline">Logout</span>
                             </Button>
                         </>
                     ) : (

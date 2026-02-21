@@ -106,6 +106,7 @@ export function BrokerDashboard() {
                     facilities: p.facilities,
                     googleMapLink: p.google_map_link,
                     images: p.images,
+                    village: p.village,
                     createdAt: p.created_at,
                     updatedAt: p.updated_at,
                     expiresAt: p.expires_at,
@@ -285,9 +286,9 @@ export function BrokerDashboard() {
 
     const filteredProperties = properties.filter(p => {
         const matchesQuery = !searchFilters.query || (
-            searchFilters.searchBy === 'city' ? p.location.toLowerCase().includes(searchFilters.query.toLowerCase()) :
+            searchFilters.searchBy === 'city' ? (p.location.toLowerCase().includes(searchFilters.query.toLowerCase()) || p.village?.toLowerCase().includes(searchFilters.query.toLowerCase())) :
                 searchFilters.searchBy === 'district' ? p.district.toLowerCase().includes(searchFilters.query.toLowerCase()) :
-                    searchFilters.searchBy === 'village' ? p.village?.toLowerCase().includes(searchFilters.query.toLowerCase()) :
+                    searchFilters.searchBy === 'village' ? (p.village?.toLowerCase().includes(searchFilters.query.toLowerCase()) || p.location.toLowerCase().includes(searchFilters.query.toLowerCase())) :
                         p.profiles?.name?.toLowerCase().includes(searchFilters.query.toLowerCase())
         );
 
