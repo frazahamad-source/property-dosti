@@ -25,17 +25,66 @@ USING (
     (SELECT is_admin FROM public.profiles WHERE id = auth.uid()) = true
 );
 
--- Insert default banner config if not exists
+-- Insert default banner slides if not exists
 INSERT INTO public.site_settings (key, value)
 VALUES (
-    'banner_config', 
+    'banner_slides', 
+    '[
+        {
+            "id": "1",
+            "title": "Grow Your Business with Property Dosti",
+            "description": "Join 500+ verified brokers. Get exclusive leads and premium listing visibility across Karnataka districts.",
+            "buttonText": "Join Premium Network",
+            "buttonLink": "/signup",
+            "backgroundImage": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920",
+            "backgroundPosition": "50% 50%"
+        },
+        {
+            "id": "2",
+            "title": "Find Your Dream Home",
+            "description": "Browse thousands of properties verified by our trusted network.",
+            "buttonText": "Browse Properties",
+            "buttonLink": "/properties",
+            "backgroundImage": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1920",
+            "backgroundPosition": "50% 50%"
+        },
+        {
+            "id": "3",
+            "title": "Connect with Verified Brokers",
+            "description": "Get direct access to property owners and certified agents.",
+            "buttonText": "Contact Us",
+            "buttonLink": "/contact",
+            "backgroundImage": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1920",
+            "backgroundPosition": "50% 50%"
+        }
+    ]'::jsonb
+)
+ON CONFLICT (key) DO NOTHING;
+
+-- Insert default site config if not exists
+INSERT INTO public.site_settings (key, value)
+VALUES (
+    'site_config',
     '{
-        "title": "Grow Your Business with Property Dosti",
-        "description": "Join 500+ verified brokers. Get exclusive leads and premium listing visibility across Karnataka districts.",
-        "buttonText": "Join Premium Network",
-        "buttonLink": "/signup",
-        "backgroundPosition": "50% 50%",
-        "backgroundImage": "" 
+        "heroTitle": "Empowering Real Estate Brokers\nin Karnataka",
+        "heroDescription": "We are the first and most trusted network of verified brokers in all districts and villages in the state of Karnataka.",
+        "heroBackgroundImage": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920",
+        "footerText": "© 2024 Property Dosti. All rights reserved.",
+        "socialLinks": {
+            "facebook": "#",
+            "twitter": "#",
+            "instagram": "#",
+            "linkedin": "#"
+        },
+        "contactPhone": "+91 7760704400",
+        "contactEmail": "support@propertydosti.com",
+        "promoBanner": {
+            "text": "Grow Your Business with Property Dosti",
+            "buttonText": "Join Network",
+            "buttonLink": "/signup",
+            "backgroundImage": "",
+            "isVisible": true
+        }
     }'::jsonb
 )
 ON CONFLICT (key) DO NOTHING;

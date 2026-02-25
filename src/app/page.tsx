@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowRight, Building2, ShieldCheck, Users } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
+
 
 import { useStore } from "@/lib/store";
 import { PropertyCard } from "@/components/PropertyCard";
@@ -89,10 +91,9 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="px-4 lg:px-6 h-14 flex items-center justify-between border-b">
-        <Link className="flex items-center justify-center font-bold text-2xl" href="#">
-          <Building2 className="mr-2 h-6 w-6 text-primary" />
-          Property Dosti
+      <header className="px-4 lg:px-6 py-4 flex items-center justify-between border-b bg-white">
+        <Link href="/">
+          <Logo />
         </Link>
         <nav className="flex gap-4 sm:gap-6">
           <Link className="text-sm font-medium hover:underline underline-offset-4" href="/login">

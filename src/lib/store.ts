@@ -78,6 +78,16 @@ export const useStore = create<AppState>()(
                 heroTitle: 'Empowering Real Estate Brokers\nin Karnataka',
                 heroDescription: 'We are the first and most trusted network of verified brokers in all districts and villages in the state of Karnataka.',
                 heroBackgroundImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920',
+                logo: {
+                    type: 'text',
+                    text: 'Property Dosti',
+                    tagline: "Broker's virtual Office",
+                    fontSize: 24,
+                    color: '#0f172a'
+                },
+                icon: {
+                    type: 'default'
+                },
                 footerText: '© 2024 Property Dosti. All rights reserved.',
                 socialLinks: {
                     facebook: '#',
@@ -114,7 +124,10 @@ export const useStore = create<AppState>()(
                     .single();
 
                 if (error) {
-                    console.error('Error fetching banner slides:', error);
+                    // Suppress error if it's just "no rows found" (PGRST116)
+                    if (error.code !== 'PGRST116') {
+                        console.error('Error fetching banner slides:', error.message || error);
+                    }
                 } else if (data && data.value) {
                     set({ bannerSlides: data.value });
                 }
@@ -151,7 +164,10 @@ export const useStore = create<AppState>()(
                     .single();
 
                 if (error) {
-                    console.error('Error fetching site config:', error);
+                    // Suppress error if it's just "no rows found" (PGRST116)
+                    if (error.code !== 'PGRST116') {
+                        console.error('Error fetching site config:', error.message || error);
+                    }
                 } else if (data && data.value) {
                     set({ siteConfig: data.value });
                 }

@@ -53,10 +53,28 @@ export interface PromoBanner {
     isVisible: boolean;
 }
 
+export interface LogoConfig {
+    type: 'text' | 'image';
+    text: string;
+    fontSize?: number;
+    color?: string;
+    tagline?: string;
+    taglineFontSize?: number;
+    taglineColor?: string;
+    imageUrl?: string;
+}
+
+export interface IconConfig {
+    type: 'default' | 'image';
+    imageUrl?: string;
+}
+
 export interface SiteConfig {
     heroTitle: string;
     heroDescription: string;
     heroBackgroundImage: string;
+    logo?: LogoConfig;
+    icon?: IconConfig;
     footerText: string;
     socialLinks: {
         facebook?: string;

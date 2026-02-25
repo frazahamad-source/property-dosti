@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { Button } from "./Button";
-import { Home, User, LogOut, Settings } from "lucide-react";
+import { Home, User, LogOut, Settings, Building2 } from "lucide-react";
+import { Logo } from "./Logo";
+
 
 export function Navbar() {
     const router = useRouter();
@@ -20,10 +22,9 @@ export function Navbar() {
 
     return (
         <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-16 items-center px-4">
-                <Link href="/" className="mr-6 flex items-center space-x-2">
-                    <Home className="h-6 w-6 text-primary" />
-                    <span className="text-xl font-bold">Property Dosti</span>
+            <div className="container flex h-20 items-center px-4">
+                <Link href="/" className="mr-6">
+                    <Logo />
                 </Link>
 
                 <div className="flex flex-1 items-center justify-end space-x-4">
