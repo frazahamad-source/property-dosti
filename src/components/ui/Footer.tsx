@@ -1,32 +1,44 @@
 'use client';
 
 import Link from "next/link";
-import { Building2, Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { Logo } from "./Logo";
 
 export function Footer() {
     const { siteConfig, fetchSiteConfig } = useStore();
+    const pathname = usePathname();
+    const isAdminPage = pathname?.startsWith('/admin');
 
     useEffect(() => {
         fetchSiteConfig();
     }, [fetchSiteConfig]);
 
     return (
-        <footer className="bg-gray-900 text-gray-300 py-12 border-t border-gray-800">
+        <footer className={cn(
+            "bg-gray-900 text-gray-300 py-12 border-t border-gray-800",
+            isAdminPage && "lg:pl-64"
+        )}>
             <div className="container px-4 md:px-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
                     {/* Company Info */}
-                    <div className="space-y-4">
-                        <Link className="flex items-center font-bold text-2xl text-white" href="/">
-                            <Building2 className="mr-2 h-6 w-6 text-primary" />
-                            Property Dosti
+                    <div className="flex flex-col items-center md:items-start space-y-4">
+                        <Link href="/" className="block">
+                            <Logo
+                                textClassName="text-2xl text-white"
+                                iconClassName="h-8 w-8"
+                                taglineClassName="text-gray-400"
+                                centerOnMobile={true}
+                            />
                         </Link>
-                        <p className="text-sm leading-relaxed">
+                        <p className="text-sm leading-relaxed text-gray-300 text-center md:text-left">
                             The first and most trusted network of verified brokers in Karnataka.
                             Connecting people with their dream properties through professional services.
                         </p>
-                        <div className="flex space-x-4">
+                        <div className="flex justify-center md:justify-start space-x-4">
                             {siteConfig?.socialLinks.facebook && (
                                 <Link href={siteConfig.socialLinks.facebook} className="hover:text-primary transition-colors">
                                     <Facebook className="h-5 w-5" />
@@ -51,9 +63,9 @@ export function Footer() {
                     </div>
 
                     {/* Quick Links */}
-                    <div>
-                        <h3 className="text-white font-bold mb-4">Quick Links</h3>
-                        <ul className="space-y-2 text-sm">
+                    <div className="text-center md:text-left">
+                        <h3 className="text-white font-bold mb-6">Quick Links</h3>
+                        <ul className="space-y-3 text-sm">
                             <li><Link href="/" className="hover:text-primary transition-colors">Home</Link></li>
                             <li><Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link></li>
                             <li><Link href="/login" className="hover:text-primary transition-colors">Broker Login</Link></li>
@@ -62,28 +74,28 @@ export function Footer() {
                     </div>
 
                     {/* Contact Info */}
-                    <div>
-                        <h3 className="text-white font-bold mb-4">Contact Us</h3>
-                        <ul className="space-y-3 text-sm">
-                            <li className="flex items-center gap-2">
+                    <div className="text-center md:text-left">
+                        <h3 className="text-white font-bold mb-6">Contact Us</h3>
+                        <ul className="space-y-4 text-sm">
+                            <li className="flex items-center justify-center md:justify-start gap-3">
                                 <Phone className="h-4 w-4 text-primary" />
                                 <span>{siteConfig?.contactPhone || '+91 77 60 70 44 00'}</span>
                             </li>
-                            <li className="flex items-center gap-2">
+                            <li className="flex items-center justify-center md:justify-start gap-3">
                                 <Mail className="h-4 w-4 text-primary" />
                                 <span>{siteConfig?.contactEmail || 'support@propertydosti.com'}</span>
                             </li>
-                            <li className="flex items-start gap-2">
+                            <li className="flex items-start justify-center md:justify-start gap-3">
                                 <MapPin className="h-4 w-4 text-primary mt-1" />
-                                <span>Ground Floor, Kankanady Gate Building,<br />Kankanady Cross Road, Kankanady,<br />Mangaluru - 575002</span>
+                                <span className="text-center md:text-left">Ground Floor, Kankanady Gate Building,<br />Kankanady Cross Road, Kankanady,<br />Mangaluru - 575002</span>
                             </li>
                         </ul>
                     </div>
 
                     {/* Newsletter/Disclaimer */}
-                    <div className="space-y-4">
-                        <h3 className="text-white font-bold mb-4">About the App</h3>
-                        <p className="text-sm">
+                    <div className="text-center md:text-left space-y-4">
+                        <h3 className="text-white font-bold mb-6">About the App</h3>
+                        <p className="text-sm leading-relaxed">
                             Join our premium network to get exclusive leads and premium listing visibility across all districts.
                         </p>
                         <div className="pt-2">

@@ -3,31 +3,38 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Image as ImageIcon, Settings, Users, Building2, LogOut, X, ChevronLeft } from 'lucide-react';
+import {
+    LayoutDashboard,
+    Building2,
+    MessageSquare,
+    CreditCard,
+    User,
+    Settings,
+    LogOut,
+    ChevronLeft
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/ui/Logo';
-
 import { useStore } from '@/lib/store';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 const sidebarItems = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
-    { name: 'Brokers', href: '/admin?view=brokers', icon: Users },
-    { name: 'Properties', href: '/admin?view=properties', icon: Building2 },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'My Listings', href: '/dashboard?view=listings', icon: Building2 },
+    { name: 'Responses', href: '/dashboard?view=responses', icon: MessageSquare },
+    { name: 'Subscription', href: '/dashboard?view=subscription', icon: CreditCard },
+    { name: 'Profile', href: '/dashboard?view=profile', icon: User },
+    // { name: 'Settings', href: '/dashboard?view=settings', icon: Settings },
 ];
 
-interface SidebarProps {
+interface BrokerSidebarProps {
     isOpen?: boolean;
     onClose?: () => void;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function BrokerSidebar({ isOpen, onClose }: BrokerSidebarProps) {
     const pathname = usePathname();
-    const searchParams = useSearchParams();
-    const currentView = searchParams.get('view');
-    const { logout } = useStore();
+    const { logout, user } = useStore();
     const router = useRouter();
 
     const handleLogout = () => {
@@ -35,14 +42,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         router.push('/login');
     };
 
-    const isActive = (item: any) => {
-        if (item.href === '/admin' && !currentView) {
-            return pathname === '/admin';
+    const isActive = (href: string) => {
+        const currentUrl = typeof window !== 'undefined' ? window.location.search : '';
+        if (href === '/dashboard' && !currentUrl) {
+            return pathname === '/dashboard';
         }
-        if (item.href.includes('view=')) {
-            return currentView === item.href.split('view=')[1];
+        if (href.includes('view=')) {
+            const view = href.split('view=')[1];
+            return currentUrl.includes(`view=${view}`);
         }
-        return pathname === item.href;
+        return pathname === href;
     };
 
     return (
@@ -56,11 +65,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         iconClassName="text-white"
                         textClassName="text-white"
                         taglineClassName="text-white/70"
+                        centerOnMobile={true}
                     />
                 </div>
             </div>
 
-            {/* Mobile-only Close Arrow: Centered vertically on the right edge to avoid logo conflict */}
             {onClose && (
                 <Button
                     variant="ghost"
@@ -80,7 +89,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         onClick={() => onClose?.()}
                         className={cn(
                             "flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-gray-800 hover:text-white",
-                            isActive(item) ? "bg-gray-800 text-white" : "text-gray-400"
+                            isActive(item.href) ? "bg-gray-800 text-white" : "text-gray-400"
                         )}
                     >
                         <item.icon className="mr-3 h-5 w-5" />
@@ -88,7 +97,22 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     </Link>
                 ))}
             </div>
+
             <div className="p-4 border-t border-gray-800">
+                <div className="flex items-center px-3 py-3 mb-2">
+                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center mr-3 overflow-hidden">
+                        {(user as any)?.avatarUrl ? (
+                            <img src={(user as any).avatarUrl} alt={(user as any)?.name} className="h-full w-full object-cover" />
+                        ) : (
+                            <span className="text-xs font-bold text-white uppercase">{(user as any)?.name?.charAt(0)}</span>
+                        )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">{(user as any)?.name}</p>
+                        <p className="text-xs text-gray-400 truncate">Broker</p>
+                    </div>
+                </div>
+
                 <Button variant="ghost" className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20" onClick={handleLogout}>
                     <LogOut className="mr-3 h-5 w-5" />
                     Logout

@@ -18,7 +18,7 @@ export function Navbar() {
         router.push('/');
     };
 
-    if (pathname === '/' || pathname?.startsWith('/admin')) return null; // Don't show navbar on landing page or admin panel
+    if (pathname === '/' || pathname?.startsWith('/admin') || pathname?.startsWith('/dashboard')) return null; // Don't show navbar on landing page, admin panel, or dashboard
 
     return (
         <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

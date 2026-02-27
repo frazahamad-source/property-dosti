@@ -21,6 +21,7 @@ export interface Broker {
     referredBy?: string;
     referralsCount: number;
     isAdmin?: boolean;
+    avatarUrl?: string;
 }
 
 export interface ChatMessage {
@@ -97,7 +98,7 @@ export interface Property {
     location: string; // City/Area
     village?: string;
     type: 'sale' | 'rent';
-    category: 'residential' | 'commercial' | 'land' | 'villa' | 'apartment' | 'offices' | 'farmhouse' | 'godown';
+    category: 'residential' | 'commercial' | 'land' | 'villa' | 'apartment' | 'offices' | 'farmhouse' | 'godown' | 'residential' | 'commercial' | 'land';
     structureType?: string; // Villa, Apartment, Farmhouse, Land, Godown, Office, etc.
     landArea?: number;
     floorDetail?: string;
@@ -136,6 +137,8 @@ export interface Admin {
     id: string;
     email: string;
     password: string;
+    name?: string;
+    avatarUrl?: string;
 }
 
 export const DISTRICTS = [

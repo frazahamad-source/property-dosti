@@ -8,13 +8,14 @@ import { PropertyCard } from '@/components/PropertyCard';
 import { sanitizePhone } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Plus, Search, MapPin, Clock, MessageSquare } from 'lucide-react';
+import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, ExternalLink, Share2, User as UserIcon } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { SubscriptionDashboard } from '@/features/subscription/SubscriptionDashboard';
 import { ChatWindow } from '@/features/chat/ChatWindow';
 import { SmartSearchForm, SmartSearchFilters } from '@/components/SmartSearchForm';
 import { supabase } from '@/lib/supabaseClient';
+import { useSearchParams } from 'next/navigation';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -40,16 +41,24 @@ const propertySchema = z.object({
 type PropertyFormValues = z.infer<typeof propertySchema>;
 
 export function BrokerDashboard() {
-    const { user, properties, addProperty, setProperties } = useStore();
+    const { user, properties, addProperty, setProperties, updateProperty, deleteProperty, setUser } = useStore();
+    const searchParams = useSearchParams();
+    const viewParam = searchParams.get('view');
+
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
     const [searchFilters, setSearchFilters] = useState<SmartSearchFilters>({
         searchBy: 'city',
         query: '',
         propertyType: ''
     });
     const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-    const [activeTab, setActiveTab] = useState<'explore' | 'listings' | 'responses'>('explore');
+    const [activeTab, setActiveTab] = useState<'explore' | 'listings' | 'responses' | 'subscription' | 'profile'>('explore');
     const [isLoading, setIsLoading] = useState(false);
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
     // Form Watch for Conditional Logic
     const { register, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm<PropertyFormValues>({
@@ -300,6 +309,101 @@ export function BrokerDashboard() {
         return matchesQuery && matchesType;
     });
 
+    // Sync active tab with URL search param
+    useEffect(() => {
+        if (viewParam) {
+            setActiveTab(viewParam as any);
+        } else {
+            setActiveTab('explore');
+        }
+    }, [viewParam]);
+
+    const handleEdit = (property: Property) => {
+        setSelectedProperty(property);
+        setUploadedImages(property.images || []);
+
+        // Populate form
+        setValue('title', property.title);
+        setValue('description', property.description);
+        setValue('price', property.price);
+        setValue('district', property.district);
+        setValue('location', property.location);
+        setValue('type', property.type);
+        setValue('category', property.category as any);
+        setValue('structureType', (property.structureType as any) || 'Villa');
+        setValue('landArea', property.landArea);
+        setValue('floorDetail', property.floorDetail);
+        setValue('parkingAllocated', property.parkingAllocated);
+        setValue('facilities', property.facilities?.join(', '));
+        setValue('googleMapLink', property.googleMapLink);
+
+        setIsEditModalOpen(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this property? This action cannot be revoked.')) return;
+
+        setIsDeleting(id);
+        try {
+            const { error } = await supabase
+                .from('properties')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            deleteProperty(id);
+            toast.success('Property deleted successfully');
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to delete property');
+        } finally {
+            setIsDeleting(null);
+        }
+    };
+
+    const onAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        if (file.size > 500 * 1024) {
+            toast.error('Avatar image must be less than 500KB');
+            return;
+        }
+
+        setIsUploadingAvatar(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `avatar_${user.id}_${Date.now()}.${fileExt}`;
+            const filePath = `avatars/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('property-images')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('property-images')
+                .getPublicUrl(filePath);
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ avatar_url: publicUrl })
+                .eq('id', user.id);
+
+            if (updateError) throw updateError;
+
+            // Update local user state
+            setUser({ ...user, avatarUrl: publicUrl } as any);
+            toast.success('Profile picture updated!');
+        } catch (error: any) {
+            console.error('Error uploading avatar:', error);
+            toast.error('Failed to upload profile picture');
+        } finally {
+            setIsUploadingAvatar(false);
+        }
+    };
+
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
         setMounted(true);
@@ -308,70 +412,61 @@ export function BrokerDashboard() {
     if (!mounted) return null;
 
     return (
-        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 pb-20">
-            <div className="container py-8 px-4">
-                {/* Membership & Rewards Section */}
-                <div className="mb-12">
-                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <Badge variant="outline" className="text-primary border-primary">NEW</Badge>
-                        Membership & Rewards
-                    </h2>
-                    <SubscriptionDashboard />
-                </div>
-
+        <div className="bg-transparent pb-10">
+            <div className="px-0">
+                {/* Header Section */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold">Broker Dashboard</h1>
-                        <p className="text-muted-foreground">Manage your listings and explore properties.</p>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            {activeTab === 'explore' && 'Global Properties'}
+                            {activeTab === 'listings' && 'My Property Listings'}
+                            {activeTab === 'responses' && 'Customer Responses'}
+                            {activeTab === 'subscription' && 'Membership & Rewards'}
+                            {activeTab === 'profile' && 'My Profile'}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            {activeTab === 'explore' && 'Explore verified properties across the network.'}
+                            {activeTab === 'listings' && 'Manage and monitor your property listings.'}
+                            {activeTab === 'responses' && 'View and manage inquiries from interested buyers.'}
+                            {activeTab === 'subscription' && 'Upgrade your account for premium features.'}
+                            {activeTab === 'profile' && 'View and update your professional profile.'}
+                        </p>
                     </div>
-                    <Button
-                        onClick={() => {
-                            if (isSubscriptionExpired) {
-                                toast.error('Subscription expired! Please renew to add new properties.');
-                            } else {
-                                setIsAddModalOpen(true);
-                            }
-                        }}
-                        className="shadow-lg shadow-primary/20"
-                        variant={(isSubscriptionExpired ? "outline" : "default") as any}
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> Add Property
-                    </Button>
-                </div>
-
-                <div className="flex items-center space-x-4 mb-8 border-b">
-                    {(['explore', 'listings', 'responses'] as const).map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`pb-4 px-2 text-sm font-medium transition-colors relative ${activeTab === tab
-                                ? 'text-primary'
-                                : 'text-muted-foreground hover:text-foreground'
-                                }`}
+                    {activeTab === 'listings' && (
+                        <Button
+                            onClick={() => {
+                                if (isSubscriptionExpired) {
+                                    toast.error('Subscription expired! Please renew to add new properties.');
+                                } else {
+                                    setIsAddModalOpen(true);
+                                    reset();
+                                    setUploadedImages([]);
+                                }
+                            }}
+                            className="shadow-lg shadow-primary/20"
+                            variant={(isSubscriptionExpired ? "outline" : "default") as any}
                         >
-                            <span className="capitalize">{tab === 'explore' ? 'Explore Global' : tab === 'listings' ? 'My Listings' : 'Responses'}</span>
-                            {tab === 'responses' && unreadCount > 0 && (
-                                <Badge variant="secondary" className="ml-2 bg-red-100 text-red-600 border-none text-[10px] h-4 min-w-[1rem] flex items-center justify-center font-bold animate-pulse">
-                                    {unreadCount}
-                                </Badge>
-                            )}
-                            {activeTab === tab && (
-                                <motion.div
-                                    layoutId="activeTab"
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                                />
-                            )}
-                        </button>
-                    ))}
+                            <Plus className="mr-2 h-4 w-4" /> Add Property
+                        </Button>
+                    )}
                 </div>
 
                 {activeTab === 'explore' && (
                     <>
+                        {/* Membership & Rewards Section - Only on Explore/Dashboard home */}
+                        <div className="mb-12">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                <Badge variant="outline" className="text-primary border-primary">NEW</Badge>
+                                Membership Upgrade
+                            </h2>
+                            <SubscriptionDashboard />
+                        </div>
+
                         <div className="mb-10">
                             <SmartSearchForm
                                 onSearch={(f) => setSearchFilters(f)}
                                 initialFilters={searchFilters}
-                                className="shadow-none border-none bg-transparent dark:bg-transparent"
+                                className="shadow-sm border border-gray-100 bg-white"
                             />
                         </div>
 
@@ -452,57 +547,117 @@ export function BrokerDashboard() {
                     </div>
                 )}
 
-                {activeTab === 'responses' && (
-                    <div className="space-y-4">
-                        {myLeads.length === 0 ? (
-                            <Card className="p-12 text-center text-muted-foreground">
-                                No responses received yet.
+                {activeTab === 'subscription' && (
+                    <div className="max-w-4xl mx-auto py-10">
+                        <SubscriptionDashboard />
+                    </div>
+                )}
+
+                {activeTab === 'profile' && (
+                    <div className="max-w-4xl space-y-8">
+                        {/* Profile Header Card */}
+                        <Card>
+                            <CardContent className="pt-10">
+                                <div className="flex flex-col md:flex-row items-center gap-8">
+                                    <div className="relative group">
+                                        <div className="h-32 w-32 rounded-full bg-blue-100 dark:bg-blue-900 border-4 border-white dark:border-gray-800 shadow-xl overflow-hidden flex items-center justify-center relative">
+                                            {(user as any)?.avatarUrl ? (
+                                                <img src={(user as any).avatarUrl} alt={(user as any)?.name} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <UserIcon className="h-16 w-16 text-blue-400" />
+                                            )}
+
+                                            {isUploadingAvatar && (
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg cursor-pointer hover:bg-primary/90 transition-transform active:scale-95">
+                                            <Camera className="h-5 w-5" />
+                                            <input
+                                                id="avatar-upload"
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={onAvatarUpload}
+                                                disabled={isUploadingAvatar}
+                                            />
+                                        </label>
+                                    </div>
+                                    <div className="flex-1 text-center md:text-left space-y-2">
+                                        <div className="flex flex-col md:flex-row items-center gap-3">
+                                            <h2 className="text-3xl font-bold">{(user as any)?.name}</h2>
+                                            <Badge variant="success" className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
+                                                Verified Broker
+                                            </Badge>
+                                        </div>
+                                        <p className="text-muted-foreground flex items-center justify-center md:justify-start gap-2">
+                                            <span className="font-medium text-foreground">Broker Code:</span> {broker?.broker_code}
+                                        </p>
+                                        <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm pt-2">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="h-4 w-4 text-primary" />
+                                                <span>{broker?.districts.join(', ')}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-4 w-4 text-primary" />
+                                                <span>Joined {new Date(broker?.registeredAt || '').toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Profile Info Grid */}
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Professional Details</CardTitle>
+                                    <CardDescription>Your information as visible to clients.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid gap-1">
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase">Company Name</label>
+                                        <div className="p-2 bg-muted/30 rounded border">{broker?.companyName || 'Not Set'}</div>
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase">Designation</label>
+                                        <div className="p-2 bg-muted/30 rounded border">{broker?.designation || 'Not Set'}</div>
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase">RERA Number</label>
+                                        <div className="p-2 bg-muted/30 rounded border">{broker?.reraNumber || 'Not Set'}</div>
+                                    </div>
+                                </CardContent>
                             </Card>
-                        ) : (
-                            <div className="grid gap-4">
-                                {myLeads.map((lead) => (
-                                    <Card key={lead.id} className={`transition-colors ${lead.status === 'new' ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : ''}`}>
-                                        <CardContent className="pt-6">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <h4 className="font-bold text-lg">{lead.name}</h4>
-                                                        {lead.status === 'new' && <Badge className="bg-blue-500 hover:bg-blue-600 text-[10px]">New</Badge>}
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">{lead.phone}</p>
-                                                </div>
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {new Date(lead.timestamp).toLocaleDateString()}
-                                                    </span>
-                                                    {lead.status === 'new' && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="h-6 text-[10px] text-blue-600 hover:text-blue-800 p-0"
-                                                            onClick={() => markLeadAsRead(lead.id)}
-                                                        >
-                                                            Mark as Read
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <p className="text-sm border-l-2 pl-4 italic bg-muted/20 py-2 rounded">
-                                                "{lead.message}"
-                                            </p>
-                                            <div className="mt-4 flex gap-2">
-                                                <Button size="sm" className="h-8" asChild onClick={() => markLeadAsRead(lead.id)}>
-                                                    <a href={`tel:${lead.phone}`}>Call Now</a>
-                                                </Button>
-                                                <Button size="sm" variant="outline" className="h-8" asChild onClick={() => markLeadAsRead(lead.id)}>
-                                                    <a href={`https://wa.me/${sanitizePhone(lead.phone)}`} target="_blank">WhatsApp</a>
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
-                        )}
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Contact Information</CardTitle>
+                                    <CardDescription>Details for business communication.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid gap-1">
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase">Mobile Number</label>
+                                        <div className="p-2 bg-muted/30 rounded border">{broker?.phone}</div>
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase">Email Address</label>
+                                        <div className="p-2 bg-muted/30 rounded border">{broker?.email}</div>
+                                    </div>
+                                    <div className="pt-4">
+                                        <Button variant="outline" className="w-full" disabled>
+                                            Request Information Change
+                                        </Button>
+                                        <p className="text-[10px] text-center text-muted-foreground mt-2">
+                                            Contract support to change verified contact details.
+                                        </p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 )}
 
@@ -686,9 +841,250 @@ export function BrokerDashboard() {
                                 </div>
                             )}
                         </div>
-                        <Button type="submit" className="w-full" disabled={uploadedImages.length === 0}>
-                            List Property
+                        <Button type="submit" className="w-full" disabled={isLoading || uploadedImages.length === 0}>
+                            {isLoading ? "Processing..." : "List Property"}
                         </Button>
+                    </form>
+                </Modal>
+
+                <Modal
+                    isOpen={isEditModalOpen}
+                    onClose={() => {
+                        setIsEditModalOpen(false);
+                        setSelectedProperty(null);
+                    }}
+                    title="Edit Property Listing"
+                >
+                    <form onSubmit={handleSubmit(async (data) => {
+                        if (!selectedProperty) return;
+                        setIsLoading(true);
+                        try {
+                            const facilitiesArray = data.facilities ? data.facilities.split(',').map(f => f.trim()).filter(f => f !== '') : [];
+
+                            const { error } = await supabase
+                                .from('properties')
+                                .update({
+                                    title: data.title,
+                                    description: data.description,
+                                    price: data.price,
+                                    district: data.district,
+                                    location: data.location,
+                                    type: data.type,
+                                    category: data.category,
+                                    structure_type: data.structureType,
+                                    land_area: data.landArea || null,
+                                    floor_detail: data.floorDetail,
+                                    parking_allocated: data.parkingAllocated,
+                                    facilities: facilitiesArray,
+                                    google_map_link: data.googleMapLink,
+                                    images: uploadedImages,
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('id', selectedProperty.id);
+
+                            if (error) throw error;
+
+                            // Update local state
+                            updateProperty(selectedProperty.id, {
+                                ...selectedProperty,
+                                ...data,
+                                facilities: facilitiesArray,
+                                images: uploadedImages,
+                                updatedAt: new Date().toISOString()
+                            } as any);
+
+                            toast.success('Property updated successfully!');
+                            setIsEditModalOpen(false);
+                            setSelectedProperty(null);
+                        } catch (error: any) {
+                            toast.error(error.message || 'Failed to update property');
+                        } finally {
+                            setIsLoading(false);
+                        }
+                    })} className="space-y-4">
+
+                        {/* Reuse the same fields as Add Modal */}
+                        <div>
+                            <label className="text-sm font-medium">Property Type</label>
+                            <select
+                                {...register('structureType')}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                                <option value="Villa">Villa / Independent House</option>
+                                <option value="Apartment">Apartment / Flat</option>
+                                <option value="Farmhouse">Farmhouse</option>
+                                <option value="Land">Land / Plot</option>
+                            </select>
+                        </div>
+
+                        {/* 2. Conditional Fields based on Structure */}
+
+                        {/* Villa / Farmhouse Fields */}
+                        {(structureType === 'Villa' || structureType === 'Farmhouse') && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Land Area</label>
+                                    <Input
+                                        type="number"
+                                        {...register('landArea')}
+                                        placeholder="Sqft / Cents"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-medium">Facilities & Amenities</label>
+                                    <Input {...register('facilities')} placeholder="e.g. Garden, Pool (Comma separated)" />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Apartment Fields */}
+                        {structureType === 'Apartment' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Floor Detail</label>
+                                    <Input {...register('floorDetail')} placeholder="e.g. 3rd Floor" />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium">Parking</label>
+                                    <Input {...register('parkingAllocated')} placeholder="e.g. 1 Covered" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-medium">Facilities & Amenities</label>
+                                    <Input {...register('facilities')} placeholder="e.g. Gym, Lift (Comma separated)" />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Land Fields */}
+                        {structureType === 'Land' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Category</label>
+                                    <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                        <option value="residential">Residential</option>
+                                        <option value="commercial">Commercial</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium">Total Area</label>
+                                    <Input
+                                        type="number"
+                                        {...register('landArea')}
+                                        placeholder="Sqft / Cents"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="text-sm font-medium">Title</label>
+                            <Input {...register('title')} placeholder="e.g. Luxury 3BHK Villa" />
+                            {errors.title?.message && <p className="text-xs text-red-500">{errors.title.message}</p>}
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium">Description</label>
+                            <textarea
+                                {...register('description')}
+                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Write detailed description point by point..."
+                            />
+                            {errors.description?.message && <p className="text-xs text-red-500">{errors.description.message}</p>}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-medium">District</label>
+                                <select
+                                    {...register('district')}
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                >
+                                    <option value="">Select District</option>
+                                    {DISTRICTS.map(d => (
+                                        <option key={d} value={d}>{d}</option>
+                                    ))}
+                                </select>
+                                {errors.district?.message && <p className="text-xs text-red-500">{errors.district.message}</p>}
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium">Local Area / Village / City</label>
+                                <Input {...register('location')} placeholder="e.g. Manipal" />
+                                {errors.location?.message && <p className="text-xs text-red-500">{errors.location.message}</p>}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-medium">Price (₹)</label>
+                                <Input type="number" {...register('price')} />
+                                {errors.price?.message && <p className="text-xs text-red-500">{errors.price.message}</p>}
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium">Google Map Link (Optional)</label>
+                                <Input {...register('googleMapLink')} placeholder="https://maps.google.com/..." />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium">Transaction Type</label>
+                                <select {...register('type')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="sale">For Sale</option>
+                                    <option value="rent">For Rent</option>
+                                </select>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium">Photos (Max 3)</label>
+                                <div className="flex gap-2">
+                                    {uploadedImages.map((img, idx) => (
+                                        <div key={idx} className="relative h-10 w-10 flex-shrink-0 group">
+                                            <img src={img} alt={`Preview ${idx}`} className="h-full w-full object-cover rounded-md border" />
+                                            <button
+                                                type="button"
+                                                onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== idx))}
+                                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px] shadow-sm"
+                                            >×</button>
+                                        </div>
+                                    ))}
+                                    {uploadedImages.length < 3 && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-10 w-10 border-dashed"
+                                            onClick={() => document.getElementById('edit-photo-upload')?.click()}
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                    <Input
+                                        id="edit-photo-upload"
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-4 flex gap-3">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => {
+                                    setIsEditModalOpen(false);
+                                    setSelectedProperty(null);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit" className="flex-1" disabled={isLoading || uploadedImages.length === 0}>
+                                {isLoading ? "Updating..." : "Save Changes"}
+                            </Button>
+                        </div>
                     </form>
                 </Modal>
             </div>

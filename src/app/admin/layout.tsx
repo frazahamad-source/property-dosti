@@ -7,7 +7,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Broker } from '@/lib/types';
 import { Suspense } from 'react';
-import { Menu, Building2 } from 'lucide-react';
+import { Menu } from 'lucide-react';
+import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
@@ -123,7 +124,12 @@ export default function AdminLayout({
             {/* Mobile Header */}
             <header className="lg:hidden bg-gray-900 text-white h-16 px-4 flex items-center justify-between sticky top-0 z-[40] shadow-md">
                 <div className="flex items-center">
-                    <Building2 className="mr-2 h-6 w-6 text-primary" />
+                    <Logo
+                        showTagline={false}
+                        iconClassName="h-6 w-6"
+                        textClassName="text-lg text-white"
+                        className="mr-2"
+                    />
                     <span className="text-lg font-bold">Admin Panel</span>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-gray-400 hover:text-white">

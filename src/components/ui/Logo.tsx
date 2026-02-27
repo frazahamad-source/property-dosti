@@ -10,6 +10,7 @@ interface LogoProps {
     textClassName?: string;
     taglineClassName?: string;
     showTagline?: boolean;
+    centerOnMobile?: boolean;
 }
 
 export function Logo({
@@ -17,9 +18,10 @@ export function Logo({
     iconClassName,
     textClassName,
     taglineClassName,
-    showTagline = true
+    showTagline = true,
+    centerOnMobile = false
 }: LogoProps) {
-    const { siteConfig } = useStore();
+    const { siteConfig, hasHydrated } = useStore();
     const logo = siteConfig?.logo;
     const icon = siteConfig?.icon;
 
@@ -36,10 +38,30 @@ export function Logo({
     const hasTextColorOverride = textClassName?.includes('text-');
     const hasTaglineColorOverride = taglineClassName?.includes('text-');
 
+    if (!hasHydrated) {
+        return (
+            <div className={cn("flex items-center animate-pulse", className)}>
+                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-800 rounded-lg mr-4" />
+                <div className="flex flex-col gap-1">
+                    <div className="h-5 w-24 bg-gray-200 dark:bg-gray-800 rounded" />
+                    {showTagline && <div className="h-2 w-20 bg-gray-100 dark:bg-gray-900 rounded" />}
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className={cn("flex items-center", className)}>
-            {/* Left: Icon Section */}
-            <div className={cn("flex-shrink-0 mr-4", iconClassName)}>
+        <div className={cn(
+            "flex items-center",
+            centerOnMobile ? "flex-col md:flex-row items-center text-center md:text-left" : "",
+            className
+        )}>
+            {/* Left/Top: Icon Section */}
+            <div className={cn(
+                "flex-shrink-0 flex items-center justify-center",
+                centerOnMobile ? "mr-0 md:mr-4 mb-2 md:mb-0" : "mr-4",
+                iconClassName
+            )}>
                 {iconType === 'image' && iconImageUrl ? (
                     <img
                         src={iconImageUrl}
@@ -52,8 +74,11 @@ export function Logo({
                 )}
             </div>
 
-            {/* Right: Text/Image Logo Content */}
-            <div className="flex flex-col">
+            {/* Right/Bottom: Text/Image Logo Content */}
+            <div className={cn(
+                "flex flex-col justify-center",
+                centerOnMobile ? "items-center md:items-start" : ""
+            )}>
                 {logoType === 'image' && logoImageUrl ? (
                     <img
                         src={logoImageUrl}
@@ -64,7 +89,7 @@ export function Logo({
                 ) : (
                     <>
                         <span
-                            className={cn("font-bold leading-tight block whitespace-nowrap", !hasTextColorOverride && "text-[#0f172a] dark:text-white", textClassName)}
+                            className={cn("font-bold leading-none block whitespace-nowrap", !hasTextColorOverride && "text-[#0f172a] dark:text-white", textClassName)}
                             style={{
                                 fontFamily: 'Inter, sans-serif',
                                 fontSize: `${logoFontSize}px`,

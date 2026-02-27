@@ -17,8 +17,10 @@ interface AppState {
     logout: () => void;
     addProperty: (property: Property) => void;
     updateProperty: (id: string, updates: Partial<Property>) => void;
+    deleteProperty: (id: string) => void;
     likeProperty: (id: string) => void;
     addPropertyLead: (lead: PropertyLead) => void;
+    setUser: (user: Broker | Admin) => void;
     approveBroker: (brokerId: string) => void;
     rejectBroker: (brokerId: string) => void;
     deleteBroker: (brokerId: string) => void;
@@ -112,6 +114,7 @@ export const useStore = create<AppState>()(
             setBrokers: (brokers) => set({ brokers }),
             login: (user, isAdmin) => set({ user, isAdmin }),
             logout: () => set({ user: null, isAdmin: false }),
+            setUser: (user: Broker | Admin) => set({ user }),
 
             fetchBannerSlides: async () => {
                 const module = await import('@/lib/supabaseClient');
@@ -200,6 +203,11 @@ export const useStore = create<AppState>()(
                     properties: state.properties.map((p) =>
                         p.id === id ? { ...p, ...updates } : p
                     ),
+                })),
+
+            deleteProperty: (id) =>
+                set((state) => ({
+                    properties: state.properties.filter((p) => p.id !== id),
                 })),
 
             likeProperty: (id) =>
