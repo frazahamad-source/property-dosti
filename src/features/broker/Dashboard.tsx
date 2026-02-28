@@ -1,11 +1,12 @@
 'use client';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
 import { Property, Broker, Admin, DISTRICTS } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { PropertyCard } from '@/components/PropertyCard';
-import { sanitizePhone } from '@/lib/utils';
+import { cn, sanitizePhone } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, ExternalLink, Share2, User as UserIcon } from 'lucide-react';
