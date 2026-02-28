@@ -53,13 +53,11 @@ export function Logo({
     return (
         <div className={cn(
             "flex items-center",
-            centerOnMobile ? "flex-col md:flex-row items-center text-center md:text-left" : "",
             className
         )}>
             {/* Left/Top: Icon Section */}
             <div className={cn(
-                "flex-shrink-0 flex items-center justify-center",
-                centerOnMobile ? "mr-0 md:mr-4 mb-2 md:mb-0" : "mr-4",
+                "flex-shrink-0 flex items-center justify-center mr-3 md:mr-4",
                 iconClassName
             )}>
                 {iconType === 'image' && iconImageUrl ? (
@@ -76,8 +74,7 @@ export function Logo({
 
             {/* Right/Bottom: Text/Image Logo Content */}
             <div className={cn(
-                "flex flex-col justify-center",
-                centerOnMobile ? "items-center md:items-start" : ""
+                "flex flex-col justify-center items-start"
             )}>
                 {logoType === 'image' && logoImageUrl ? (
                     <img

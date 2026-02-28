@@ -99,6 +99,7 @@ export const useStore = create<AppState>()(
                 },
                 contactPhone: '+91 7760704400',
                 contactEmail: 'support@propertydosti.com',
+                officeAddress: 'Ground Floor, Kankanady Gate Building,\nKankanady Cross Road, Kankanady,\nMangaluru - 575002',
                 promoBanner: {
                     text: 'Grow Your Business with Property Dosti',
                     buttonText: 'Join Network',

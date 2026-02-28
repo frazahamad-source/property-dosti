@@ -53,7 +53,6 @@ export default function DashboardLayout({
                         className="mr-2"
                         centerOnMobile={false}
                     />
-                    <span className="text-lg font-bold">Broker Dashboard</span>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-gray-400 hover:text-white">
                     <Menu className="h-6 w-6" />
@@ -80,6 +79,10 @@ export default function DashboardLayout({
                     <Suspense fallback={<div className="flex items-center justify-center h-full">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                     </div>}>
+                        <div className="lg:hidden mb-6 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Broker's Dashboard</h1>
+                            <p className="text-xs text-gray-500">Karnataka's Verified Broker Network</p>
+                        </div>
                         {children}
                     </Suspense>
                 </main>

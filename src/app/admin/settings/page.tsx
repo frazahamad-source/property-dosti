@@ -182,6 +182,15 @@ export default function SettingsPage() {
                                         />
                                     </div>
                                 </div>
+                                <div className="space-y-2 pt-2">
+                                    <label className="text-sm font-medium">Office Address</label>
+                                    <textarea
+                                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm min-h-[100px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                        value={config.officeAddress || ''}
+                                        onChange={(e) => handleChange('officeAddress', e.target.value)}
+                                        placeholder="Enter full office address..."
+                                    />
+                                </div>
                             </CardContent>
                         </Card>
 

@@ -87,7 +87,9 @@ export function Footer() {
                             </li>
                             <li className="flex items-start justify-center md:justify-start gap-3">
                                 <MapPin className="h-4 w-4 text-primary mt-1" />
-                                <span className="text-center md:text-left">Ground Floor, Kankanady Gate Building,<br />Kankanady Cross Road, Kankanady,<br />Mangaluru - 575002</span>
+                                <span className="text-center md:text-left whitespace-pre-line">
+                                    {siteConfig?.officeAddress || 'Ground Floor, Kankanady Gate Building,\nKankanady Cross Road, Kankanady,\nMangaluru - 575002'}
+                                </span>
                             </li>
                         </ul>
                     </div>

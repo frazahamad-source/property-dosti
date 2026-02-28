@@ -85,6 +85,7 @@ export interface SiteConfig {
     };
     contactPhone: string;
     contactEmail: string;
+    officeAddress?: string;
     promoBanner?: PromoBanner;
 }
 
