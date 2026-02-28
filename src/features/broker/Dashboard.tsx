@@ -495,52 +495,119 @@ export function BrokerDashboard() {
                                     </Button>
                                 </Card>
                             ) : (
-                                <div className="rounded-md border bg-white dark:bg-gray-950 overflow-hidden">
-                                    <table className="w-full text-sm">
-                                        <thead className="bg-muted/50 border-b">
-                                            <tr>
-                                                <th className="p-4 text-left font-medium">Property</th>
-                                                <th className="p-4 text-left font-medium">Stats</th>
-                                                <th className="p-4 text-left font-medium">Status</th>
-                                                <th className="p-4 text-right font-medium">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y">
-                                            {myProperties.map((p) => (
-                                                <tr key={p.id} className="hover:bg-muted/20">
-                                                    <td className="p-4">
-                                                        <div className="font-medium">{p.title}</div>
-                                                        <div className="text-xs text-muted-foreground">{p.location}, {p.district}</div>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <div className="flex gap-3 text-xs">
-                                                            <span className="flex items-center gap-1"><Badge variant="outline" className="text-[10px]">{p.likes} Likes</Badge></span>
-                                                            <span className="flex items-center gap-1">
-                                                                <Badge variant="outline" className={`text-[10px] ${myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0 ? 'border-blue-500 text-blue-600' : ''}`}>
-                                                                    {p.leadsCount} Leads
-                                                                    {myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0 &&
-                                                                        ` (${myLeads.filter(l => l.property_id === p.id && l.status === 'new').length} new)`
-                                                                    }
-                                                                </Badge>
-                                                            </span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+                                    {myProperties.map((p) => (
+                                        <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow border-gray-100 dark:border-gray-800">
+                                            <CardContent className="p-0">
+                                                <div className="flex flex-col sm:flex-row h-full">
+                                                    {/* Property Image */}
+                                                    <div className="w-full sm:w-48 h-48 sm:h-auto relative bg-muted">
+                                                        {p.images && p.images.length > 0 ? (
+                                                            <img
+                                                                src={p.images[0]}
+                                                                alt={p.title}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center">
+                                                                <Camera className="h-8 w-8 text-muted-foreground/40" />
+                                                            </div>
+                                                        )}
+                                                        <Badge
+                                                            variant={p.isActive ? "success" : "secondary"}
+                                                            className="absolute top-2 left-2 shadow-sm"
+                                                        >
+                                                            {p.isActive ? "Active" : "Inactive"}
+                                                        </Badge>
+                                                    </div>
+
+                                                    {/* Property Details */}
+                                                    <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between">
+                                                        <div className="space-y-1">
+                                                            <div className="flex justify-between items-start">
+                                                                <h3 className="text-xl font-bold text-primary">₹ {p.price.toLocaleString('en-IN')}</h3>
+                                                                <div className="flex gap-2">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-gray-400 hover:text-primary"
+                                                                        onClick={() => handleEdit(p)}
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-gray-400 hover:text-red-500"
+                                                                        onClick={() => handleDelete(p.id)}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                            <h4 className="font-semibold text-lg line-clamp-1">{p.title}</h4>
+                                                            <div className="flex items-center text-sm text-muted-foreground gap-2">
+                                                                <MapPin className="h-3.5 w-3.5" />
+                                                                <span className="line-clamp-1">{p.location}, {p.district}</span>
+                                                            </div>
                                                         </div>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <Badge variant={p.isActive ? "success" : "secondary"}>{p.isActive ? "Active" : "Inactive"}</Badge>
-                                                    </td>
-                                                    <td className="p-4 text-right">
-                                                        <Button variant="ghost" size="sm" onClick={() => {
-                                                            const url = `${window.location.origin}/property/${p.id}`;
-                                                            navigator.clipboard.writeText(url);
-                                                            toast.success('Property link copied to clipboard!');
-                                                        }}>
-                                                            Share
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+
+                                                        <div className="mt-4 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-50 dark:border-gray-800/50">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                                                    <motion.div whileHover={{ scale: 1.1 }}>
+                                                                        <Check className="h-4 w-4 text-green-500" />
+                                                                    </motion.div>
+                                                                    <span>{p.likes} Likes</span>
+                                                                </div>
+                                                                <div
+                                                                    className={cn(
+                                                                        "flex items-center gap-1.5 text-sm cursor-pointer transition-colors",
+                                                                        myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0
+                                                                            ? "text-blue-600 font-semibold"
+                                                                            : "text-muted-foreground hover:text-primary"
+                                                                    )}
+                                                                    onClick={() => setActiveTab('responses')}
+                                                                >
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                    <span>{p.leadsCount} Leads</span>
+                                                                    {myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0 && (
+                                                                        <Badge className="ml-1 px-1.5 h-4 text-[10px] bg-blue-600">
+                                                                            {myLeads.filter(l => l.property_id === p.id && l.status === 'new').length} NEW
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex gap-2">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="text-xs h-8 px-3 rounded-full"
+                                                                    onClick={() => {
+                                                                        const url = `${window.location.origin}/property/${p.id}`;
+                                                                        navigator.clipboard.writeText(url);
+                                                                        toast.success('Property link copied!');
+                                                                    }}
+                                                                >
+                                                                    <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
+                                                                </Button>
+                                                                <Link href={`/property/${p.id}`} target="_blank">
+                                                                    <Button
+                                                                        variant="default"
+                                                                        size="sm"
+                                                                        className="text-xs h-8 px-3 rounded-full"
+                                                                    >
+                                                                        <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> View
+                                                                    </Button>
+                                                                </Link>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
                                 </div>
                             )}
                         </div>
