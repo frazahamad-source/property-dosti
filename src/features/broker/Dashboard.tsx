@@ -60,6 +60,7 @@ export function BrokerDashboard() {
     const [activeTab, setActiveTab] = useState<'explore' | 'listings' | 'responses' | 'subscription' | 'profile'>('explore');
     const [isLoading, setIsLoading] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+    const [listingSearch, setListingSearch] = useState('');
 
     // Form Watch for Conditional Logic
     const { register, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm<PropertyFormValues>({
@@ -79,6 +80,11 @@ export function BrokerDashboard() {
     const isSubscriptionExpired = broker ? new Date(broker.subscriptionExpiry) < new Date() : false;
 
     const myProperties = properties.filter(p => p.brokerId === user?.id);
+    const filteredMyProperties = myProperties.filter(p =>
+        p.title.toLowerCase().includes(listingSearch.toLowerCase()) ||
+        p.location.toLowerCase().includes(listingSearch.toLowerCase()) ||
+        p.district.toLowerCase().includes(listingSearch.toLowerCase())
+    );
     const [propertyLeads, setPropertyLeads] = useState<any[]>([]); // Local state for leads
     const myLeads = propertyLeads;
     const unreadCount = myLeads.filter(l => l.status === 'new').length;
@@ -483,6 +489,17 @@ export function BrokerDashboard() {
 
                 {activeTab === 'listings' && (
                     <div className="space-y-6">
+                        {/* Compact Search Bar */}
+                        <div className="relative max-w-md">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Quick search by title or location..."
+                                className="pl-10 h-10 border-gray-200 focus:ring-primary/20"
+                                value={listingSearch}
+                                onChange={(e) => setListingSearch(e.target.value)}
+                            />
+                        </div>
+
                         <div className="grid gap-4">
                             {myProperties.length === 0 ? (
                                 <Card className="p-12 text-center">
@@ -495,114 +512,118 @@ export function BrokerDashboard() {
                                         Create Your First Listing
                                     </Button>
                                 </Card>
+                            ) : filteredMyProperties.length === 0 ? (
+                                <div className="p-12 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+                                    No properties match your search.
+                                </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
-                                    {myProperties.map((p) => (
-                                        <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow border-gray-100 dark:border-gray-800">
-                                            <CardContent className="p-0">
-                                                <div className="flex flex-col sm:flex-row h-full">
-                                                    {/* Property Image */}
-                                                    <div className="w-full sm:w-48 h-48 sm:h-auto relative bg-muted">
-                                                        {p.images && p.images.length > 0 ? (
-                                                            <img
-                                                                src={p.images[0]}
-                                                                alt={p.title}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center">
-                                                                <Camera className="h-8 w-8 text-muted-foreground/40" />
+                                <div className="grid grid-cols-1 gap-4">
+                                    {filteredMyProperties.map((p) => (
+                                        <Card key={p.id} className="overflow-hidden hover:shadow-sm transition-shadow border-gray-100 dark:border-gray-800">
+                                            <CardContent className="p-3 sm:p-4">
+                                                <div className="flex gap-4">
+                                                    {/* Left Column: Image + Title */}
+                                                    <div className="flex flex-col gap-2 w-24 sm:w-32 flex-shrink-0">
+                                                        <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                                                            {p.images && p.images.length > 0 ? (
+                                                                <img
+                                                                    src={p.images[0]}
+                                                                    alt={p.title}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center">
+                                                                    <Camera className="h-6 w-6 text-muted-foreground/30" />
+                                                                </div>
+                                                            )}
+                                                            <div className="absolute top-1 left-1">
+                                                                <Badge
+                                                                    className={cn(
+                                                                        "px-1.5 py-0 text-[9px] uppercase font-bold",
+                                                                        p.isActive ? "bg-green-500" : "bg-gray-400"
+                                                                    )}
+                                                                >
+                                                                    {p.isActive ? "Live" : "Draft"}
+                                                                </Badge>
                                                             </div>
-                                                        )}
-                                                        <Badge
-                                                            variant={p.isActive ? "success" : "secondary"}
-                                                            className="absolute top-2 left-2 shadow-sm"
-                                                        >
-                                                            {p.isActive ? "Active" : "Inactive"}
-                                                        </Badge>
+                                                        </div>
+                                                        <h4 className="font-semibold text-[11px] sm:text-xs text-center line-clamp-2 text-gray-700 dark:text-gray-300">
+                                                            {p.title}
+                                                        </h4>
                                                     </div>
 
-                                                    {/* Property Details */}
-                                                    <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between">
-                                                        <div className="space-y-1">
+                                                    {/* Right Column: Details + Icons */}
+                                                    <div className="flex-1 flex flex-col justify-between py-1">
+                                                        <div className="space-y-2">
                                                             <div className="flex justify-between items-start">
-                                                                <h3 className="text-xl font-bold text-primary">₹ {p.price.toLocaleString('en-IN')}</h3>
-                                                                <div className="flex gap-2">
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-8 w-8 text-gray-400 hover:text-primary"
-                                                                        onClick={() => handleEdit(p)}
+                                                                <div className="space-y-0.5">
+                                                                    <h3 className="text-xl font-extrabold text-gray-900 dark:text-gray-100">
+                                                                        ₹ {p.price.toLocaleString('en-IN')}
+                                                                    </h3>
+                                                                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-primary uppercase">
+                                                                        {p.type} • {p.category}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex gap-1.5 pt-1">
+                                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 dark:bg-gray-900 rounded border border-gray-100 dark:border-gray-800 text-[10px] text-muted-foreground">
+                                                                        <Check className="h-3 w-3 text-green-500" />
+                                                                        <span>{p.likes}</span>
+                                                                    </div>
+                                                                    <div
+                                                                        className={cn(
+                                                                            "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] cursor-pointer transition-colors",
+                                                                            myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0
+                                                                                ? "bg-blue-50 border-blue-200 text-blue-600 font-bold"
+                                                                                : "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-muted-foreground hover:text-primary"
+                                                                        )}
+                                                                        onClick={() => setActiveTab('responses')}
                                                                     >
-                                                                        <Pencil className="h-4 w-4" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-8 w-8 text-gray-400 hover:text-red-500"
-                                                                        onClick={() => handleDelete(p.id)}
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
+                                                                        <MessageSquare className="h-3 w-3" />
+                                                                        <span>{p.leadsCount}</span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <h4 className="font-semibold text-lg line-clamp-1">{p.title}</h4>
-                                                            <div className="flex items-center text-sm text-muted-foreground gap-2">
-                                                                <MapPin className="h-3.5 w-3.5" />
-                                                                <span className="line-clamp-1">{p.location}, {p.district}</span>
+
+                                                            <div className="flex items-start text-xs text-muted-foreground gap-1.5 pt-1">
+                                                                <MapPin className="h-3.5 w-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                                                                <span className="line-clamp-2 uppercase tracking-wide text-[10px] sm:text-[11px]">
+                                                                    {p.location}, {p.district}
+                                                                </span>
                                                             </div>
                                                         </div>
 
-                                                        <div className="mt-4 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-50 dark:border-gray-800/50">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                                                    <motion.div whileHover={{ scale: 1.1 }}>
-                                                                        <Check className="h-4 w-4 text-green-500" />
-                                                                    </motion.div>
-                                                                    <span>{p.likes} Likes</span>
-                                                                </div>
-                                                                <div
-                                                                    className={cn(
-                                                                        "flex items-center gap-1.5 text-sm cursor-pointer transition-colors",
-                                                                        myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0
-                                                                            ? "text-blue-600 font-semibold"
-                                                                            : "text-muted-foreground hover:text-primary"
-                                                                    )}
-                                                                    onClick={() => setActiveTab('responses')}
-                                                                >
-                                                                    <MessageSquare className="h-4 w-4" />
-                                                                    <span>{p.leadsCount} Leads</span>
-                                                                    {myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0 && (
-                                                                        <Badge className="ml-1 px-1.5 h-4 text-[10px] bg-blue-600">
-                                                                            {myLeads.filter(l => l.property_id === p.id && l.status === 'new').length} NEW
-                                                                        </Badge>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
+                                                        {/* Action Buttons below everything */}
+                                                        <div className="mt-4 flex items-center justify-between gap-2 pt-3 border-t border-gray-50 dark:border-gray-800/50">
                                                             <div className="flex gap-2">
                                                                 <Button
                                                                     variant="outline"
                                                                     size="sm"
-                                                                    className="text-xs h-8 px-3 rounded-full"
-                                                                    onClick={() => {
-                                                                        const url = `${window.location.origin}/property/${p.id}`;
-                                                                        navigator.clipboard.writeText(url);
-                                                                        toast.success('Property link copied!');
-                                                                    }}
+                                                                    className="h-7 text-[10px] px-2.5 rounded hover:bg-primary/5 hover:text-primary border-gray-200"
+                                                                    onClick={() => handleEdit(p)}
                                                                 >
-                                                                    <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
+                                                                    <Pencil className="h-3 w-3 mr-1" /> Edit Listing
                                                                 </Button>
-                                                                <Link href={`/property/${p.id}`} target="_blank">
-                                                                    <Button
-                                                                        variant="default"
-                                                                        size="sm"
-                                                                        className="text-xs h-8 px-3 rounded-full"
-                                                                    >
-                                                                        <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> View
-                                                                    </Button>
-                                                                </Link>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-7 text-[10px] px-2.5 rounded text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                                    onClick={() => handleDelete(p.id)}
+                                                                >
+                                                                    <Trash2 className="h-3 w-3 mr-1" /> Delete
+                                                                </Button>
                                                             </div>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-7 text-[10px] px-2.5 rounded hover:bg-primary/5 hover:text-primary border-gray-200"
+                                                                onClick={() => {
+                                                                    const url = `${window.location.origin}/property/${p.id}`;
+                                                                    navigator.clipboard.writeText(url);
+                                                                    toast.success('Link copied!');
+                                                                }}
+                                                            >
+                                                                <Share2 className="h-3 w-3 mr-1" /> Share
+                                                            </Button>
                                                         </div>
                                                     </div>
                                                 </div>
