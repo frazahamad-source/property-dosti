@@ -62,14 +62,24 @@ export function Footer() {
                         </div>
                     </div>
 
-                    {/* Quick Links */}
                     <div className="text-center md:text-left">
                         <h3 className="text-white font-bold mb-6">Quick Links</h3>
-                        <ul className="space-y-3 text-sm">
-                            <li><Link href="/" className="hover:text-primary transition-colors">Home</Link></li>
-                            <li><Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link></li>
-                            <li><Link href="/login" className="hover:text-primary transition-colors">Broker Login</Link></li>
-                            <li><Link href="/signup" className="hover:text-primary transition-colors">Join Network</Link></li>
+                        <ul className="flex flex-wrap justify-center gap-y-2 text-sm md:block md:space-y-3">
+                            <li className="flex items-center">
+                                <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+                                <span className="mx-2 text-gray-600 md:hidden">|</span>
+                            </li>
+                            <li className="flex items-center">
+                                <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+                                <span className="mx-2 text-gray-600 md:hidden">|</span>
+                            </li>
+                            <li className="flex items-center">
+                                <Link href="/login" className="hover:text-primary transition-colors">Broker Login</Link>
+                                <span className="mx-2 text-gray-600 md:hidden">|</span>
+                            </li>
+                            <li className="flex items-center">
+                                <Link href="/signup" className="hover:text-primary transition-colors">Join Network</Link>
+                            </li>
                         </ul>
                     </div>
 
