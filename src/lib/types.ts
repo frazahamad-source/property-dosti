@@ -102,7 +102,10 @@ export interface Property {
     category: 'residential' | 'commercial' | 'land' | 'villa' | 'apartment' | 'offices' | 'farmhouse' | 'godown' | 'residential' | 'commercial' | 'land';
     structureType?: string; // Villa, Apartment, Farmhouse, Land, Godown, Office, etc.
     landArea?: number;
+    floorNumber?: number;
     floorDetail?: string;
+    parkingSpaces?: number;
+    parkingType?: 'Covered' | 'Open' | 'Open but Covered' | 'Common Parking';
     parkingAllocated?: string;
     facilities?: string[];
     googleMapLink?: string;
@@ -175,3 +178,11 @@ export const DISTRICTS = [
     "Yadgir",
     "Vijayanagara"
 ] as const;
+
+export interface AmenityConfig {
+    id: string;
+    name: string;
+    property_types: string[]; // Association with Apartment, Villa, etc.
+    created_at?: string;
+    updated_at?: string;
+}

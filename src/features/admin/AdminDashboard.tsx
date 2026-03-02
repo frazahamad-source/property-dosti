@@ -6,11 +6,13 @@ import { Users, Building2, CheckCircle2, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { BrokerManager } from './BrokerManager';
 import { PropertyManager } from './PropertyManager';
+import { AmenitiesManager } from './AmenitiesManager';
+import { ListChecks } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 
 interface AdminDashboardProps {
-    view?: 'overview' | 'brokers' | 'properties';
+    view?: 'overview' | 'brokers' | 'properties' | 'amenities';
 }
 
 export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
@@ -63,6 +65,15 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
             color: "text-purple-600",
             bgColor: "bg-purple-50",
             targetView: 'properties'
+        },
+        {
+            title: "Amenities Config",
+            value: "Manage",
+            icon: ListChecks,
+            description: "Dynamic facility options",
+            color: "text-orange-600",
+            bgColor: "bg-orange-50",
+            targetView: 'amenities'
         }
     ];
 
@@ -72,6 +83,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
                 return <BrokerManager />;
             case 'properties':
                 return <PropertyManager />;
+            case 'amenities':
+                return <AmenitiesManager />;
             default:
                 return (
                     <>

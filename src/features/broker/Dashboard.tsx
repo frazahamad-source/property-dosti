@@ -15,6 +15,8 @@ import { Modal } from '@/components/ui/Modal';
 import { SubscriptionDashboard } from '@/features/subscription/SubscriptionDashboard';
 import { ChatWindow } from '@/features/chat/ChatWindow';
 import { SmartSearchForm, SmartSearchFilters } from '@/components/SmartSearchForm';
+import { ReferralBanner } from '@/components/broker/ReferralBanner';
+import { AmenitySelector } from '@/components/broker/AmenitySelector';
 import { supabase } from '@/lib/supabaseClient';
 import { useSearchParams } from 'next/navigation';
 
@@ -31,11 +33,14 @@ const propertySchema = z.object({
     location: z.string().min(2, "Village/City/Area is required"),
     type: z.enum(['sale', 'rent']),
     category: z.enum(['residential', 'commercial', 'land']),
-    structureType: z.enum(['Villa', 'Apartment', 'Farmhouse', 'Land']).optional(),
-    landArea: z.coerce.number().optional(),
+    structureType: z.enum(['Villa', 'Apartment', 'Farmhouse', 'Land', 'Commercial']).optional(),
+    landArea: z.coerce.number().optional().nullable(),
+    floorNumber: z.coerce.number().optional().nullable(),
     floorDetail: z.string().optional(),
+    parkingSpaces: z.coerce.number().optional().nullable(),
+    parkingType: z.enum(['Covered', 'Open', 'Open but Covered', 'Common Parking']).optional().nullable(),
     parkingAllocated: z.string().optional(),
-    facilities: z.string().optional(), // Comma separated string for input
+    facilities: z.array(z.string()).optional(),
     googleMapLink: z.string().url("Must be a valid URL").optional().or(z.literal('')),
 });
 
@@ -61,6 +66,7 @@ export function BrokerDashboard() {
     const [isLoading, setIsLoading] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const [listingSearch, setListingSearch] = useState('');
+    const [amenitiesConfig, setAmenitiesConfig] = useState<any[]>([]);
 
     // Form Watch for Conditional Logic
     const { register, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm<PropertyFormValues>({
@@ -74,6 +80,7 @@ export function BrokerDashboard() {
     });
 
     const structureType = watch('structureType');
+    const parkingSpaces = watch('parkingSpaces');
     const priceValue = watch('price');
 
     const broker = user && 'subscriptionExpiry' in user ? user : null;
@@ -117,7 +124,10 @@ export function BrokerDashboard() {
                     category: p.category,
                     structureType: p.structure_type,
                     landArea: p.land_area,
+                    floorNumber: p.floor_number,
                     floorDetail: p.floor_detail,
+                    parkingSpaces: p.parking_spaces,
+                    parkingType: p.parking_type,
                     parkingAllocated: p.parking_allocated,
                     facilities: p.facilities,
                     googleMapLink: p.google_map_link,
@@ -158,6 +168,22 @@ export function BrokerDashboard() {
 
         fetchLeads();
     }, [user]);
+
+    // Fetch amenities config
+    useEffect(() => {
+        const fetchAmenities = async () => {
+            const { data, error } = await supabase
+                .from('amenities_config')
+                .select('*')
+                .order('name');
+            if (error) {
+                console.error('Error fetching amenities:', error);
+            } else if (data) {
+                setAmenitiesConfig(data);
+            }
+        };
+        fetchAmenities();
+    }, []);
 
     const markLeadAsRead = async (leadId: string) => {
         // Optimistic update
@@ -219,8 +245,8 @@ export function BrokerDashboard() {
         if (!user) return;
         setIsLoading(true);
 
-        // Process facilities from string to array
-        const facilitiesArray = data.facilities ? data.facilities.split(',').map(f => f.trim()).filter(f => f !== '') : [];
+        // Process facilities: already an array from Zod
+        const facilitiesArray = data.facilities || [];
 
         // Determine category based on structure type if needed
         let finalCategory = data.category;
@@ -247,7 +273,10 @@ export function BrokerDashboard() {
                     category: finalCategory,
                     structure_type: data.structureType,
                     land_area: data.landArea || null,
+                    floor_number: data.floorNumber || null,
                     floor_detail: data.floorDetail,
+                    parking_spaces: data.parkingSpaces || 0,
+                    parking_type: data.parkingType,
                     parking_allocated: data.parkingAllocated,
                     facilities: facilitiesArray,
                     google_map_link: data.googleMapLink,
@@ -273,7 +302,10 @@ export function BrokerDashboard() {
                 category: p.category,
                 structureType: p.structure_type,
                 landArea: p.land_area,
+                floorNumber: p.floor_number,
                 floorDetail: p.floor_detail,
+                parkingSpaces: p.parking_spaces,
+                parkingType: p.parking_type,
                 parkingAllocated: p.parking_allocated,
                 facilities: p.facilities,
                 googleMapLink: p.google_map_link,
@@ -339,9 +371,12 @@ export function BrokerDashboard() {
         setValue('category', property.category as any);
         setValue('structureType', (property.structureType as any) || 'Villa');
         setValue('landArea', property.landArea);
+        setValue('floorNumber', property.floorNumber);
         setValue('floorDetail', property.floorDetail);
+        setValue('parkingSpaces', property.parkingSpaces);
+        setValue('parkingType', property.parkingType as any);
         setValue('parkingAllocated', property.parkingAllocated);
-        setValue('facilities', property.facilities?.join(', '));
+        setValue('facilities', property.facilities || []);
         setValue('googleMapLink', property.googleMapLink);
 
         setIsEditModalOpen(true);
@@ -469,6 +504,12 @@ export function BrokerDashboard() {
                             <SubscriptionDashboard />
                         </div>
 
+                        {broker?.referralCode && (
+                            <div className="mb-12">
+                                <ReferralBanner referralCode={broker.referralCode} />
+                            </div>
+                        )}
+
                         <div className="mb-10">
                             <SmartSearchForm
                                 onSearch={(f) => setSearchFilters(f)}
@@ -564,14 +605,14 @@ export function BrokerDashboard() {
                                                                         {p.type} • {p.category}
                                                                     </div>
                                                                 </div>
-                                                                <div className="flex gap-1.5 pt-1">
-                                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 dark:bg-gray-900 rounded border border-gray-100 dark:border-gray-800 text-[10px] text-muted-foreground">
+                                                                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-1 pt-1">
+                                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 dark:bg-gray-900 rounded border border-gray-100 dark:border-gray-800 text-[10px] text-muted-foreground w-fit">
                                                                         <Check className="h-3 w-3 text-green-500" />
                                                                         <span>{p.likes}</span>
                                                                     </div>
                                                                     <div
                                                                         className={cn(
-                                                                            "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] cursor-pointer transition-colors",
+                                                                            "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] cursor-pointer transition-colors w-fit",
                                                                             myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0
                                                                                 ? "bg-blue-50 border-blue-200 text-blue-600 font-bold"
                                                                                 : "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-muted-foreground hover:text-primary"
@@ -593,36 +634,36 @@ export function BrokerDashboard() {
                                                         </div>
 
                                                         {/* Action Buttons below everything */}
-                                                        <div className="mt-4 flex items-center justify-between gap-2 pt-3 border-t border-gray-50 dark:border-gray-800/50">
-                                                            <div className="flex gap-2">
+                                                        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-gray-50 dark:border-gray-800/50">
+                                                            <div className="flex flex-wrap gap-2">
                                                                 <Button
                                                                     variant="outline"
                                                                     size="sm"
-                                                                    className="h-7 text-[10px] px-2.5 rounded hover:bg-primary/5 hover:text-primary border-gray-200"
+                                                                    className="h-8 text-[11px] px-3 rounded-md hover:bg-primary/5 hover:text-primary border-gray-200 flex-1 sm:flex-none justify-center"
                                                                     onClick={() => handleEdit(p)}
                                                                 >
-                                                                    <Pencil className="h-3 w-3 mr-1" /> Edit Listing
+                                                                    <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Listing
                                                                 </Button>
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    className="h-7 text-[10px] px-2.5 rounded text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                                    className="h-8 text-[11px] px-3 rounded-md text-red-500 hover:text-red-600 hover:bg-red-50 flex-1 sm:flex-none justify-center"
                                                                     onClick={() => handleDelete(p.id)}
                                                                 >
-                                                                    <Trash2 className="h-3 w-3 mr-1" /> Delete
+                                                                    <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Delete
                                                                 </Button>
                                                             </div>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="h-7 text-[10px] px-2.5 rounded hover:bg-primary/5 hover:text-primary border-gray-200"
+                                                                className="h-8 text-[11px] px-3 rounded-md hover:bg-primary hover:text-white border-primary/20 text-primary w-full sm:w-auto justify-center"
                                                                 onClick={() => {
                                                                     const url = `${window.location.origin}/property/${p.id}`;
                                                                     navigator.clipboard.writeText(url);
                                                                     toast.success('Link copied!');
                                                                 }}
                                                             >
-                                                                <Share2 className="h-3 w-3 mr-1" /> Share
+                                                                <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -753,7 +794,7 @@ export function BrokerDashboard() {
                 <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Property">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-                        {/* 1. Structure Type (User requested this first) */}
+                        {/* 1. Structure Type */}
                         <div>
                             <label className="text-sm font-medium">Property Type</label>
                             <select
@@ -764,6 +805,7 @@ export function BrokerDashboard() {
                                 <option value="Apartment">Apartment / Flat</option>
                                 <option value="Farmhouse">Farmhouse</option>
                                 <option value="Land">Land / Plot</option>
+                                <option value="Commercial">Commercial (Office/Shop)</option>
                             </select>
                         </div>
 
@@ -772,17 +814,9 @@ export function BrokerDashboard() {
                         {/* Villa / Farmhouse Fields */}
                         {(structureType === 'Villa' || structureType === 'Farmhouse') && (
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium">Land Area</label>
-                                    <Input
-                                        type="number"
-                                        {...register('landArea')}
-                                        placeholder="Sqft / Cents"
-                                    />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="text-sm font-medium">Facilities & Amenities</label>
-                                    <Input {...register('facilities')} placeholder="e.g. Garden, Pool (Comma separated)" />
+                                <div className="col-span-2">
+                                    <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
+                                    <Input type="number" {...register('landArea')} step="0.01" />
                                 </div>
                             </div>
                         )}
@@ -791,17 +825,62 @@ export function BrokerDashboard() {
                         {structureType === 'Apartment' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium">Floor Detail</label>
-                                    <Input {...register('floorDetail')} placeholder="e.g. 3rd Floor" />
+                                    <label className="text-sm font-medium">Floor Number (1-50)</label>
+                                    <select {...register('floorNumber')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                        {[...Array(50)].map((_, i) => (
+                                            <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium">Parking</label>
-                                    <Input {...register('parkingAllocated')} placeholder="e.g. 1 Covered" />
+                                    <label className="text-sm font-medium">Floor Detail (Optional)</label>
+                                    <Input {...register('floorDetail')} placeholder="e.g. 3rd Floor" />
                                 </div>
-                                <div className="md:col-span-2">
-                                    <label className="text-sm font-medium">Facilities & Amenities</label>
-                                    <Input {...register('facilities')} placeholder="e.g. Gym, Lift (Comma separated)" />
+                            </div>
+                        )}
+
+                        {/* Parking Details (For non-land types) */}
+                        {structureType && structureType !== 'Land' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Parking Spaces (0-10)</label>
+                                    <select {...register('parkingSpaces')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                        {[...Array(11)].map((_, i) => (
+                                            <option key={i} value={i}>{i}</option>
+                                        ))}
+                                    </select>
                                 </div>
+                                {Number(parkingSpaces) > 0 && (
+                                    <div>
+                                        <label className="text-sm font-medium">Parking Type</label>
+                                        <select {...register('parkingType')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                            <option value="Covered">Covered</option>
+                                            <option value="Open">Open</option>
+                                            <option value="Open but Covered">Open but Covered</option>
+                                            <option value="Common Parking">Common Parking</option>
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Dynamic Amenities */}
+                        {structureType && (
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium capitalize">{structureType} Amenities</label>
+                                <AmenitySelector
+                                    allAmenities={amenitiesConfig}
+                                    selectedAmenities={watch('facilities') || []}
+                                    onToggle={(amenity) => {
+                                        const current = watch('facilities') || [];
+                                        if (current.includes(amenity)) {
+                                            setValue('facilities', current.filter(a => a !== amenity));
+                                        } else {
+                                            setValue('facilities', [...current, amenity]);
+                                        }
+                                    }}
+                                    propertyType={structureType}
+                                />
                             </div>
                         )}
 
@@ -948,7 +1027,7 @@ export function BrokerDashboard() {
                         if (!selectedProperty) return;
                         setIsLoading(true);
                         try {
-                            const facilitiesArray = data.facilities ? data.facilities.split(',').map(f => f.trim()).filter(f => f !== '') : [];
+                            const facilitiesArray = data.facilities || [];
 
                             const { error } = await supabase
                                 .from('properties')
@@ -962,7 +1041,10 @@ export function BrokerDashboard() {
                                     category: data.category,
                                     structure_type: data.structureType,
                                     land_area: data.landArea || null,
+                                    floor_number: data.floorNumber || null,
                                     floor_detail: data.floorDetail,
+                                    parking_spaces: data.parkingSpaces || 0,
+                                    parking_type: data.parkingType,
                                     parking_allocated: data.parkingAllocated,
                                     facilities: facilitiesArray,
                                     google_map_link: data.googleMapLink,
@@ -976,8 +1058,22 @@ export function BrokerDashboard() {
                             // Update local state
                             updateProperty(selectedProperty.id, {
                                 ...selectedProperty,
-                                ...data,
+                                title: data.title,
+                                description: data.description,
+                                price: data.price,
+                                district: data.district,
+                                location: data.location,
+                                type: data.type,
+                                category: data.category,
+                                structureType: data.structureType,
+                                landArea: data.landArea,
+                                floorNumber: data.floorNumber,
+                                floorDetail: data.floorDetail,
+                                parkingSpaces: data.parkingSpaces,
+                                parkingType: data.parkingType as any,
+                                parkingAllocated: data.parkingAllocated,
                                 facilities: facilitiesArray,
+                                google_map_link: data.googleMapLink,
                                 images: uploadedImages,
                                 updatedAt: new Date().toISOString()
                             } as any);
@@ -992,7 +1088,7 @@ export function BrokerDashboard() {
                         }
                     })} className="space-y-4">
 
-                        {/* Reuse the same fields as Add Modal */}
+                        {/* 1. Structure Type */}
                         <div>
                             <label className="text-sm font-medium">Property Type</label>
                             <select
@@ -1003,6 +1099,7 @@ export function BrokerDashboard() {
                                 <option value="Apartment">Apartment / Flat</option>
                                 <option value="Farmhouse">Farmhouse</option>
                                 <option value="Land">Land / Plot</option>
+                                <option value="Commercial">Commercial (Office/Shop)</option>
                             </select>
                         </div>
 
@@ -1011,17 +1108,9 @@ export function BrokerDashboard() {
                         {/* Villa / Farmhouse Fields */}
                         {(structureType === 'Villa' || structureType === 'Farmhouse') && (
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium">Land Area</label>
-                                    <Input
-                                        type="number"
-                                        {...register('landArea')}
-                                        placeholder="Sqft / Cents"
-                                    />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="text-sm font-medium">Facilities & Amenities</label>
-                                    <Input {...register('facilities')} placeholder="e.g. Garden, Pool (Comma separated)" />
+                                <div className="col-span-2">
+                                    <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
+                                    <Input type="number" {...register('landArea')} step="0.01" />
                                 </div>
                             </div>
                         )}
@@ -1030,17 +1119,62 @@ export function BrokerDashboard() {
                         {structureType === 'Apartment' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium">Floor Detail</label>
-                                    <Input {...register('floorDetail')} placeholder="e.g. 3rd Floor" />
+                                    <label className="text-sm font-medium">Floor Number (1-50)</label>
+                                    <select {...register('floorNumber')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                        {[...Array(50)].map((_, i) => (
+                                            <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium">Parking</label>
-                                    <Input {...register('parkingAllocated')} placeholder="e.g. 1 Covered" />
+                                    <label className="text-sm font-medium">Floor Detail (Optional)</label>
+                                    <Input {...register('floorDetail')} placeholder="e.g. 3rd Floor" />
                                 </div>
-                                <div className="md:col-span-2">
-                                    <label className="text-sm font-medium">Facilities & Amenities</label>
-                                    <Input {...register('facilities')} placeholder="e.g. Gym, Lift (Comma separated)" />
+                            </div>
+                        )}
+
+                        {/* Parking Details (For non-land types) */}
+                        {structureType && structureType !== 'Land' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Parking Spaces (0-10)</label>
+                                    <select {...register('parkingSpaces')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                        {[...Array(11)].map((_, i) => (
+                                            <option key={i} value={i}>{i}</option>
+                                        ))}
+                                    </select>
                                 </div>
+                                {Number(parkingSpaces) > 0 && (
+                                    <div>
+                                        <label className="text-sm font-medium">Parking Type</label>
+                                        <select {...register('parkingType')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                            <option value="Covered">Covered</option>
+                                            <option value="Open">Open</option>
+                                            <option value="Open but Covered">Open but Covered</option>
+                                            <option value="Common Parking">Common Parking</option>
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Dynamic Amenities */}
+                        {structureType && (
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium capitalize">{structureType} Amenities</label>
+                                <AmenitySelector
+                                    allAmenities={amenitiesConfig}
+                                    selectedAmenities={watch('facilities') || []}
+                                    onToggle={(amenity) => {
+                                        const current = watch('facilities') || [];
+                                        if (current.includes(amenity)) {
+                                            setValue('facilities', current.filter(a => a !== amenity));
+                                        } else {
+                                            setValue('facilities', [...current, amenity]);
+                                        }
+                                    }}
+                                    propertyType={structureType}
+                                />
                             </div>
                         )}
 
