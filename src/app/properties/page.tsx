@@ -22,61 +22,6 @@ function PropertiesContent() {
     const query = searchParams.get('q') || '';
     const type = searchParams.get('type') || '';
 
-    useEffect(() => {
-        const fetchProperties = async () => {
-            setLoading(true);
-            const { data, error } = await supabase
-                .from('properties')
-                .select(`
-                    *,
-                    profiles (
-                        name,
-                        phone
-                    )
-                `)
-                .eq('is_active', true)
-                .order('created_at', { ascending: false });
-
-            if (!error && data) {
-                const mapped: Property[] = data.map((p: any) => ({
-                    id: p.id,
-                    brokerId: p.broker_id,
-                    title: p.title,
-                    description: p.description,
-                    price: p.price,
-                    district: p.district,
-                    location: p.location,
-                    village: p.village,
-                    type: p.type,
-                    category: p.category,
-                    structureType: p.structure_type,
-                    images: p.images,
-                    createdAt: p.created_at,
-                    updatedAt: p.updated_at,
-                    expiresAt: p.expires_at,
-                    isActive: p.is_active,
-                    likes: p.likes,
-                    leadsCount: p.leads_count,
-                    amenities: p.amenities || [],
-                    brokerPhone: p.profiles?.phone,
-                    profiles: p.profiles
-                }));
-                setProperties(mapped);
-                applyFilters(mapped, { searchBy, query, propertyType: type });
-            }
-            setLoading(false);
-        };
-
-        fetchProperties();
-    }, [setProperties]);
-
-    // Re-filter when search params change
-    useEffect(() => {
-        if (properties.length > 0) {
-            applyFilters(properties, { searchBy, query, propertyType: type });
-        }
-    }, [searchParams, properties]);
-
     const normalizeLocation = (loc: string) => {
         const lower = loc.toLowerCase().trim();
         // Common aliases and spelling variations
@@ -138,6 +83,62 @@ function PropertiesContent() {
 
         setFilteredProperties(filtered);
     };
+
+    useEffect(() => {
+        const fetchProperties = async () => {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('properties')
+                .select(`
+                    *,
+                    profiles (
+                        name,
+                        phone
+                    )
+                `)
+                .eq('is_active', true)
+                .order('created_at', { ascending: false });
+
+            if (!error && data) {
+                const mapped: Property[] = data.map((p: any) => ({
+                    id: p.id,
+                    brokerId: p.broker_id,
+                    title: p.title,
+                    description: p.description,
+                    price: p.price,
+                    district: p.district,
+                    location: p.location,
+                    village: p.village,
+                    type: p.type,
+                    category: p.category,
+                    structureType: p.structure_type,
+                    images: p.images,
+                    createdAt: p.created_at,
+                    updatedAt: p.updated_at,
+                    expiresAt: p.expires_at,
+                    isActive: p.is_active,
+                    likes: p.likes,
+                    leadsCount: p.leads_count,
+                    amenities: p.amenities || [],
+                    brokerPhone: p.profiles?.phone,
+                    profiles: p.profiles
+                }));
+                setProperties(mapped);
+                applyFilters(mapped, { searchBy, query, propertyType: type });
+            }
+            setLoading(false);
+        };
+
+        fetchProperties();
+    }, [setProperties]);
+
+    // Re-filter when search params change
+    useEffect(() => {
+        if (properties.length > 0) {
+            applyFilters(properties, { searchBy, query, propertyType: type });
+        }
+    }, [searchParams, properties]);
+
 
     const handleSearch = (filters: SmartSearchFilters) => {
         const params = new URLSearchParams();

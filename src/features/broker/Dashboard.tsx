@@ -1,20 +1,17 @@
 'use client'; // Broker Dashboard Features
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '@/lib/store';
-import { Property, Broker, Admin, DISTRICTS } from '@/lib/types';
+import { Property, DISTRICTS } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { PropertyCard } from '@/components/PropertyCard';
-import { cn, sanitizePhone } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, ExternalLink, Share2, User as UserIcon, MoreVertical, Eye } from 'lucide-react';
+import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, Share2, User as UserIcon, MoreVertical, Eye } from 'lucide-react';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { SubscriptionDashboard } from '@/features/subscription/SubscriptionDashboard';
-import { ChatWindow } from '@/features/chat/ChatWindow';
 import { SmartSearchForm, SmartSearchFilters } from '@/components/SmartSearchForm';
 import { ReferralBanner } from '@/components/broker/ReferralBanner';
 import { AmenitySelector } from '@/components/broker/AmenitySelector';
@@ -353,28 +350,7 @@ export function BrokerDashboard() {
         return matchesQuery && matchesType;
     });
 
-    // Sync active tab with URL search param
-    useEffect(() => {
-        if (viewParam) {
-            setActiveTab(viewParam as any);
-        } else {
-            setActiveTab('explore');
-        }
-
-        // Handle direct edit link
-        if (editParam && properties.length > 0) {
-            const propertyToEdit = properties.find(p => p.id === editParam);
-            if (propertyToEdit && propertyToEdit.brokerId === user?.id) {
-                handleEdit(propertyToEdit);
-                // Clear the param from URL to avoid reopening on refresh
-                const newParams = new URLSearchParams(searchParams.toString());
-                newParams.delete('edit');
-                router.replace(`/dashboard?${newParams.toString()}`);
-            }
-        }
-    }, [viewParam, editParam, properties, user]);
-
-    const handleEdit = (property: Property) => {
+    const handleEdit = useCallback((property: Property) => {
         setSelectedProperty(property);
         setUploadedImages(property.images || []);
 
@@ -394,10 +370,31 @@ export function BrokerDashboard() {
         setValue('parkingType', property.parkingType as any);
         setValue('parkingAllocated', property.parkingAllocated);
         setValue('facilities', property.facilities || []);
-        setValue('googleMapLink', property.googleMapLink);
+        setValue('googleMapLink', property.googleMapLink || '');
 
         setIsEditModalOpen(true);
-    };
+    }, [setValue]);
+
+    // Sync active tab with URL search param
+    useEffect(() => {
+        if (viewParam) {
+            setActiveTab(viewParam as any);
+        } else {
+            setActiveTab('explore');
+        }
+
+        // Handle direct edit link
+        if (editParam && properties.length > 0) {
+            const propertyToEdit = properties.find(p => p.id === editParam);
+            if (propertyToEdit && propertyToEdit.brokerId === user?.id) {
+                handleEdit(propertyToEdit);
+                // Clear the param from URL to avoid reopening on refresh
+                const newParams = new URLSearchParams(searchParams.toString());
+                newParams.delete('edit');
+                router.replace(`/dashboard?${newParams.toString()}`);
+            }
+        }
+    }, [viewParam, editParam, properties, user, handleEdit, router, searchParams]);
 
     const handleDelete = async (id: string) => {
         setIsDeleting(id);
@@ -560,7 +557,7 @@ export function BrokerDashboard() {
                         <div className="grid gap-4">
                             {myProperties.length === 0 ? (
                                 <Card className="p-12 text-center">
-                                    <p className="text-muted-foreground">You haven't listed any properties yet.</p>
+                                    <p className="text-muted-foreground">You haven&apos;t listed any properties yet.</p>
                                     <Button
                                         variant={"outline" as any}
                                         className="mt-4"

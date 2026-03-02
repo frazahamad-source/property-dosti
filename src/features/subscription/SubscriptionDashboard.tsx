@@ -1,11 +1,12 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import { useStore } from '@/lib/store';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { QrCode, Share2, Users, Calendar, Info } from 'lucide-react';
+import { QrCode, Share2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function SubscriptionDashboard() {
@@ -15,7 +16,7 @@ export function SubscriptionDashboard() {
     if (!broker) return null;
 
     const expiryDate = new Date(broker.subscriptionExpiry);
-    const daysLeft = Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const daysLeft = useMemo(() => Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)), [expiryDate]);
     const isExpired = daysLeft <= 0;
 
     const copyReferralCode = () => {

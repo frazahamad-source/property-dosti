@@ -118,8 +118,7 @@ export const useStore = create<AppState>()(
             setUser: (user: Broker | Admin) => set({ user }),
 
             fetchBannerSlides: async () => {
-                const module = await import('@/lib/supabaseClient');
-                const supabase = module.supabase;
+                const { supabase } = await import('@/lib/supabaseClient');
 
                 const { data, error } = await supabase
                     .from('site_settings')
@@ -142,8 +141,7 @@ export const useStore = create<AppState>()(
                 set({ bannerSlides: slides });
 
                 // Persist to DB
-                const module = await import('@/lib/supabaseClient');
-                const supabase = module.supabase;
+                const { supabase } = await import('@/lib/supabaseClient');
 
                 const { error } = await supabase
                     .from('site_settings')
@@ -158,8 +156,7 @@ export const useStore = create<AppState>()(
             },
 
             fetchSiteConfig: async () => {
-                const module = await import('@/lib/supabaseClient');
-                const supabase = module.supabase;
+                const { supabase } = await import('@/lib/supabaseClient');
 
                 const { data, error } = await supabase
                     .from('site_settings')
@@ -179,8 +176,7 @@ export const useStore = create<AppState>()(
 
             updateSiteConfig: async (config) => {
                 set({ siteConfig: config });
-                const module = await import('@/lib/supabaseClient');
-                const supabase = module.supabase;
+                const { supabase } = await import('@/lib/supabaseClient');
 
                 const { error } = await supabase
                     .from('site_settings')
