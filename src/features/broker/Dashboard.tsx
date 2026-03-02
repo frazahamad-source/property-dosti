@@ -1,4 +1,4 @@
-'use client';
+'use client'; // Broker Dashboard Features
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
