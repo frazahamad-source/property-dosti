@@ -9,7 +9,8 @@ import { PropertyCard } from '@/components/PropertyCard';
 import { cn, sanitizePhone } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, ExternalLink, Share2, User as UserIcon } from 'lucide-react';
+import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, ExternalLink, Share2, User as UserIcon, MoreVertical, Eye } from 'lucide-react';
+import { DropdownMenu, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { SubscriptionDashboard } from '@/features/subscription/SubscriptionDashboard';
@@ -18,7 +19,7 @@ import { SmartSearchForm, SmartSearchFilters } from '@/components/SmartSearchFor
 import { ReferralBanner } from '@/components/broker/ReferralBanner';
 import { AmenitySelector } from '@/components/broker/AmenitySelector';
 import { supabase } from '@/lib/supabaseClient';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -49,12 +50,16 @@ type PropertyFormValues = z.infer<typeof propertySchema>;
 export function BrokerDashboard() {
     const { user, properties, addProperty, setProperties, updateProperty, deleteProperty, setUser } = useStore();
     const searchParams = useSearchParams();
+    const router = useRouter();
     const viewParam = searchParams.get('view');
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null);
+    const editParam = searchParams.get('edit');
 
     const [searchFilters, setSearchFilters] = useState<SmartSearchFilters>({
         searchBy: 'city',
@@ -355,7 +360,19 @@ export function BrokerDashboard() {
         } else {
             setActiveTab('explore');
         }
-    }, [viewParam]);
+
+        // Handle direct edit link
+        if (editParam && properties.length > 0) {
+            const propertyToEdit = properties.find(p => p.id === editParam);
+            if (propertyToEdit && propertyToEdit.brokerId === user?.id) {
+                handleEdit(propertyToEdit);
+                // Clear the param from URL to avoid reopening on refresh
+                const newParams = new URLSearchParams(searchParams.toString());
+                newParams.delete('edit');
+                router.replace(`/dashboard?${newParams.toString()}`);
+            }
+        }
+    }, [viewParam, editParam, properties, user]);
 
     const handleEdit = (property: Property) => {
         setSelectedProperty(property);
@@ -383,8 +400,6 @@ export function BrokerDashboard() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!window.confirm('Are you sure you want to delete this property? This action cannot be revoked.')) return;
-
         setIsDeleting(id);
         try {
             const { error } = await supabase
@@ -396,6 +411,7 @@ export function BrokerDashboard() {
 
             deleteProperty(id);
             toast.success('Property deleted successfully');
+            setIsDeleteModalOpen(false);
         } catch (error: any) {
             toast.error(error.message || 'Failed to delete property');
         } finally {
@@ -560,10 +576,35 @@ export function BrokerDashboard() {
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
                                     {filteredMyProperties.map((p) => (
-                                        <Card key={p.id} className="overflow-hidden hover:shadow-sm transition-shadow border-gray-100 dark:border-gray-800">
+                                        <Card key={p.id} className="overflow-hidden hover:shadow-sm transition-shadow border-gray-100 dark:border-gray-800 relative">
+                                            <div className="absolute top-2 right-2 z-10">
+                                                <DropdownMenu
+                                                    trigger={
+                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full bg-white/80 backdrop-blur hover:bg-white shadow-sm border border-gray-100">
+                                                            <MoreVertical className="h-4 w-4 text-gray-600" />
+                                                        </Button>
+                                                    }
+                                                >
+                                                    <DropdownMenuItem onClick={() => window.open(`/property/${p.id}`, '_blank')}>
+                                                        <Eye className="h-4 w-4" /> View
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleEdit(p)}>
+                                                        <Pencil className="h-4 w-4" /> Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        variant="danger"
+                                                        onClick={() => {
+                                                            setPropertyToDelete(p.id);
+                                                            setIsDeleteModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" /> Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenu>
+                                            </div>
                                             <CardContent className="p-3 sm:p-4">
                                                 <div className="flex gap-4">
-                                                    {/* Left Column: Image + Title */}
+                                                    {/* Left Column: Image */}
                                                     <div className="flex flex-col gap-2 w-24 sm:w-32 flex-shrink-0">
                                                         <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
                                                             {p.images && p.images.length > 0 ? (
@@ -580,7 +621,7 @@ export function BrokerDashboard() {
                                                             <div className="absolute top-1 left-1">
                                                                 <Badge
                                                                     className={cn(
-                                                                        "px-1.5 py-0 text-[9px] uppercase font-bold",
+                                                                        "px-1.5 py-0 text-[10px] uppercase font-bold",
                                                                         p.isActive ? "bg-green-500" : "bg-gray-400"
                                                                     )}
                                                                 >
@@ -588,85 +629,69 @@ export function BrokerDashboard() {
                                                                 </Badge>
                                                             </div>
                                                         </div>
-                                                        <h4 className="font-semibold text-[11px] sm:text-xs text-center line-clamp-2 text-gray-700 dark:text-gray-300">
-                                                            {p.title}
-                                                        </h4>
                                                     </div>
 
-                                                    {/* Right Column: Details + Icons */}
+                                                    {/* Right Column: Details */}
                                                     <div className="flex-1 flex flex-col justify-between py-1">
-                                                        <div className="space-y-2">
-                                                            <div className="flex justify-between items-start">
-                                                                <div className="space-y-0.5">
-                                                                    <h3 className="text-xl font-extrabold text-gray-900 dark:text-gray-100">
-                                                                        ₹ {p.price.toLocaleString('en-IN')}
-                                                                    </h3>
-                                                                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-primary uppercase">
-                                                                        {p.type} • {p.category}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-1 pt-1">
-                                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 dark:bg-gray-900 rounded border border-gray-100 dark:border-gray-800 text-[10px] text-muted-foreground w-fit">
-                                                                        <Check className="h-3 w-3 text-green-500" />
-                                                                        <span>{p.likes}</span>
-                                                                    </div>
-                                                                    <div
-                                                                        className={cn(
-                                                                            "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] cursor-pointer transition-colors w-fit",
-                                                                            myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0
-                                                                                ? "bg-blue-50 border-blue-200 text-blue-600 font-bold"
-                                                                                : "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-muted-foreground hover:text-primary"
-                                                                        )}
-                                                                        onClick={() => setActiveTab('responses')}
-                                                                    >
-                                                                        <MessageSquare className="h-3 w-3" />
-                                                                        <span>{p.leadsCount}</span>
-                                                                    </div>
+                                                        <div className="space-y-1.5">
+                                                            <div className="space-y-0.5">
+                                                                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                                                    ₹ {p.price.toLocaleString('en-IN')}
+                                                                </h3>
+                                                                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-primary uppercase">
+                                                                    {p.type} • {p.category}
                                                                 </div>
                                                             </div>
 
                                                             <div className="flex items-start text-xs text-muted-foreground gap-1.5 pt-1">
                                                                 <MapPin className="h-3.5 w-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
-                                                                <span className="line-clamp-2 uppercase tracking-wide text-[10px] sm:text-[11px]">
+                                                                <span className="line-clamp-1 uppercase tracking-wide text-[10px] sm:text-[11px]">
                                                                     {p.location}, {p.district}
                                                                 </span>
                                                             </div>
                                                         </div>
 
-                                                        {/* Action Buttons below everything */}
-                                                        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-gray-50 dark:border-gray-800/50">
-                                                            <div className="flex flex-wrap gap-2">
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="h-8 text-[11px] px-3 rounded-md hover:bg-primary/5 hover:text-primary border-gray-200 flex-1 sm:flex-none justify-center"
-                                                                    onClick={() => handleEdit(p)}
+                                                        {/* Status & Share Row */}
+                                                        <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-50 dark:border-gray-800/50">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="flex items-center gap-1 px-2 py-1 bg-pink-50 dark:bg-pink-900/20 rounded-md border border-pink-100 dark:border-pink-800 text-[10px] text-pink-600 font-bold">
+                                                                    <Check className="h-3 w-3" />
+                                                                    <span>{p.likes}</span>
+                                                                </div>
+                                                                <div
+                                                                    className={cn(
+                                                                        "flex items-center gap-1 px-2 py-1 rounded-md border text-[10px] cursor-pointer transition-colors font-bold",
+                                                                        myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0
+                                                                            ? "bg-blue-50 border-blue-200 text-blue-600"
+                                                                            : "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-muted-foreground hover:text-primary"
+                                                                    )}
+                                                                    onClick={() => setActiveTab('responses')}
                                                                 >
-                                                                    <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Listing
-                                                                </Button>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 text-[11px] px-3 rounded-md text-red-500 hover:text-red-600 hover:bg-red-50 flex-1 sm:flex-none justify-center"
-                                                                    onClick={() => handleDelete(p.id)}
-                                                                >
-                                                                    <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Delete
-                                                                </Button>
+                                                                    <MessageSquare className="h-3 w-3" />
+                                                                    <span>{p.leadsCount}</span>
+                                                                </div>
                                                             </div>
+
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="h-8 text-[11px] px-3 rounded-md hover:bg-primary hover:text-white border-primary/20 text-primary w-full sm:w-auto justify-center"
+                                                                className="h-8 text-[11px] px-3 rounded-md hover:bg-primary hover:text-white border-primary/20 text-primary flex items-center gap-1.5"
                                                                 onClick={() => {
                                                                     const url = `${window.location.origin}/property/${p.id}`;
                                                                     navigator.clipboard.writeText(url);
                                                                     toast.success('Link copied!');
                                                                 }}
                                                             >
-                                                                <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
+                                                                <Share2 className="h-3.5 w-3.5" /> Share
                                                             </Button>
                                                         </div>
                                                     </div>
+                                                </div>
+                                                {/* Title below thumbnail and content */}
+                                                <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-800/50">
+                                                    <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200 line-clamp-1">
+                                                        {p.title}
+                                                    </h4>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -682,6 +707,39 @@ export function BrokerDashboard() {
                         <SubscriptionDashboard />
                     </div>
                 )}
+
+                {/* Delete Confirmation Modal */}
+                <Modal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    title="Delete Property"
+                >
+                    <div className="space-y-6">
+                        <div className="p-4 bg-red-50 text-red-700 rounded-xl border border-red-100 flex gap-3 text-sm">
+                            <Trash2 className="h-5 w-5 flex-shrink-0" />
+                            <p>Are you sure you want to delete this property? <strong>This action cannot be undone</strong> and all data including images and likes will be permanently removed.</p>
+                        </div>
+
+                        <div className="flex gap-3 mt-8">
+                            <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                disabled={!!isDeleting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                className="flex-1 font-bold shadow-lg shadow-red-200"
+                                onClick={() => propertyToDelete && handleDelete(propertyToDelete)}
+                                disabled={!!isDeleting}
+                            >
+                                {isDeleting ? "Deleting..." : "Delete Permanently"}
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
 
                 {activeTab === 'profile' && (
                     <div className="max-w-4xl space-y-8">
@@ -1024,7 +1082,7 @@ export function BrokerDashboard() {
                     title="Edit Property Listing"
                 >
                     <form onSubmit={handleSubmit(async (data) => {
-                        if (!selectedProperty) return;
+                        if (!selectedProperty || !user) return;
                         setIsLoading(true);
                         try {
                             const facilitiesArray = data.facilities || [];
@@ -1038,7 +1096,7 @@ export function BrokerDashboard() {
                                     district: data.district,
                                     location: data.location,
                                     type: data.type,
-                                    category: data.category,
+                                    category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'residential' : data.category,
                                     structure_type: data.structureType,
                                     land_area: data.landArea || null,
                                     floor_number: data.floorNumber || null,
@@ -1064,7 +1122,7 @@ export function BrokerDashboard() {
                                 district: data.district,
                                 location: data.location,
                                 type: data.type,
-                                category: data.category,
+                                category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'residential' : data.category,
                                 structureType: data.structureType,
                                 landArea: data.landArea,
                                 floorNumber: data.floorNumber,
@@ -1081,7 +1139,9 @@ export function BrokerDashboard() {
                             toast.success('Property updated successfully!');
                             setIsEditModalOpen(false);
                             setSelectedProperty(null);
+                            reset();
                         } catch (error: any) {
+                            console.error('Error updating property:', error);
                             toast.error(error.message || 'Failed to update property');
                         } finally {
                             setIsLoading(false);

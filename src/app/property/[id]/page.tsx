@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink } from 'lucide-react';
+import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import Link from 'next/link';
 import { useState, useMemo, useEffect } from 'react';
@@ -18,7 +18,7 @@ import { sanitizePhone } from '@/lib/utils';
 export default function PropertyDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const { properties, brokers, siteConfig, addPropertyLead, likeProperty, setProperties, setBrokers, fetchSiteConfig } = useStore();
+    const { user, properties, brokers, siteConfig, addPropertyLead, likeProperty, setProperties, setBrokers, fetchSiteConfig, deleteProperty } = useStore();
 
     const [property, setProperty] = useState<Property | undefined>(properties.find(p => p.id === id));
     const [broker, setBroker] = useState<Broker | undefined>(brokers.find(b => b.id === property?.brokerId));
@@ -141,6 +141,27 @@ export default function PropertyDetailPage() {
         setLeadForm({ name: '', phone: '', message: 'I am interested in this property. Please contact me.' });
     };
 
+    const handleDelete = async () => {
+        if (!window.confirm('Are you sure you want to delete this property? This action cannot be revoked.')) return;
+
+        try {
+            const { error } = await supabase
+                .from('properties')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            deleteProperty(id);
+            toast.success('Property deleted successfully');
+            window.location.href = '/dashboard?view=listings';
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to delete property');
+        }
+    };
+
+    const isOwner = user?.id === property.brokerId;
+
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
     const whatsappShareMsg = `Check out this property on Property Dosti: "${property.title}" - ${property.price.toLocaleString('en-IN')} INR in ${property.location}. View details: ${shareUrl}`;
 
@@ -189,10 +210,31 @@ export default function PropertyDetailPage() {
             )}
 
             <div className="container px-4 py-8">
-                <div className="mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <Button variant="ghost" size="sm" asChild className="-ml-2 hover:bg-transparent hover:text-primary transition-colors">
                         <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Listings</Link>
                     </Button>
+
+                    {isOwner && (
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 sm:flex-none gap-2 font-bold border-blue-100 text-blue-600 hover:bg-blue-50"
+                                onClick={() => window.location.href = `/dashboard?view=listings&edit=${property.id}`}
+                            >
+                                <Pencil className="h-4 w-4" /> Edit Listing
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex-1 sm:flex-none gap-2 font-bold text-red-500 hover:text-red-600 hover:bg-red-50"
+                                onClick={handleDelete}
+                            >
+                                <Trash2 className="h-4 w-4" /> Delete
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -219,9 +261,9 @@ export default function PropertyDetailPage() {
                                         {property.village ? `${property.village}, ` : ''}{property.location}, {property.district}
                                     </div>
                                 </div>
-                                <div className="text-left md:text-right bg-primary/5 p-4 rounded-xl border border-primary/10 min-w-[200px]">
-                                    <div className="text-3xl font-black text-primary">₹{property.price.toLocaleString('en-IN')}</div>
-                                    <div className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">Total Price</div>
+                                <div className="text-left md:text-right bg-primary/5 p-4 rounded-xl border border-primary/10 flex-shrink-0 w-full md:w-auto min-w-[180px]">
+                                    <div className="text-2xl lg:text-3xl font-black text-primary break-all">₹{property.price.toLocaleString('en-IN')}</div>
+                                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Total Price</div>
                                 </div>
                             </div>
 
