@@ -261,8 +261,8 @@ export default function PropertyDetailPage() {
                                         {property.village ? `${property.village}, ` : ''}{property.location}, {property.district}
                                     </div>
                                 </div>
-                                <div className="text-left md:text-right bg-primary/5 p-4 rounded-xl border border-primary/10 flex-shrink-0 w-full md:w-auto min-w-[180px]">
-                                    <div className="text-2xl lg:text-3xl font-black text-primary break-all">₹{property.price.toLocaleString('en-IN')}</div>
+                                <div className="text-left md:text-right bg-primary/5 p-4 rounded-xl border border-primary/10 flex-shrink-0 w-full md:w-auto md:min-w-[200px]">
+                                    <div className="text-2xl lg:text-3xl font-black text-primary break-words">₹{property.price.toLocaleString('en-IN')}</div>
                                     <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Total Price</div>
                                 </div>
                             </div>
