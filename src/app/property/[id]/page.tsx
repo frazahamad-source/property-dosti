@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink, Pencil, Trash2, Car } from 'lucide-react';
 import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import Link from 'next/link';
 import { useState, useMemo, useEffect } from 'react';
@@ -63,8 +63,12 @@ export default function PropertyDetailPage() {
                     isActive: propData.is_active,
                     likes: propData.likes,
                     leadsCount: propData.leads_count,
-                    amenities: propData.amenities,
-                    brokerPhone: propData.broker_phone // Assuming this might be joined or stored
+                    amenities: propData.facilities || [], // Map facilities from DB to amenities for UI
+                    structureType: propData.structure_type,
+                    parkingSpaces: propData.parking_spaces,
+                    parkingType: propData.parking_type,
+                    googleMapLink: propData.google_map_link,
+                    brokerPhone: propData.broker_phone
                 };
                 setProperty(mappedProperty);
 
@@ -312,6 +316,31 @@ export default function PropertyDetailPage() {
                                 <div>
                                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                                         <span className="w-8 h-1 bg-primary rounded-full"></span>
+                                        Property Details
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100">
+                                            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary text-left">Structure Type</div>
+                                            <div className="text-lg font-black text-left">{property.structureType || 'Residential'}</div>
+                                        </div>
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100">
+                                            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary flex items-center gap-1 text-left">
+                                                <Car className="h-3 w-3" /> Car Parking
+                                            </div>
+                                            <div className="text-lg font-black text-left">
+                                                {property.parkingType && property.parkingSpaces && property.parkingSpaces > 0
+                                                    ? `${property.parkingSpaces} (${property.parkingType})`
+                                                    : property.parkingSpaces && property.parkingSpaces > 0
+                                                        ? `${property.parkingSpaces} Spaces`
+                                                        : 'None'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <span className="w-8 h-1 bg-primary rounded-full"></span>
                                         Description
                                     </h3>
                                     <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line text-lg">
@@ -334,6 +363,26 @@ export default function PropertyDetailPage() {
                                             </div>
                                         ))}
                                     </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <span className="w-8 h-1 bg-primary rounded-full"></span>
+                                        Location
+                                    </h3>
+                                    <div className="rounded-2xl overflow-hidden border shadow-sm ring-1 ring-black/5 h-[300px] sm:h-[400px]">
+                                        <iframe
+                                            width="100%"
+                                            height="100%"
+                                            frameBorder="0"
+                                            style={{ border: 0 }}
+                                            src={property.googleMapLink ?
+                                                `https://www.google.com/maps?q=${encodeURIComponent(property.googleMapLink)}&output=embed` :
+                                                `https://www.google.com/maps?q=${encodeURIComponent(`${property.location}, ${property.district}`)}&output=embed`}
+                                            allowFullScreen
+                                        ></iframe>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground mt-2 font-medium">Map view is indicative based on provided location details.</p>
                                 </div>
                             </div>
                         </div>
