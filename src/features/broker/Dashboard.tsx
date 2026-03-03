@@ -29,7 +29,7 @@ const propertySchema = z.object({
     price: z.coerce.number().min(1, "Price is required"),
     district: z.string().min(1, "District is mandatory"),
     location: z.string().min(2, "Village/City/Area is required"),
-    type: z.enum(['sale', 'rent']),
+    type: z.enum(['sale', 'rent', 'lease']),
     category: z.string().optional().nullable().or(z.literal('')),
     structureType: z.string().optional().nullable().or(z.literal('')),
     landArea: z.coerce.number().optional().nullable(),
