@@ -23,7 +23,7 @@ export function Footer() {
             isAdminPage && "lg:pl-64"
         )}>
             <div className="container px-4 md:px-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                     {/* Company Info */}
                     <div className="flex flex-col items-center md:items-start space-y-4">
                         <Link href="/" className="block">
@@ -62,41 +62,21 @@ export function Footer() {
                         </div>
                     </div>
 
-                    <div className="text-center md:text-left">
-                        <h3 className="text-white font-bold mb-6">Quick Links</h3>
-                        <ul className="flex flex-wrap justify-center gap-y-2 text-sm md:block md:space-y-3">
-                            <li className="flex items-center">
-                                <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-                                <span className="mx-2 text-gray-600 md:hidden">|</span>
-                            </li>
-                            <li className="flex items-center">
-                                <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
-                                <span className="mx-2 text-gray-600 md:hidden">|</span>
-                            </li>
-                            <li className="flex items-center">
-                                <Link href="/login" className="hover:text-primary transition-colors">Broker Login</Link>
-                                <span className="mx-2 text-gray-600 md:hidden">|</span>
-                            </li>
-                            <li className="flex items-center">
-                                <Link href="/signup" className="hover:text-primary transition-colors">Join Network</Link>
-                            </li>
-                        </ul>
-                    </div>
 
                     {/* Contact Info */}
                     <div className="text-center md:text-left">
                         <h3 className="text-white font-bold mb-6">Contact Us</h3>
                         <ul className="space-y-4 text-sm">
-                            <li className="flex items-center justify-center md:justify-start gap-3">
-                                <Phone className="h-4 w-4 text-primary" />
+                            <li className="flex items-start justify-center md:justify-start gap-4">
+                                <Phone className="h-4 w-4 text-primary mt-0.5" />
                                 <span>{siteConfig?.contactPhone || '+91 77 60 70 44 00'}</span>
                             </li>
-                            <li className="flex items-center justify-center md:justify-start gap-3">
-                                <Mail className="h-4 w-4 text-primary" />
+                            <li className="flex items-start justify-center md:justify-start gap-4">
+                                <Mail className="h-4 w-4 text-primary mt-0.5" />
                                 <span>{siteConfig?.contactEmail || 'support@propertydosti.com'}</span>
                             </li>
-                            <li className="flex items-start justify-center md:justify-start gap-3">
-                                <MapPin className="h-4 w-4 text-primary mt-1" />
+                            <li className="flex items-start justify-center md:justify-start gap-4">
+                                <MapPin className="h-4 w-4 text-primary mt-0.5" />
                                 <span className="text-center md:text-left whitespace-pre-line">
                                     {siteConfig?.officeAddress || 'Ground Floor, Kankanady Gate Building,\nKankanady Cross Road, Kankanady,\nMangaluru - 575002'}
                                 </span>
@@ -116,6 +96,17 @@ export function Footer() {
                                     Register Now
                                 </button>
                             </Link>
+                        </div>
+
+                        {/* Relocated Individual Links */}
+                        <div className="pt-8 flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-2 text-xs text-gray-400">
+                            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+                            <span className="text-gray-700">|</span>
+                            <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+                            <span className="text-gray-700">|</span>
+                            <Link href="/login" className="hover:text-primary transition-colors">Broker Login</Link>
+                            <span className="text-gray-700">|</span>
+                            <Link href="/signup" className="hover:text-primary transition-colors">Join Network</Link>
                         </div>
                     </div>
                 </div>
