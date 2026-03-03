@@ -41,6 +41,7 @@ const propertySchema = z.object({
     facilities: z.array(z.string()).optional().nullable(),
     googleMapLink: z.string().optional().nullable().or(z.literal('')),
     village: z.string().optional().nullable(),
+    hidePrice: z.boolean().optional(),
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -283,6 +284,7 @@ export function BrokerDashboard() {
                     parking_allocated: data.parkingAllocated,
                     facilities: facilitiesArray,
                     google_map_link: data.googleMapLink,
+                    hide_price: data.hidePrice || false,
                     images: uploadedImages,
                     amenities: [], // Can extended similarly later
                 })
@@ -312,6 +314,7 @@ export function BrokerDashboard() {
                 parkingAllocated: p.parking_allocated,
                 facilities: p.facilities,
                 googleMapLink: p.google_map_link,
+                hidePrice: p.hide_price,
                 images: p.images,
                 createdAt: p.created_at,
                 updatedAt: p.updated_at,
@@ -924,7 +927,7 @@ export function BrokerDashboard() {
                         {/* Dynamic Amenities */}
                         {structureType && (
                             <div className="space-y-2">
-                                <label className="text-sm font-medium capitalize">{structureType} Amenities</label>
+                                <label className="text-sm font-medium capitalize">Facilities & Amenities</label>
                                 <AmenitySelector
                                     allAmenities={amenitiesConfig}
                                     selectedAmenities={watch('facilities') || []}
@@ -993,22 +996,34 @@ export function BrokerDashboard() {
                                 {errors.district?.message && <p className="text-xs text-red-500">{errors.district.message}</p>}
                             </div>
                             <div>
-                                <label className="text-sm font-medium">Local Area / Village / City</label>
+                                <label className="text-sm font-medium">City</label>
                                 <Input {...register('location')} placeholder="e.g. Manipal" />
                                 {errors.location?.message && <p className="text-xs text-red-500">{errors.location.message}</p>}
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div>
+                            <div className="col-span-2">
+                                <label className="text-sm font-medium">Local Area / Village (Optional)</label>
+                                <Input {...register('village')} placeholder="e.g. Kadri" />
+                                {errors.village?.message && <p className="text-xs text-red-500">{errors.village.message}</p>}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
                                 <label className="text-sm font-medium">Price (₹)</label>
                                 <Input type="number" {...register('price')} />
+                                <div className="flex items-center gap-2 py-1">
+                                    <div className="h-[1px] flex-1 bg-border/50"></div>
+                                    <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">OR</span>
+                                    <div className="h-[1px] flex-1 bg-border/50"></div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input type="checkbox" {...register('hidePrice')} id="hidePriceAdd" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                                    <label htmlFor="hidePriceAdd" className="text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Call or Message for quote</label>
+                                </div>
                                 {errors.price?.message && <p className="text-xs text-red-500">{errors.price.message}</p>}
-                                {priceValue > 0 && (
-                                    <p className="text-xs text-green-600 font-medium mt-1">
-                                        {priceValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
-                                    </p>
-                                )}
                             </div>
                             <div>
                                 <label className="text-sm font-medium">Google Map Link (Optional)</label>
@@ -1021,8 +1036,9 @@ export function BrokerDashboard() {
                         <div>
                             <label className="text-sm font-medium">Transaction Type</label>
                             <select {...register('type')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="sale">For Sale</option>
-                                <option value="rent">For Rent</option>
+                                <option value="sale">Sale</option>
+                                <option value="rent">Rent</option>
+                                <option value="lease">Lease</option>
                             </select>
                         </div>
 
@@ -1106,6 +1122,7 @@ export function BrokerDashboard() {
                                     parking_allocated: data.parkingAllocated,
                                     facilities: facilitiesArray,
                                     google_map_link: data.googleMapLink,
+                                    hide_price: data.hidePrice || false,
                                     images: uploadedImages,
                                     updated_at: new Date().toISOString()
                                 })
@@ -1133,6 +1150,7 @@ export function BrokerDashboard() {
                                 parkingAllocated: data.parkingAllocated,
                                 facilities: facilitiesArray,
                                 google_map_link: data.googleMapLink,
+                                hidePrice: data.hidePrice,
                                 images: uploadedImages,
                                 updatedAt: new Date().toISOString()
                             } as any);
@@ -1227,7 +1245,7 @@ export function BrokerDashboard() {
                         {/* Dynamic Amenities */}
                         {structureType && (
                             <div className="space-y-2">
-                                <label className="text-sm font-medium capitalize">{structureType} Amenities</label>
+                                <label className="text-sm font-medium capitalize">Facilities & Amenities</label>
                                 <AmenitySelector
                                     allAmenities={amenitiesConfig}
                                     selectedAmenities={watch('facilities') || []}
@@ -1296,21 +1314,30 @@ export function BrokerDashboard() {
                                 {errors.district?.message && <p className="text-xs text-red-500">{errors.district.message}</p>}
                             </div>
                             <div>
-                                <label className="text-sm font-medium">Local Area / Village / City</label>
+                                <label className="text-sm font-medium">City</label>
                                 <Input {...register('location')} placeholder="e.g. Manipal" />
                                 {errors.location?.message && <p className="text-xs text-red-500">{errors.location.message}</p>}
                             </div>
                             <div className="col-span-2">
-                                <label className="text-sm font-medium">Village (Optional)</label>
-                                <Input {...register('village')} placeholder="e.g. Perampalli" />
+                                <label className="text-sm font-medium">Local Area / Village (Optional)</label>
+                                <Input {...register('village')} placeholder="e.g. Kadri" />
                                 {errors.village?.message && <p className="text-xs text-red-500">{errors.village.message}</p>}
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div>
+                            <div className="space-y-2">
                                 <label className="text-sm font-medium">Price (₹)</label>
                                 <Input type="number" {...register('price')} />
+                                <div className="flex items-center gap-2 py-1">
+                                    <div className="h-[1px] flex-1 bg-border/50"></div>
+                                    <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">OR</span>
+                                    <div className="h-[1px] flex-1 bg-border/50"></div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input type="checkbox" {...register('hidePrice')} id="hidePriceEdit" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                                    <label htmlFor="hidePriceEdit" className="text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Call or Message for quote</label>
+                                </div>
                                 {errors.price?.message && <p className="text-xs text-red-500">{errors.price.message}</p>}
                             </div>
                             <div>
@@ -1324,8 +1351,9 @@ export function BrokerDashboard() {
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-medium">Transaction Type</label>
                                 <select {...register('type')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="sale">For Sale</option>
-                                    <option value="rent">For Rent</option>
+                                    <option value="sale">Sale</option>
+                                    <option value="rent">Rent</option>
+                                    <option value="lease">Lease</option>
                                 </select>
                                 {errors.type?.message && <p className="text-xs text-red-500">{errors.type.message}</p>}
                             </div>

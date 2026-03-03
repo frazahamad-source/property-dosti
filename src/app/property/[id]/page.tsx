@@ -13,7 +13,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { Property, Broker } from '@/lib/types';
-import { sanitizePhone } from '@/lib/utils';
+import { sanitizePhone, cn } from '@/lib/utils';
 
 export default function PropertyDetailPage() {
     const params = useParams();
@@ -68,6 +68,7 @@ export default function PropertyDetailPage() {
                     parkingSpaces: propData.parking_spaces,
                     parkingType: propData.parking_type,
                     googleMapLink: propData.google_map_link,
+                    hidePrice: propData.hide_price,
                     brokerPhone: propData.broker_phone
                 };
                 setProperty(mappedProperty);
@@ -167,7 +168,8 @@ export default function PropertyDetailPage() {
     const isOwner = user?.id === property.brokerId;
 
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-    const whatsappShareMsg = `Check out this property on Property Dosti: "${property.title}" - ${property.price.toLocaleString('en-IN')} INR in ${property.location}. View details: ${shareUrl}`;
+    const displayPrice = property.hidePrice ? 'Call or Message to discuss' : `₹${property.price.toLocaleString('en-IN')}`;
+    const whatsappShareMsg = `Check out this property on Property Dosti: "${property.title}" - ${displayPrice} in ${property.location}. View details: ${shareUrl}`;
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
@@ -253,7 +255,7 @@ export default function PropertyDetailPage() {
                                 <div>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors uppercase tracking-wider text-[10px] font-bold">
-                                            {property.type === 'sale' ? 'For Sale' : 'For Rent'}
+                                            {property.type === 'sale' ? 'For Sale' : property.type === 'rent' ? 'For Rent' : 'For Lease'}
                                         </Badge>
                                         <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider">
                                             {property.category}
@@ -266,8 +268,12 @@ export default function PropertyDetailPage() {
                                     </div>
                                 </div>
                                 <div className="text-left md:text-right bg-primary/5 p-4 rounded-xl border border-primary/10 flex-shrink-0 w-full md:w-auto md:min-w-[200px]">
-                                    <div className="text-2xl lg:text-3xl font-black text-primary break-words">₹{property.price.toLocaleString('en-IN')}</div>
-                                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Total Price</div>
+                                    <div className={cn("font-black text-primary break-words", property.hidePrice ? "text-lg lg:text-xl" : "text-2xl lg:text-3xl")}>
+                                        {displayPrice}
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
+                                        {property.hidePrice ? "Contact for Quote" : "Total Price"}
+                                    </div>
                                 </div>
                             </div>
 
@@ -286,7 +292,7 @@ export default function PropertyDetailPage() {
                                     variant="outline"
                                     className="flex-1 min-w-[140px] gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
                                     onClick={() => {
-                                        const msg = encodeURIComponent(`Check out this property: ${property.title} - ${property.price.toLocaleString('en-IN')} INR. ${shareUrl}`);
+                                        const msg = encodeURIComponent(`Check out this property: ${property.title} - ${displayPrice}. ${shareUrl}`);
                                         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                                         const whatsappUrl = isMobile
                                             ? `whatsapp://send?text=${msg}`

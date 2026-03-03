@@ -98,7 +98,8 @@ export interface Property {
     district: string;
     location: string; // City/Area
     village?: string;
-    type: 'sale' | 'rent';
+    type: 'sale' | 'rent' | 'lease';
+    hidePrice?: boolean;
     category: 'residential' | 'commercial' | 'land' | 'villa' | 'apartment' | 'offices' | 'farmhouse' | 'godown' | 'residential' | 'commercial' | 'land';
     structureType?: string; // Villa, Apartment, Farmhouse, Land, Godown, Office, etc.
     landArea?: number;
