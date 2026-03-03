@@ -39,7 +39,8 @@ const propertySchema = z.object({
     parkingType: z.enum(['Covered', 'Open', 'Open but Covered', 'Common Parking']).optional().nullable(),
     parkingAllocated: z.string().optional(),
     facilities: z.array(z.string()).optional(),
-    googleMapLink: z.string().url("Must be a valid URL").optional().or(z.literal('')),
+    googleMapLink: z.string().optional().or(z.literal('')),
+    village: z.string().optional(),
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -371,6 +372,7 @@ export function BrokerDashboard() {
         setValue('parkingAllocated', property.parkingAllocated);
         setValue('facilities', property.facilities || []);
         setValue('googleMapLink', property.googleMapLink || '');
+        setValue('village', property.village || '');
 
         setIsEditModalOpen(true);
     }, [setValue]);
@@ -1092,6 +1094,7 @@ export function BrokerDashboard() {
                                     price: data.price,
                                     district: data.district,
                                     location: data.location,
+                                    village: data.village,
                                     type: data.type,
                                     category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'residential' : data.category,
                                     structure_type: data.structureType,
@@ -1118,6 +1121,7 @@ export function BrokerDashboard() {
                                 price: data.price,
                                 district: data.district,
                                 location: data.location,
+                                village: data.village,
                                 type: data.type,
                                 category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'residential' : data.category,
                                 structureType: data.structureType,
@@ -1143,6 +1147,9 @@ export function BrokerDashboard() {
                         } finally {
                             setIsLoading(false);
                         }
+                    }, (errors) => {
+                        console.error('Validation Errors:', errors);
+                        toast.error('Please check the form for errors.');
                     })} className="space-y-4">
 
                         {/* 1. Structure Type */}
@@ -1168,6 +1175,7 @@ export function BrokerDashboard() {
                                 <div className="col-span-2">
                                     <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
                                     <Input type="number" {...register('landArea')} step="0.01" />
+                                    {errors.landArea?.message && <p className="text-xs text-red-500">{errors.landArea.message}</p>}
                                 </div>
                             </div>
                         )}
@@ -1291,6 +1299,11 @@ export function BrokerDashboard() {
                                 <Input {...register('location')} placeholder="e.g. Manipal" />
                                 {errors.location?.message && <p className="text-xs text-red-500">{errors.location.message}</p>}
                             </div>
+                            <div className="col-span-2">
+                                <label className="text-sm font-medium">Village (Optional)</label>
+                                <Input {...register('village')} placeholder="e.g. Perampalli" />
+                                {errors.village?.message && <p className="text-xs text-red-500">{errors.village.message}</p>}
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -1302,6 +1315,7 @@ export function BrokerDashboard() {
                             <div>
                                 <label className="text-sm font-medium">Google Map Link (Optional)</label>
                                 <Input {...register('googleMapLink')} placeholder="https://maps.google.com/..." />
+                                {errors.googleMapLink?.message && <p className="text-xs text-red-500">{errors.googleMapLink.message}</p>}
                             </div>
                         </div>
 
