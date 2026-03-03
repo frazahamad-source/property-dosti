@@ -100,8 +100,8 @@ export function Logo({
                         {showTagline && logoTagline && (
                             <div
                                 className={cn(
-                                    "mt-0.5 text-[8.5px] uppercase font-light select-none flex justify-between w-full",
-                                    !hasTaglineColorOverride && "text-gray-500 dark:text-gray-400",
+                                    "mt-0.5 text-[9px] uppercase font-light select-none flex justify-between w-full max-w-full",
+                                    !hasTaglineColorOverride && "text-gray-500 dark:text-gray-300",
                                     taglineClassName
                                 )}
                                 style={{

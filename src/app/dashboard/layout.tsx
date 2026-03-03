@@ -44,12 +44,13 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex flex-col">
             {/* Mobile Header */}
-            <header className="lg:hidden bg-gray-900 text-white h-16 px-4 flex items-center justify-between sticky top-0 z-[40] shadow-md">
+            <header className="lg:hidden bg-gray-900 text-white h-20 px-4 flex items-center justify-between sticky top-0 z-[40] shadow-md">
                 <div className="flex items-center">
                     <Logo
-                        showTagline={false}
+                        showTagline={true}
                         iconClassName="h-6 w-6"
                         textClassName="text-lg text-white"
+                        taglineClassName="text-white/80"
                         className="mr-2"
                         centerOnMobile={false}
                     />
