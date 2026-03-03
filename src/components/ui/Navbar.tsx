@@ -24,7 +24,7 @@ export function Navbar() {
         <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-20 items-center px-2 md:px-4">
                 <Link href="/" className="mr-2 md:mr-6 flex-shrink-0">
-                    <Logo showTagline={false} className="scale-90 md:scale-100 origin-left" />
+                    <Logo className="scale-90 md:scale-100 origin-left" />
                 </Link>
 
                 <div className="flex flex-1 items-center justify-end space-x-4">

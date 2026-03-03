@@ -74,17 +74,17 @@ export function Logo({
 
             {/* Right/Bottom: Text/Image Logo Content */}
             <div className={cn(
-                "flex flex-col justify-center items-start"
+                "flex flex-col justify-center items-start overflow-visible"
             )}>
-                {logoType === 'image' && logoImageUrl ? (
-                    <img
-                        src={logoImageUrl}
-                        alt={logoText}
-                        className="h-10 w-auto object-contain"
-                        style={{ maxHeight: '50px' }}
-                    />
-                ) : (
-                    <>
+                <div className="flex items-center">
+                    {logoType === 'image' && logoImageUrl ? (
+                        <img
+                            src={logoImageUrl}
+                            alt={logoText}
+                            className="h-10 w-auto object-contain"
+                            style={{ maxHeight: '50px' }}
+                        />
+                    ) : (
                         <span
                             className={cn("font-bold leading-none block whitespace-nowrap", !hasTextColorOverride && "text-[#0f172a] dark:text-white", textClassName)}
                             style={{
@@ -95,27 +95,27 @@ export function Logo({
                         >
                             {logoText}
                         </span>
+                    )}
+                </div>
 
-                        {/* Tagline stretched to match the width of the heading */}
-                        {showTagline && logoTagline && (
-                            <div
-                                className={cn(
-                                    "mt-0.5 text-[9px] uppercase font-light select-none flex justify-between w-full max-w-full",
-                                    !hasTaglineColorOverride && "text-gray-500 dark:text-gray-300",
-                                    taglineClassName
-                                )}
-                                style={{
-                                    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                                    fontWeight: 300,
-                                    letterSpacing: '0.1em'
-                                }}
-                            >
-                                {logoTagline.split("").map((char, i) => (
-                                    <span key={i}>{char === " " ? "\u00A0" : char}</span>
-                                ))}
-                            </div>
+                {/* Tagline moved outside the text-only block to support image logos too */}
+                {showTagline && logoTagline && (
+                    <div
+                        className={cn(
+                            "mt-0.5 text-[9.5px] uppercase font-light select-none flex justify-between w-full max-w-full",
+                            !hasTaglineColorOverride && "text-gray-600 dark:text-gray-300",
+                            taglineClassName
                         )}
-                    </>
+                        style={{
+                            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                            fontWeight: 300,
+                            letterSpacing: '0.12em'
+                        }}
+                    >
+                        {logoTagline.split("").map((char, i) => (
+                            <span key={i}>{char === " " ? "\u00A0" : char}</span>
+                        ))}
+                    </div>
                 )}
             </div>
         </div>
