@@ -122,7 +122,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     className="w-full mt-3 font-bold shadow-md shadow-primary/20"
                     onClick={() => {
                         const phone = sanitizePhone(property.brokerPhone || '7760704400');
-                        const msg = encodeURIComponent(`Hi, I am interested in your property: "${property.title}" in ${property.location}. Is it still available?`);
+                        const promoText = `\n\n*Just a quick note* – I'm an active user on https://propertydosti.com, a platform built exclusively for brokers like us. It's free to join and great for networking.`;
+                        const msg = encodeURIComponent(`Hi, I am interested in your property: "${property.title}" in ${property.location}. Is it still available? Please reply.${promoText}`);
                         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                         const url = isMobile
                             ? `whatsapp://send?phone=${phone}&text=${msg}`

@@ -445,10 +445,10 @@ export default function PropertyDetailPage() {
                                             variant="outline"
                                             className="gap-2 font-bold border-green-200 text-green-700 hover:bg-green-50 rounded-xl"
                                             onClick={() => {
-                                                const msg = encodeURIComponent(`Hi, I am interested in your property on Property Dosti: "${property.title}". Please share more details.`);
+                                                const promoText = `\n\n*Just a quick note* – I'm an active user on https://propertydosti.com, a platform built exclusively for brokers like us. It's free to join and great for networking.`;
+                                                const msg = encodeURIComponent(`Hi, I am interested in your property on Property Dosti: "${property.title}". Is it still available? Please reply.${promoText}`);
                                                 // Sanitize phone number: remove + if present, ensure 91 prefix
                                                 const phone = sanitizePhone(broker?.phone || '7760704400');
-
                                                 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                                                 const url = isMobile
                                                     ? `whatsapp://send?phone=${phone}&text=${msg}`
