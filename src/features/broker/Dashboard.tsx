@@ -1149,7 +1149,8 @@ export function BrokerDashboard() {
                         }
                     }, (errors) => {
                         console.error('Validation Errors:', errors);
-                        toast.error('Please check the form for errors.');
+                        const fieldNames = Object.keys(errors).join(', ');
+                        toast.error(`Please check these fields: ${fieldNames}`);
                     })} className="space-y-4">
 
                         {/* 1. Structure Type */}
@@ -1326,6 +1327,7 @@ export function BrokerDashboard() {
                                     <option value="sale">For Sale</option>
                                     <option value="rent">For Rent</option>
                                 </select>
+                                {errors.type?.message && <p className="text-xs text-red-500">{errors.type.message}</p>}
                             </div>
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-medium">Photos (Max 3)</label>
