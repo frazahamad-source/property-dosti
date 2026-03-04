@@ -100,7 +100,6 @@ export function LoginForm() {
                 email: profile.email || '',
                 phone: profile.phone || '',
                 broker_code: profile.broker_code || '',
-                uniqueBrokerId: profile.unique_broker_id,
                 role: 'broker',
                 status: profile.status || 'pending',
                 registeredAt: profile.registered_at || new Date().toISOString(),
