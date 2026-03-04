@@ -470,7 +470,7 @@ export function BrokerDashboard() {
                 .upload(filePath, file, { upsert: true });
 
             if (uploadError) {
-                console.error('Avatar upload error details:', JSON.stringify(uploadError));
+                console.error('Avatar upload error:', JSON.stringify(uploadError));
                 throw uploadError;
             }
 
@@ -478,21 +478,30 @@ export function BrokerDashboard() {
                 .from('property-images')
                 .getPublicUrl(filePath);
 
-            // Add cache-buster to force reload of new avatar
-            const avatarUrlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
+            const avatarUrl = `${publicUrl}?t=${Date.now()}`;
 
-            const { error: updateError } = await supabase
+            // Try avatar_url column first, fallback to photo_url
+            let updateError;
+            const { error: err1 } = await supabase
                 .from('profiles')
-                .update({ avatar_url: avatarUrlWithCacheBuster })
+                .update({ avatar_url: avatarUrl })
                 .eq('id', user.id);
 
-            if (updateError) {
-                console.error('Profile update error details:', JSON.stringify(updateError));
-                throw updateError;
+            if (err1) {
+                console.warn('avatar_url column failed, trying photo_url:', err1.message);
+                const { error: err2 } = await supabase
+                    .from('profiles')
+                    .update({ photo_url: avatarUrl })
+                    .eq('id', user.id);
+                updateError = err2;
             }
 
-            // Update local user state
-            setUser({ ...user, avatarUrl: avatarUrlWithCacheBuster });
+            if (updateError) {
+                console.error('Profile update error:', JSON.stringify(updateError));
+                throw new Error(`Database update failed: ${updateError.message}. You may need to add an 'avatar_url' column to the 'profiles' table in Supabase.`);
+            }
+
+            setUser({ ...user, avatarUrl: avatarUrl });
             toast.success('Profile picture updated!');
         } catch (err: unknown) {
             const error = err as Error;
