@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useStore } from '@/lib/store';
 import { LogoConfig, IconConfig } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
@@ -83,7 +84,8 @@ export function LogoSettings() {
             }
 
             toast.success(`${target === 'logo' ? 'Logo' : 'Icon'} uploaded! Remember to Save Changes.`);
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             console.error('Error uploading:', error);
             toast.error('Failed to upload image');
         } finally {
@@ -149,7 +151,7 @@ export function LogoSettings() {
                         <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded border bg-muted flex items-center justify-center overflow-hidden">
                                 {icon.type === 'image' && icon.imageUrl ? (
-                                    <img src={icon.imageUrl} alt="Icon preview" className="h-full w-full object-contain" />
+                                    <Image src={icon.imageUrl} alt="Icon preview" width={48} height={48} className="object-contain" />
                                 ) : (
                                     <span className="text-primary font-bold">PD</span>
                                 )}
@@ -244,7 +246,9 @@ export function LogoSettings() {
                         <div className="border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center transition-colors hover:bg-muted/50 border-muted">
                             {logo.imageUrl ? (
                                 <div className="space-y-4 flex flex-col items-center w-full">
-                                    <img src={logo.imageUrl} alt="Logo preview" className="max-h-24 max-w-full object-contain" />
+                                    <div className="relative h-24 w-full">
+                                        <Image src={logo.imageUrl} alt="Logo preview" fill className="object-contain" />
+                                    </div>
                                     <div className="flex gap-2">
                                         <Button variant="outline" size="sm" asChild className="cursor-pointer relative">
                                             <label>

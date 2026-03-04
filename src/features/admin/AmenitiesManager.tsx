@@ -80,7 +80,8 @@ export function AmenitiesManager() {
             }
             setIsModalOpen(false);
             fetchAmenities();
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             toast.error(error.message || 'Error saving amenity');
         } finally {
             setIsSaving(false);
@@ -99,7 +100,8 @@ export function AmenitiesManager() {
             if (error) throw error;
             toast.success('Amenity deleted');
             fetchAmenities();
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             toast.error(error.message || 'Error deleting amenity');
         }
     };

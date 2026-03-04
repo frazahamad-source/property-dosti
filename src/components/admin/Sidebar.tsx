@@ -10,7 +10,13 @@ import { Logo } from '@/components/ui/Logo';
 import { useStore } from '@/lib/store';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-const sidebarItems = [
+interface SidebarItem {
+    name: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+}
+
+const sidebarItems: SidebarItem[] = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
@@ -35,7 +41,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         router.push('/login');
     };
 
-    const isActive = (item: any) => {
+    const isActive = (item: SidebarItem) => {
         if (item.href === '/admin' && !currentView) {
             return pathname === '/admin';
         }

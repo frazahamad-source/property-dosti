@@ -52,7 +52,8 @@ export function UpdatePasswordForm() {
 
             toast.success('Password updated successfully!');
             router.push('/login');
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             console.error('Update password error:', error);
             toast.error(error.message || 'Failed to update password.');
         } finally {

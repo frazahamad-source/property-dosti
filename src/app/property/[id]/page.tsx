@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink, Pencil, Trash2, Car } from 'lucide-react';
 import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import Link from 'next/link';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { Property, Broker } from '@/lib/types';
@@ -18,7 +18,7 @@ import { sanitizePhone, cn } from '@/lib/utils';
 export default function PropertyDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const { user, properties, brokers, siteConfig, addPropertyLead, likeProperty, setProperties, setBrokers, fetchSiteConfig, deleteProperty } = useStore();
+    const { user, properties, brokers, siteConfig, addPropertyLead, likeProperty, fetchSiteConfig, deleteProperty } = useStore();
 
     const [property, setProperty] = useState<Property | undefined>(properties.find(p => p.id === id));
     const [broker, setBroker] = useState<Broker | undefined>(brokers.find(b => b.id === property?.brokerId));
@@ -74,7 +74,7 @@ export default function PropertyDetailPage() {
                 setProperty(mappedProperty);
 
                 // Fetch Broker for this property
-                const { data: brokerData, error: brokerError } = await supabase
+                const { data: brokerData } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('id', propData.broker_id)
@@ -104,7 +104,8 @@ export default function PropertyDetailPage() {
         };
 
         fetchProperty();
-    }, [id, property]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, property, fetchSiteConfig]);
 
     const [leadForm, setLeadForm] = useState({
         name: '',
@@ -137,10 +138,12 @@ export default function PropertyDetailPage() {
         addPropertyLead({
             id: `lead-${Date.now()}`,
             propertyId: property.id,
+            property_id: property.id,
             brokerId: property.brokerId,
             name: leadForm.name,
             phone: leadForm.phone,
             message: leadForm.message,
+            status: 'new',
             timestamp: new Date().toISOString(),
         });
 
@@ -162,8 +165,9 @@ export default function PropertyDetailPage() {
             deleteProperty(id);
             toast.success('Property deleted successfully');
             window.location.href = '/dashboard?view=listings';
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to delete property');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to delete property';
+            toast.error(message);
         }
     };
 

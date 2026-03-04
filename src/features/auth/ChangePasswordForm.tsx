@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -44,7 +45,8 @@ export function ChangePasswordForm() {
             toast.success('Password updated successfully!');
             reset();
             router.push('/'); // Redirect to home or profile
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             console.error('Error updating password:', error);
             toast.error(error.message || 'Failed to update password');
         } finally {

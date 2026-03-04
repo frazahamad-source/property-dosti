@@ -1,5 +1,6 @@
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Property } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -42,10 +43,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
             <div className="aspect-[16/9] relative bg-gray-200">
                 <Link href={`/property/${property.id}`} className="block w-full h-full cursor-pointer">
                     {property.images[0] ? (
-                        <img
+                        <Image
                             src={property.images[0]}
                             alt={property.title}
-                            className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+                            fill
+                            className="object-cover transition-transform hover:scale-105 duration-300"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                     ) : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">No Image</div>
@@ -90,8 +93,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
                 <div className="flex gap-2 mt-4">
                     <Button
-                        variant={"outline" as any}
-                        size={"sm" as any}
+                        variant="outline"
+                        size="sm"
                         className="flex-1 h-9 text-pink-600 border-pink-100 hover:bg-pink-50 hover:text-pink-700 font-bold"
                         onClick={handleLike}
                     >
@@ -99,8 +102,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
                         {property.likes}
                     </Button>
                     <Button
-                        variant={"outline" as any}
-                        size={"sm" as any}
+                        variant="outline"
+                        size="sm"
                         className="flex-1 h-9 text-blue-600 border-blue-100 hover:bg-blue-50 hover:text-blue-700 font-bold"
                         onClick={() => {
                             const url = `${window.location.origin}/property/${property.id}`;
@@ -118,7 +121,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 </div>
 
                 <Button
-                    variant={"primary" as any}
+                    variant="default"
                     className="w-full mt-3 font-bold shadow-md shadow-primary/20"
                     onClick={() => {
                         const phone = sanitizePhone(property.brokerPhone || '7760704400');

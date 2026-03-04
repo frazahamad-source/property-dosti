@@ -1,15 +1,14 @@
 'use client';
-
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AdminDashboard } from '@/features/admin/AdminDashboard';
 
-export default function AdminPage() {
+function AdminContent() {
     const { isAdmin, hasHydrated } = useStore();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const view = (searchParams.get('view') as any) || 'overview';
+    const view = (searchParams.get('view') as 'properties' | 'brokers' | 'amenities' | 'overview' | null) || 'overview';
 
     useEffect(() => {
         if (hasHydrated && !isAdmin) {
@@ -28,4 +27,12 @@ export default function AdminPage() {
     if (!isAdmin) return null;
 
     return <AdminDashboard view={view} />;
+}
+
+export default function AdminPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading admin panel...</div>}>
+            <AdminContent />
+        </Suspense>
+    );
 }

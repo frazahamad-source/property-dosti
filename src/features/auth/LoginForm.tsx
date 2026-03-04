@@ -96,11 +96,11 @@ export function LoginForm() {
             // 3. Update local store
             const mappedProfile = {
                 id: profile.id,
+                role: profile.role as 'broker',
                 name: profile.name || 'Unknown',
                 email: profile.email || '',
                 phone: profile.phone || '',
                 broker_code: profile.broker_code || '',
-                role: 'broker',
                 status: profile.status || 'pending',
                 registeredAt: profile.registered_at || new Date().toISOString(),
                 subscriptionExpiry: profile.subscription_expiry || new Date().toISOString(),
@@ -118,10 +118,11 @@ export function LoginForm() {
                 village: profile.village,
                 avatarUrl: profile.avatar_url,
             };
-            login(mappedProfile as any, false);
+            login(mappedProfile, false);
             toast.success('Welcome back!');
             router.push('/dashboard');
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             console.error('Login error:', error);
             toast.error(error.message || 'Invalid credentials');
         } finally {

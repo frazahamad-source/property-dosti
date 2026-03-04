@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Send, User, Bot, X, Search, ChevronLeft, MessageSquare, Check, CheckCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Broker, ChatMessage } from '@/lib/types';
+import { Broker, ChatMessage, Admin } from '@/lib/types';
 import { supabase } from '@/lib/supabaseClient';
 
 interface ChatWindowProps {
@@ -105,7 +105,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             let botReply = "I'm still learning! How can I help you today?";
 
             if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
-                botReply = `Hello ${(user as any)?.name || 'there'}! I am your Property Dosti Assistant.`;
+                botReply = `Hello ${(user as Broker | Admin | null)?.name || 'there'}! I am your Property Dosti Assistant.`;
             } else if (lowerMsg.includes('qr') || lowerMsg.includes('code') || lowerMsg.includes('pay')) {
                 botReply = 'You can find the payment QR code in your Dashboard under the "Membership & Rewards" section. Just scan it to pay the ₹100 fee!';
             } else if (lowerMsg.includes('subscription') || lowerMsg.includes('fee')) {
@@ -161,7 +161,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                                 </div>
                                 <div className="flex flex-col">
                                     <CardTitle className="text-sm font-bold leading-none">
-                                        {selectedUser === 'bot' ? 'Property Assistant' : (selectedUser as any)?.name || 'Property Dosti Chat'}
+                                        {selectedUser === 'bot' ? 'Property Assistant' : (selectedUser as Broker | null)?.name || 'Property Dosti Chat'}
                                     </CardTitle>
                                     <span className="text-[10px] text-muted-foreground mt-1">
                                         {selectedUser === 'bot' ? 'Online' : selectedUser ? 'Broker' : 'Connect with others'}

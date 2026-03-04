@@ -10,7 +10,7 @@ export function sanitizePhone(phone: string): string {
     if (!phone) return '';
 
     // 1. Remove all spaces and non-digit characters except the leading '+'
-    let cleaned = phone.trim().replace(/[^\d+]/g, '');
+    const cleaned = ('' + phone).replace(/\D/g, '');
 
     // 2. Handle '+' prefix
     if (cleaned.startsWith('+')) {

@@ -21,6 +21,7 @@ export default function DashboardLayout({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
@@ -81,13 +82,13 @@ export default function DashboardLayout({
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                     </div>}>
                         <div className="lg:hidden mb-6 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-                            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Broker's Dashboard</h1>
-                            <p className="text-xs text-gray-500">Karnataka's Verified Broker Network</p>
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Broker&apos;s Dashboard</h1>
+                            <p className="text-xs text-gray-500">Karnataka&apos;s Verified Broker Network</p>
                         </div>
                         {children}
                     </Suspense>
-                </main>
-            </div>
-        </div>
+                </main >
+            </div >
+        </div >
     );
 }

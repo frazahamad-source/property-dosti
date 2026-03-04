@@ -135,10 +135,12 @@ export interface Property {
 export interface PropertyLead {
     id: string;
     propertyId: string;
+    property_id?: string; // DB compatibility
     brokerId: string;
     name: string;
     phone: string;
     message: string;
+    status: 'new' | 'read' | 'contacted';
     timestamp: string;
 }
 
@@ -190,4 +192,18 @@ export interface AmenityConfig {
     property_types: string[]; // Association with Apartment, Villa, etc.
     created_at?: string;
     updated_at?: string;
+}
+
+export interface Referral {
+    id: string;
+    referring_broker_id: string;
+    referred_broker_id?: string;
+    referred_person_name: string;
+    referred_contact: string;
+    status: 'pending' | 'completed';
+    referral_code: string;
+    admin_approval_status: 'pending' | 'approved' | 'rejected';
+    reward_status: 'pending' | 'sent' | 'none' | 'applied';
+    reward_value: number;
+    created_at: string;
 }

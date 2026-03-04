@@ -5,7 +5,7 @@ import { useStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Broker } from '@/lib/types';
+import { Broker, Property } from '@/lib/types';
 import { Suspense } from 'react';
 import { Menu } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
@@ -17,12 +17,13 @@ export default function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { user, isAdmin, hasHydrated, setBrokers, setProperties } = useStore();
+    const { isAdmin, hasHydrated, setBrokers, setProperties } = useStore();
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
@@ -50,7 +51,7 @@ export default function AdminLayout({
                     console.error('Error fetching brokers from Supabase:', brokerError);
                 } else if (brokerData) {
                     console.log(`Fetched ${brokerData.length} brokers for Admin Panel`);
-                    const mappedBrokers: Broker[] = brokerData.map((b: any) => ({
+                    const mappedBrokers: Broker[] = brokerData.map((b: { id: string; name?: string; email?: string; phone?: string; broker_code?: string; rera_number?: string; districts?: string[]; city?: string; village?: string; status?: 'pending' | 'approved' | 'rejected'; registered_at?: string; subscription_expiry?: string; referral_code?: string; referred_by?: string; referral_count?: number; referrals_count?: number; referral_earnings?: number; unique_broker_id?: string; company_name?: string; designation?: string; whatsapp_number?: string; }) => ({
                         id: b.id,
                         name: b.name || 'Unknown',
                         email: b.email || '',
@@ -85,7 +86,7 @@ export default function AdminLayout({
                 if (propertyError) {
                     console.error('Error fetching properties:', propertyError);
                 } else if (propertyData) {
-                    const mappedProperties: any[] = propertyData.map((p: any) => ({
+                    const mappedProperties: Property[] = propertyData.map((p: { id: string; broker_id: string; title?: string; description?: string; price?: number; district?: string; location?: string; type?: 'sale' | 'rent' | 'lease'; category?: string; images?: string[]; created_at: string; updated_at: string; expires_at: string; is_active?: boolean; likes?: number; leads_count?: number; amenities?: string[]; }) => ({
                         id: p.id,
                         brokerId: p.broker_id,
                         title: p.title || 'No Title',
@@ -94,7 +95,7 @@ export default function AdminLayout({
                         district: p.district || 'Unknown',
                         location: p.location || 'Unknown',
                         type: p.type || 'sale',
-                        category: p.category || 'residential',
+                        category: (p.category as Property['category']) || 'residential',
                         images: p.images || [],
                         createdAt: p.created_at,
                         updatedAt: p.updated_at,
@@ -161,12 +162,12 @@ export default function AdminLayout({
                     </div>}>
                         <div className="lg:hidden mb-6 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
                             <h1 className="text-xl font-bold text-gray-900 dark:text-white">Admin Panel</h1>
-                            <p className="text-xs text-gray-500">Karnataka's Verified Broker Network</p>
+                            <p className="text-xs text-gray-500">Karnataka&apos;s Verified Broker Network</p>
                         </div>
                         {children}
                     </Suspense>
                 </main>
             </div>
-        </div>
+        </div >
     );
 }

@@ -1,0 +1,171 @@
+﻿
+> property-dosti@0.1.0 lint
+> eslint
+
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\app\properties\page.tsx
+   45:11  warning  The 'applyFilters' function makes the dependencies of useEffect Hook (at line 143) change on every render. To fix this, wrap the definition of 'applyFilters' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  139:13  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+  142:9   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\app\property\[id]\page.tsx
+  107:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\PropertyCard.tsx
+  45:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\PropertyImageGallery.tsx
+  54:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  99:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\PropertySearch.tsx
+   6:18  warning  'Filter' is defined but never used              @typescript-eslint/no-unused-vars
+  26:12  warning  'isOpen' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  26:20  warning  'setIsOpen' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\SmartSearchForm.tsx
+  6:36  warning  'User' is defined but never used   @typescript-eslint/no-unused-vars
+  7:10  warning  'Badge' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\admin\LogoSettings.tsx
+   40:18  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   86:25  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  152:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  247:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\admin\Sidebar.tsx
+   6:83  warning  'X' is defined but never used             @typescript-eslint/no-unused-vars
+  38:29  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\broker\AmenitySelector.tsx
+  4:20  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\broker\BrokerSidebar.tsx
+   12:5   warning  'Settings' is defined but never used                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  104:35  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  105:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  105:48  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  105:78  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  107:96  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  111:90  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\ui\Logo.tsx
+  22:5   warning  'centerOnMobile' is assigned a value but never used                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  64:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  81:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\ui\Modal.tsx
+  6:10  warning  'cn' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\components\ui\Navbar.tsx
+  7:10  warning  'Home' is defined but never used       @typescript-eslint/no-unused-vars
+  7:16  warning  'User' is defined but never used       @typescript-eslint/no-unused-vars
+  7:40  warning  'Building2' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\admin\AmenitiesManager.tsx
+   10:50  warning  'Filter' is defined but never used        @typescript-eslint/no-unused-vars
+   83:25  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:25  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\admin\BrokerManager.tsx
+   17:37  warning  'rejectBroker' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  105:25  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\admin\PropertyManager.tsx
+   5:10  warning  'Card' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   5:16  warning  'CardContent' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   5:29  warning  'CardDescription' is defined but never used                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+   5:46  warning  'CardHeader' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   5:58  warning  'CardTitle' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   6:10  warning  'Badge' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  48:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\auth\ChangePasswordForm.tsx
+  47:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\auth\ForgotPassword.tsx
+  12:10  warning  'Loader2' is defined but never used                              @typescript-eslint/no-unused-vars
+  58:27  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\auth\LoginForm.tsx
+  28:13  warning  'brokers' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  84:56  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\auth\SignupForm.tsx
+   44:13  warning  'registerBroker' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   53:48  error    Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+  134:25  error    Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\auth\UpdatePasswordForm.tsx
+  55:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\broker\Dashboard.tsx
+    78:50   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+    89:11   warning  'priceValue' is assigned a value but never used                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   102:11   warning  'unreadCount' is assigned a value but never used                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   120:63   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   120:78   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   211:11   warning  'markLeadAsRead' is assigned a value but never used                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   257:29   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   352:25   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   387:51   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   388:62   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   393:57   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   405:39   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   436:25   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   476:58   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   478:25   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   526:89   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   589:63   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   635:65   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+   782:129  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   852:55   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   853:49   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+   853:68   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   853:98   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   878:90   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  1170:45   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  1247:66   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  1254:34   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  1260:41   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  1463:45   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\chat\ChatWindow.tsx
+    9:16   warning  'User' is defined but never used          @typescript-eslint/no-unused-vars
+    9:66   warning  'Check' is defined but never used         @typescript-eslint/no-unused-vars
+  108:46   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:107  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\chat\GlobalChat.tsx
+  10:11  warning  'pathname' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\subscription\SubscriptionDashboard.tsx
+   18:11  warning  The 'expiryDate' object construction makes the dependencies of useMemo Hook (at line 23) change on every render. To fix this, wrap the initialization of 'expiryDate' in its own useMemo() Hook                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+   19:22  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/rules-of-hooks
+   20:21  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\features\subscription\SubscriptionDashboard.tsx:20:21
+  18 |     const expiryDate = new Date(broker.subscriptionExpiry);
+  19 |     const daysLeft = useMemo(() => {
+> 20 |         const now = Date.now();
+     |                     ^^^^^^^^^^ Cannot call impure function
+  21 |         return Math.ceil((expiryDate.getTime() - now) / (1000 * 60 * 60 * 24));
+  22 |         // eslint-disable-next-line react-hooks/purity
+  23 |     }, [expiryDate]);  react-hooks/purity
+   22:9   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/purity')
+   72:49  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   72:74  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  112:75  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\lib\store.ts
+  4:10  warning  'MOCK_BROKERS' is defined but never used     @typescript-eslint/no-unused-vars
+  4:24  warning  'MOCK_PROPERTIES' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\prope\OneDrive\Documents\Apps\Property Dosti\property-dosti\src\lib\whatsapp.ts
+  6:81  warning  'brokerName' is defined but never used  @typescript-eslint/no-unused-vars
+
+Γ£û 98 problems (45 errors, 53 warnings)
+  0 errors and 4 warnings potentially fixable with the `--fix` option.
+

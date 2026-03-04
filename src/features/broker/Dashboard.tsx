@@ -1,7 +1,8 @@
 'use client'; // Broker Dashboard Features
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useStore } from '@/lib/store';
-import { Property, DISTRICTS } from '@/lib/types';
+import { Property, DISTRICTS, AmenityConfig, Referral, PropertyLead } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { PropertyCard } from '@/components/PropertyCard';
 import { cn } from '@/lib/utils';
@@ -70,8 +71,8 @@ export function BrokerDashboard() {
     const [isLoading, setIsLoading] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const [listingSearch, setListingSearch] = useState('');
-    const [amenitiesConfig, setAmenitiesConfig] = useState<any[]>([]);
-    const [referralStats, setReferralStats] = useState<any[]>([]);
+    const [amenitiesConfig, setAmenitiesConfig] = useState<AmenityConfig[]>([]);
+    const [referralStats, setReferralStats] = useState<Referral[]>([]);
 
     // Form Watch for Conditional Logic
     const { register, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm<PropertyFormValues>({
@@ -97,7 +98,7 @@ export function BrokerDashboard() {
         p.location.toLowerCase().includes(listingSearch.toLowerCase()) ||
         p.district.toLowerCase().includes(listingSearch.toLowerCase())
     );
-    const [propertyLeads, setPropertyLeads] = useState<any[]>([]); // Local state for leads
+    const [propertyLeads, setPropertyLeads] = useState<PropertyLead[]>([]); // Local state for leads
     const myLeads = propertyLeads;
     const unreadCount = myLeads.filter(l => l.status === 'new').length;
 
@@ -117,36 +118,39 @@ export function BrokerDashboard() {
             if (error) {
                 console.error('Error fetching properties:', error);
             } else if (data) {
-                const mappedProperties: Property[] = data.map((p: any) => ({
-                    id: p.id,
-                    brokerId: p.broker_id,
-                    title: p.title,
-                    description: p.description,
-                    price: p.price,
-                    district: p.district,
-                    location: p.location,
-                    type: p.type,
-                    category: p.category,
-                    structureType: p.structure_type,
-                    landArea: p.land_area,
-                    floorNumber: p.floor_number,
-                    floorDetail: p.floor_detail,
-                    parkingSpaces: p.parking_spaces,
-                    parkingType: p.parking_type,
-                    parkingAllocated: p.parking_allocated,
-                    facilities: p.facilities,
-                    googleMapLink: p.google_map_link,
-                    images: p.images,
-                    village: p.village,
-                    createdAt: p.created_at,
-                    updatedAt: p.updated_at,
-                    expiresAt: p.expires_at,
-                    isActive: p.is_active,
-                    likes: p.likes,
-                    leadsCount: p.leads_count,
-                    amenities: p.amenities,
-                    brokerPhone: p.profiles?.phone,
-                }));
+                const mappedProperties = (data as unknown[]).map((item) => {
+                    const p = item as any; // Cast internally if needed, but not in parameter
+                    return {
+                        id: p.id,
+                        brokerId: p.broker_id,
+                        title: p.title || 'No Title',
+                        description: p.description || '',
+                        price: p.price || 0,
+                        district: p.district || 'Unknown',
+                        location: p.location || 'Unknown',
+                        type: p.type || 'sale',
+                        category: (p.category as Property['category']) || 'residential',
+                        structureType: p.structure_type || '',
+                        landArea: p.land_area || 0,
+                        floorNumber: p.floor_number || 0,
+                        floorDetail: p.floor_detail || '',
+                        parkingSpaces: p.parking_spaces || 0,
+                        parkingType: (p.parking_type as Property['parkingType']) || 'Open',
+                        parkingAllocated: p.parking_allocated || '',
+                        facilities: p.facilities || [],
+                        googleMapLink: p.google_map_link || '',
+                        images: p.images || [],
+                        village: p.village || '',
+                        createdAt: p.created_at,
+                        updatedAt: p.updated_at,
+                        expiresAt: p.expires_at,
+                        isActive: p.is_active ?? true,
+                        likes: p.likes || 0,
+                        leadsCount: p.leads_count || 0,
+                        amenities: p.amenities || [],
+                        brokerPhone: p.profiles?.phone || '',
+                    };
+                });
                 setProperties(mappedProperties);
             }
         };
@@ -254,7 +258,8 @@ export function BrokerDashboard() {
                     .getPublicUrl(filePath);
 
                 newImageUrls.push(publicUrl);
-            } catch (error: any) {
+            } catch (err: unknown) {
+                const error = err as Error;
                 console.error('Error uploading image:', error);
                 toast.error(`Failed to upload ${file.name}`);
             }
@@ -349,7 +354,8 @@ export function BrokerDashboard() {
             setIsAddModalOpen(false);
             setUploadedImages([]);
             reset();
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             console.error('Error adding property:', error);
             toast.error(error.message || 'Failed to list property.');
         } finally {
@@ -384,13 +390,13 @@ export function BrokerDashboard() {
         setValue('district', property.district);
         setValue('location', property.location);
         setValue('type', property.type);
-        setValue('category', property.category as any);
-        setValue('structureType', (property.structureType as any) || 'Villa');
+        setValue('category', property.category as Property['category']);
+        setValue('structureType', (property.structureType as Property['structureType']) || 'Villa');
         setValue('landArea', property.landArea);
         setValue('floorNumber', property.floorNumber);
         setValue('floorDetail', property.floorDetail);
         setValue('parkingSpaces', property.parkingSpaces);
-        setValue('parkingType', property.parkingType as any);
+        setValue('parkingType', property.parkingType as Property['parkingType']);
         setValue('parkingAllocated', property.parkingAllocated);
         setValue('facilities', property.facilities || []);
         setValue('googleMapLink', property.googleMapLink || '');
@@ -402,7 +408,10 @@ export function BrokerDashboard() {
     // Sync active tab with URL search param
     useEffect(() => {
         if (viewParam) {
-            setActiveTab(viewParam as any);
+            const validTabs = ['explore', 'listings', 'responses', 'subscription', 'profile'];
+            if (validTabs.includes(viewParam)) {
+                setActiveTab(viewParam as 'explore' | 'listings' | 'responses' | 'subscription' | 'profile');
+            }
         } else {
             setActiveTab('explore');
         }
@@ -433,8 +442,9 @@ export function BrokerDashboard() {
             deleteProperty(id);
             toast.success('Property deleted successfully');
             setIsDeleteModalOpen(false);
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to delete property');
+        } catch (err: unknown) {
+            const error = err as Error;
+            toast.error(error.message || 'Error occurred');
         } finally {
             setIsDeleting(null);
         }
@@ -473,9 +483,10 @@ export function BrokerDashboard() {
             if (updateError) throw updateError;
 
             // Update local user state
-            setUser({ ...user, avatarUrl: publicUrl } as any);
+            setUser({ ...user, avatarUrl: publicUrl });
             toast.success('Profile picture updated!');
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             console.error('Error uploading avatar:', error);
             toast.error('Failed to upload profile picture');
         } finally {
@@ -523,7 +534,7 @@ export function BrokerDashboard() {
                                 }
                             }}
                             className="shadow-lg shadow-primary/20"
-                            variant={(isSubscriptionExpired ? "outline" : "default") as any}
+                            variant={isSubscriptionExpired ? "outline" : "default"}
                         >
                             <Plus className="mr-2 h-4 w-4" /> Add Property
                         </Button>
@@ -586,7 +597,7 @@ export function BrokerDashboard() {
                                 <Card className="p-12 text-center">
                                     <p className="text-muted-foreground">You haven&apos;t listed any properties yet.</p>
                                     <Button
-                                        variant={"outline" as any}
+                                        variant="outline"
                                         className="mt-4"
                                         onClick={() => setIsAddModalOpen(true)}
                                     >
@@ -632,10 +643,11 @@ export function BrokerDashboard() {
                                                     <div className="flex flex-col gap-2 w-24 sm:w-32 flex-shrink-0">
                                                         <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
                                                             {p.images && p.images.length > 0 ? (
-                                                                <img
+                                                                <Image
                                                                     src={p.images[0]}
                                                                     alt={p.title}
-                                                                    className="w-full h-full object-cover"
+                                                                    fill
+                                                                    className="object-cover"
                                                                 />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center">
@@ -779,7 +791,7 @@ export function BrokerDashboard() {
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <Badge
-                                                                variant={ref.admin_approval_status ? "success" : "secondary" as any}
+                                                                variant={ref.admin_approval_status === 'approved' ? "default" : "secondary"}
                                                                 className={ref.admin_approval_status ? "bg-green-100 text-green-700" : ""}
                                                             >
                                                                 {ref.admin_approval_status ? 'Approved' : 'Pending'}
@@ -849,8 +861,8 @@ export function BrokerDashboard() {
                                 <div className="flex flex-col md:flex-row items-center gap-8">
                                     <div className="relative group">
                                         <div className="h-32 w-32 rounded-full bg-blue-100 dark:bg-blue-900 border-4 border-white dark:border-gray-800 shadow-xl overflow-hidden flex items-center justify-center relative">
-                                            {(user as any)?.avatarUrl ? (
-                                                <img src={(user as any).avatarUrl} alt={(user as any)?.name} className="h-full w-full object-cover" />
+                                            {user?.avatarUrl ? (
+                                                <Image src={user.avatarUrl} alt={user.name || 'User'} fill className="object-cover" />
                                             ) : (
                                                 <UserIcon className="h-16 w-16 text-blue-400" />
                                             )}
@@ -875,7 +887,7 @@ export function BrokerDashboard() {
                                     </div>
                                     <div className="flex-1 text-center md:text-left space-y-2">
                                         <div className="flex flex-col md:flex-row items-center gap-3">
-                                            <h2 className="text-3xl font-bold">{(user as any)?.name}</h2>
+                                            <h2 className="text-3xl font-bold">{user?.name}</h2>
                                             <Badge variant="success" className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
                                                 Verified Broker
                                             </Badge>
@@ -1167,7 +1179,7 @@ export function BrokerDashboard() {
                                 <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
                                     {uploadedImages.map((img, idx) => (
                                         <div key={idx} className="relative h-16 w-16 flex-shrink-0 group">
-                                            <img src={img} alt={`Preview ${idx}`} className="h-full w-full object-cover rounded-md border" />
+                                            <Image src={img} alt={`Preview ${idx}`} fill className="object-cover rounded-md border" />
                                             <button
                                                 type="button"
                                                 onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== idx))}
@@ -1236,28 +1248,29 @@ export function BrokerDashboard() {
                                 price: data.price,
                                 district: data.district,
                                 location: data.location,
-                                village: data.village,
+                                village: data.village ?? undefined,
                                 type: data.type,
-                                category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'residential' : data.category,
-                                structureType: data.structureType,
-                                landArea: data.landArea,
-                                floorNumber: data.floorNumber,
-                                floorDetail: data.floorDetail,
-                                parkingSpaces: data.parkingSpaces,
-                                parkingType: data.parkingType as any,
-                                parkingAllocated: data.parkingAllocated,
+                                category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'residential' : data.category as Property['category'],
+                                structureType: data.structureType ?? undefined,
+                                landArea: data.landArea ?? undefined,
+                                floorNumber: data.floorNumber ?? undefined,
+                                floorDetail: data.floorDetail ?? undefined,
+                                parkingSpaces: data.parkingSpaces ?? undefined,
+                                parkingType: data.parkingType as Property['parkingType'],
+                                parkingAllocated: data.parkingAllocated ?? undefined,
                                 facilities: facilitiesArray,
-                                google_map_link: data.googleMapLink,
-                                hidePrice: data.hidePrice,
+                                googleMapLink: data.googleMapLink ?? undefined,
+                                hidePrice: data.hidePrice ?? undefined,
                                 images: uploadedImages,
                                 updatedAt: new Date().toISOString()
-                            } as any);
+                            });
 
                             toast.success('Property updated successfully!');
                             setIsEditModalOpen(false);
                             setSelectedProperty(null);
                             reset();
-                        } catch (error: any) {
+                        } catch (err: unknown) {
+                            const error = err as Error;
                             console.error('Error updating property:', error);
                             toast.error(error.message || 'Failed to update property');
                         } finally {
@@ -1460,7 +1473,7 @@ export function BrokerDashboard() {
                                 <div className="flex gap-2">
                                     {uploadedImages.map((img, idx) => (
                                         <div key={idx} className="relative h-10 w-10 flex-shrink-0 group">
-                                            <img src={img} alt={`Preview ${idx}`} className="h-full w-full object-cover rounded-md border" />
+                                            <Image src={img} alt={`Preview ${idx}`} fill className="object-cover rounded-md border" />
                                             <button
                                                 type="button"
                                                 onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== idx))}

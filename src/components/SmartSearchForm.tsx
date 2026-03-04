@@ -52,7 +52,7 @@ export function SmartSearchForm({ onSearch, initialFilters, className = "" }: Sm
                     <label className="absolute left-3 top-1 text-[10px] font-bold text-gray-400 uppercase tracking-tight">Search by</label>
                     <select
                         value={filters.searchBy}
-                        onChange={(e) => setFilters(prev => ({ ...prev, searchBy: e.target.value as any }))}
+                        onChange={(e) => setFilters(prev => ({ ...prev, searchBy: e.target.value as SmartSearchFilters['searchBy'] }))}
                         className="w-full h-14 pl-3 pr-8 pt-4 bg-gray-50 dark:bg-gray-800/50 border-none rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
                     >
                         <option value="city">City / Town</option>

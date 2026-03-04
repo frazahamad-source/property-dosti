@@ -41,9 +41,9 @@ export function ForgotPasswordForm() {
 
             setIsSubmitted(true);
             toast.success('Check your email for reset instructions.');
-        } catch (error: any) {
-            console.error('Reset password error:', error);
-            toast.error(error.message || 'Failed to send reset email.');
+        } catch (err: unknown) {
+            const error = err as Error;
+            toast.error(error.message || 'Something went wrong');
         } finally {
             setIsLoading(false);
         }
@@ -55,7 +55,7 @@ export function ForgotPasswordForm() {
                 <CardHeader>
                     <CardTitle>Email Sent</CardTitle>
                     <CardDescription>
-                        We've sent a password reset link to your email address. Please check your inbox and spam folder.
+                        We&apos;ve sent a password reset link to your email address. Please check your inbox and spam folder.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-center">

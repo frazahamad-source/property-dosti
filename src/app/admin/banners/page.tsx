@@ -54,7 +54,7 @@ export default function BannersPage() {
         setSlides(slides.map(s => s.id === id ? { ...s, [field]: value } : s));
     };
 
-    const handlePromoChange = (field: keyof NonNullable<SiteConfig['promoBanner']>, value: any) => {
+    const handlePromoChange = (field: keyof NonNullable<SiteConfig['promoBanner']>, value: string | boolean) => {
         if (!config) return;
         setConfig({
             ...config,
@@ -65,13 +65,13 @@ export default function BannersPage() {
     const handleSave = async () => {
         setLoading(true);
         try {
-            const promises: Promise<any>[] = [updateBannerSlides(slides)];
+            const promises: Promise<void>[] = [updateBannerSlides(slides)];
             if (config) {
                 promises.push(updateSiteConfig(config));
             }
             await Promise.all(promises);
             toast.success('All banner settings updated successfully!');
-        } catch (error) {
+        } catch {
             toast.error('Failed to update banner settings');
         } finally {
             setLoading(false);

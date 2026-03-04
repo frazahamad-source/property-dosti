@@ -1,8 +1,6 @@
-
 'use client';
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { ArrowRight, Building2, ShieldCheck, Users } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 
@@ -34,6 +32,7 @@ export default function Home() {
   useEffect(() => {
     if (properties.length > 0) {
       console.log('Home: Properties from store updated:', properties.length);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFilteredProperties(properties);
     }
   }, [properties]);
@@ -59,25 +58,25 @@ export default function Home() {
         console.error('Error fetching properties FULL:', JSON.stringify(error, null, 2));
         // Also log to toast if possible, or just console for now
       } else if (data) {
-        const mappedProperties: Property[] = data.map((p: any) => ({
+        const mappedProperties: Property[] = data.map((p: { id: string; broker_id: string; title?: string; description?: string; price?: number; district?: string; location?: string; type?: 'sale' | 'rent' | 'lease'; category?: string; images?: string[]; created_at: string; updated_at: string; expires_at: string; is_active?: boolean; likes?: number; leads_count?: number; amenities?: string[]; profiles?: { phone: string }; }) => ({
           id: p.id,
           brokerId: p.broker_id,
-          title: p.title,
-          description: p.description,
-          price: p.price,
-          district: p.district,
-          location: p.location,
-          type: p.type,
-          category: p.category,
-          images: p.images,
+          title: p.title || 'No Title',
+          description: p.description || '',
+          price: p.price || 0,
+          district: p.district || 'Unknown',
+          location: p.location || 'Unknown',
+          type: p.type || 'sale',
+          category: (p.category as Property['category']) || 'residential',
+          images: p.images || [],
           createdAt: p.created_at,
           updatedAt: p.updated_at,
           expiresAt: p.expires_at,
-          isActive: p.is_active,
-          likes: p.likes,
-          leadsCount: p.leads_count,
-          amenities: p.amenities,
-          brokerPhone: p.profiles?.phone,
+          isActive: p.is_active ?? true,
+          likes: p.likes || 0,
+          leadsCount: p.leads_count || 0,
+          amenities: p.amenities || [],
+          brokerPhone: p.profiles?.phone || '',
         }));
         setProperties(mappedProperties);
       }
@@ -85,9 +84,9 @@ export default function Home() {
     };
 
     fetchProperties();
-  }, [setProperties]);
+  }, [setProperties, fetchBannerSlides, fetchSiteConfig]);
 
-  const hotProperties = properties.slice(0, 6);
+  // const hotProperties = properties.slice(0, 6);
 
   return (
     <div className="flex min-h-screen flex-col">

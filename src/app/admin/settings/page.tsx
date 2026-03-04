@@ -47,7 +47,7 @@ export default function SettingsPage() {
         try {
             await updateSiteConfig(config);
             toast.success('Settings updated successfully!');
-        } catch (error) {
+        } catch {
             toast.error('Failed to update settings');
         } finally {
             setLoading(false);

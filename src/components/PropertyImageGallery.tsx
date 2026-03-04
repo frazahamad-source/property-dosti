@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PropertyImageGalleryProps {
@@ -35,6 +36,7 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
 
     useEffect(() => {
         if (!emblaMainApi) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         onSelect();
         emblaMainApi.on('select', onSelect);
         emblaMainApi.on('reInit', onSelect);
@@ -50,10 +52,12 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
                     <div className="flex h-full">
                         {images.map((src, index) => (
                             <div className="flex-[0_0_100%] min-w-0 relative h-full" key={index}>
-                                <img
+                                <Image
                                     src={src}
                                     alt={`${title} - Image ${index + 1}`}
-                                    className="block w-full h-full object-cover"
+                                    fill
+                                    className="object-cover"
+                                    priority={index === 0}
                                 />
                             </div>
                         ))}
@@ -95,10 +99,11 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
                                 }`}
                             onClick={() => onThumbClick(index)}
                         >
-                            <img
+                            <Image
                                 src={src}
                                 alt={`Thumbnail ${index + 1}`}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
                             />
                         </div>
                     ))}

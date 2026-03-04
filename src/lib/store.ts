@@ -224,8 +224,7 @@ export const useStore = create<AppState>()(
                 }));
 
                 // Persist to DB
-                const module = await import('@/lib/supabaseClient');
-                const supabase = module.supabase;
+                const { supabase } = await import('@/lib/supabaseClient');
 
                 const { error } = await supabase
                     .from('property_leads')
@@ -318,7 +317,7 @@ export const useStore = create<AppState>()(
                 if (error) {
                     console.error('Error fetching chat messages:', error);
                 } else if (data) {
-                    const mapped: ChatMessage[] = data.map((m: any) => ({
+                    const mapped: ChatMessage[] = data.map((m: { id: string; sender_id: string; receiver_id: string; text: string; timestamp: string }) => ({
                         id: m.id,
                         senderId: m.sender_id,
                         receiverId: m.receiver_id,
@@ -357,7 +356,7 @@ export const useStore = create<AppState>()(
 
                     return {
                         brokers: state.brokers.map(b => {
-                            if (b.id === referrer.id) {
+                            if (referrer && b.id === referrer.id) {
                                 // Extend subscription by 30 days
                                 const expiry = new Date(b.subscriptionExpiry);
                                 expiry.setDate(expiry.getDate() + 30);

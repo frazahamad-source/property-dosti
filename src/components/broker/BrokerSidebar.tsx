@@ -99,17 +99,20 @@ export function BrokerSidebar({ isOpen, onClose }: BrokerSidebarProps) {
             </div>
 
             <div className="p-4 border-t border-gray-800">
-                <div className="flex items-center px-3 py-3 mb-2">
-                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center mr-3 overflow-hidden">
-                        {(user as any)?.avatarUrl ? (
-                            <img src={(user as any).avatarUrl} alt={(user as any)?.name} className="h-full w-full object-cover" />
-                        ) : (
-                            <span className="text-xs font-bold text-white uppercase">{(user as any)?.name?.charAt(0)}</span>
-                        )}
+                <div className="flex items-center gap-3 px-3 py-4 border-t border-primary/10">
+                    <div className="relative h-10 w-10 flex-shrink-0">
+                        <img
+                            src={user?.avatarUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=100&auto=format&fit=crop"}
+                            alt={user?.name || "Broker"}
+                            className="h-full w-full rounded-full object-cover border border-primary/20"
+                        />
+                        <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{(user as any)?.name}</p>
-                        <p className="text-xs text-gray-400 truncate">Broker</p>
+                        <p className="text-sm font-bold text-white truncate">{user?.name || "Broker Name"}</p>
+                        <p className="text-[10px] text-primary font-semibold truncate capitalize">
+                            {user && 'role' in user ? user.role : (user ? "Administrator" : "Professional Broker")}
+                        </p>
                     </div>
                 </div>
 

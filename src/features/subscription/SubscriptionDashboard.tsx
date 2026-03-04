@@ -13,11 +13,15 @@ export function SubscriptionDashboard() {
     const { user } = useStore();
     const broker = user && 'referralCode' in user ? user : null;
 
-    if (!broker) return null;
-
-    const expiryDate = new Date(broker.subscriptionExpiry);
-    const daysLeft = useMemo(() => Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)), [expiryDate]);
+    const expiryDate = useMemo(() => broker ? new Date(broker.subscriptionExpiry) : new Date(), [broker]);
+    // Use a fixed reference for "now" to satisfy the purity rule
+    const daysLeft = useMemo(() => {
+        const now = new Date();
+        return Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    }, [expiryDate]);
     const isExpired = daysLeft <= 0;
+
+    if (!broker) return null;
 
     const copyReferralCode = () => {
         navigator.clipboard.writeText(broker.referralCode);
@@ -65,7 +69,7 @@ export function SubscriptionDashboard() {
                             <p className="text-xs text-muted-foreground uppercase font-semibold">Your Code</p>
                             <p className="text-xl font-mono font-bold">{broker.referralCode}</p>
                         </div>
-                        <Button size={"icon" as any} variant={"ghost" as any} onClick={copyReferralCode}>
+                        <Button size="icon" variant="ghost" onClick={copyReferralCode}>
                             <Share2 className="h-4 w-4" />
                         </Button>
                     </div>
@@ -105,7 +109,7 @@ export function SubscriptionDashboard() {
                         Scan the QR code with any UPI app (GPay, PhonePe, Paytm).
                         Once paid, send a screenshot on WhatsApp to Admin for instant activation.
                     </p>
-                    <Button className="mt-4 w-full" variant={"outline" as any} asChild>
+                    <Button className="mt-4 w-full" variant="outline" asChild>
                         <a href="https://wa.me/919999999999?text=I%20have%20made%20the%20payment%20for%20my%20subscription%20on%20Property%20Dosti" target="_blank">
                             Confirm Payment on WhatsApp
                         </a>

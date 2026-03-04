@@ -50,7 +50,7 @@ export function SignupForm() {
     const brokerIdFromUrl = searchParams.get('broker_id');
 
     const { register, handleSubmit, formState: { errors } } = useForm<SignupFormValues>({
-        resolver: zodResolver(signupSchema) as any,
+        resolver: zodResolver(signupSchema),
         defaultValues: {
             districts: "",
             referralCode: brokerIdFromUrl || "",
@@ -131,7 +131,8 @@ export function SignupForm() {
 
             toast.success('Registration successful! Please wait for admin approval.');
             router.push('/login');
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             console.error('Signup error:', error);
             toast.error(error.message || 'Registration failed. Please try again.');
         } finally {

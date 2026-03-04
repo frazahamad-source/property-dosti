@@ -1,6 +1,5 @@
-
 'use client';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { BrokerDashboard } from '@/features/broker/Dashboard';
@@ -25,5 +24,9 @@ export default function DashboardPage() {
 
     if (!user) return null;
 
-    return <BrokerDashboard />;
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading dashboard...</div>}>
+            <BrokerDashboard />
+        </Suspense>
+    );
 }

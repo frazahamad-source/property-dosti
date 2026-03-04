@@ -102,7 +102,8 @@ export function BrokerManager() {
             // 5. Update local state
             approveBroker(id);
             toast.success(`Approved broker ${name} and notification sent.`);
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as Error;
             console.error('Approval error:', error);
             toast.error(`Failed to approve ${name}: ${error.message}`);
         }

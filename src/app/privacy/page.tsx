@@ -70,7 +70,7 @@ export default function PrivacyPolicy() {
                             <p className="leading-relaxed">
                                 Welcome to Property Dosti. We are committed to protecting your personal data and respecting your privacy.
                                 In accordance with the <strong>Digital Personal Data Protection Act (DPDPA), 2023</strong>,
-                                Property Dosti acts as a <strong>"Data Fiduciary"</strong> for the personal data collected through our platform.
+                                Property Dosti acts as a <strong>&quot;Data Fiduciary&quot;</strong> for the personal data collected through our platform.
                             </p>
                         </section>
 

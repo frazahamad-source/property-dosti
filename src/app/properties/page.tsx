@@ -18,7 +18,7 @@ function PropertiesContent() {
     const [loading, setLoading] = useState(true);
     const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
 
-    const searchBy = searchParams.get('by') as any || 'city';
+    const searchBy = (searchParams.get('by') as SmartSearchFilters['searchBy']) || 'city';
     const query = searchParams.get('q') || '';
     const type = searchParams.get('type') || '';
 
@@ -100,27 +100,27 @@ function PropertiesContent() {
                 .order('created_at', { ascending: false });
 
             if (!error && data) {
-                const mapped: Property[] = data.map((p: any) => ({
+                const mapped: Property[] = data.map((p: { id: string; broker_id: string; title?: string; description?: string; price?: number; district?: string; location?: string; type?: 'sale' | 'rent' | 'lease'; category?: string; structure_type?: string; images?: string[]; created_at: string; updated_at: string; expires_at: string; is_active?: boolean; likes?: number; leads_count?: number; amenities?: string[]; village?: string; profiles?: { name: string; phone: string; }; }) => ({
                     id: p.id,
                     brokerId: p.broker_id,
-                    title: p.title,
-                    description: p.description,
-                    price: p.price,
-                    district: p.district,
-                    location: p.location,
-                    village: p.village,
-                    type: p.type,
-                    category: p.category,
-                    structureType: p.structure_type,
-                    images: p.images,
+                    title: p.title || 'No Title',
+                    description: p.description || '',
+                    price: p.price || 0,
+                    district: p.district || 'Unknown',
+                    location: p.location || 'Unknown',
+                    village: p.village || '',
+                    type: p.type || 'sale',
+                    category: (p.category as Property['category']) || 'residential',
+                    structureType: p.structure_type || '',
+                    images: p.images || [],
                     createdAt: p.created_at,
                     updatedAt: p.updated_at,
                     expiresAt: p.expires_at,
-                    isActive: p.is_active,
-                    likes: p.likes,
-                    leadsCount: p.leads_count,
+                    isActive: p.is_active ?? true,
+                    likes: p.likes || 0,
+                    leadsCount: p.leads_count || 0,
                     amenities: p.amenities || [],
-                    brokerPhone: p.profiles?.phone,
+                    brokerPhone: p.profiles?.phone || '',
                     profiles: p.profiles
                 }));
                 setProperties(mapped);
@@ -130,14 +130,17 @@ function PropertiesContent() {
         };
 
         fetchProperties();
-    }, [setProperties]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [setProperties, searchBy, query, type]);
 
     // Re-filter when search params change
     useEffect(() => {
         if (properties.length > 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             applyFilters(properties, { searchBy, query, propertyType: type });
         }
-    }, [searchParams, properties]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, properties, applyFilters, searchBy, query, type]);
 
 
     const handleSearch = (filters: SmartSearchFilters) => {
