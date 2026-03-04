@@ -552,15 +552,6 @@ export function BrokerDashboard() {
                             <SubscriptionDashboard />
                         </div>
 
-                        {broker?.uniqueBrokerId && (
-                            <div className="mb-12">
-                                <ReferralBanner
-                                    referralCode={broker.referralCode}
-                                    uniqueBrokerId={broker.uniqueBrokerId}
-                                />
-                            </div>
-                        )}
-
                         <div className="mb-10">
                             <SmartSearchForm
                                 onSearch={(f) => setSearchFilters(f)}

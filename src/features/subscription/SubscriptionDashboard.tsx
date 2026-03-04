@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { QrCode, Share2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { ReferralBanner } from '@/components/broker/ReferralBanner';
 
 export function SubscriptionDashboard() {
     const { user } = useStore();
@@ -58,41 +59,6 @@ export function SubscriptionDashboard() {
                 </CardContent>
             </Card>
 
-            <Card className="border-primary/20 bg-white/50 backdrop-blur">
-                <CardHeader>
-                    <CardTitle className="text-xl">Refer & Earn</CardTitle>
-                    <CardDescription>Get 1 month free for every referral</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="p-4 bg-muted rounded-lg flex items-center justify-between border">
-                        <div>
-                            <p className="text-xs text-muted-foreground uppercase font-semibold">Your Code</p>
-                            <p className="text-xl font-mono font-bold">{broker.referralCode}</p>
-                        </div>
-                        <Button size="icon" variant="ghost" onClick={copyReferralCode}>
-                            <Share2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm">
-                        <div className="flex-1 text-center">
-                            <p className="font-bold text-lg">{broker.referralCount}</p>
-                            <p className="text-muted-foreground">Referrals</p>
-                        </div>
-                        <div className="w-px h-8 bg-border" />
-                        <div className="flex-1 text-center">
-                            <p className="font-bold text-lg text-green-600">{broker.referralCount * 30} Days</p>
-                            <p className="text-muted-foreground">Earned</p>
-                        </div>
-                    </div>
-                    {broker.referralCount > 0 && (
-                        <div className="text-[10px] text-center text-muted-foreground pt-2 border-t">
-                            <p>Reward: {broker.referralCount} × 30 days extension</p>
-                            <p>Next Reward: Complete next referral for +30 days</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
             <Card className="border-primary/20 bg-white/50 backdrop-blur md:col-span-2 lg:col-span-1">
                 <CardHeader>
                     <CardTitle className="text-xl">Quick Payment</CardTitle>
@@ -116,6 +82,13 @@ export function SubscriptionDashboard() {
                     </Button>
                 </CardContent>
             </Card>
+
+            <div className="md:col-span-2 lg:col-span-3">
+                <ReferralBanner
+                    referralCode={broker.referralCode}
+                    uniqueBrokerId={broker.uniqueBrokerId}
+                />
+            </div>
         </div>
     );
 }
