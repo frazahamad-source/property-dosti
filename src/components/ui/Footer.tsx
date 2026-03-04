@@ -75,9 +75,11 @@ export function Footer() {
                                 <Mail className="h-4 w-4 text-primary mt-0.5" />
                                 <span>{siteConfig?.contactEmail || 'support@propertydosti.com'}</span>
                             </li>
-                            <li className="flex items-start justify-center md:justify-start gap-4">
-                                <MapPin className="h-4 w-4 text-primary mt-0.5" />
-                                <span className="text-center md:text-left whitespace-pre-line">
+                            <li className="flex items-start gap-4">
+                                <div className="mt-1 shrink-0">
+                                    <MapPin className="h-4 w-4 text-primary" />
+                                </div>
+                                <span className="text-left whitespace-pre-line text-xs sm:text-sm">
                                     {siteConfig?.officeAddress || 'Ground Floor, Kankanady Gate Building,\nKankanady Cross Road, Kankanady,\nMangaluru - 575002'}
                                 </span>
                             </li>

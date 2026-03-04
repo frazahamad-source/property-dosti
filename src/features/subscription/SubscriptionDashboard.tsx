@@ -6,7 +6,7 @@ import { useStore } from '@/lib/store';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { QrCode, Share2, Calendar } from 'lucide-react';
+import { QrCode, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { ReferralBanner } from '@/components/broker/ReferralBanner';
 
@@ -15,49 +15,52 @@ export function SubscriptionDashboard() {
     const broker = user && 'referralCode' in user ? user : null;
 
     const expiryDate = useMemo(() => broker ? new Date(broker.subscriptionExpiry) : new Date(), [broker]);
-    // Use a fixed reference for "now" to satisfy the purity rule
     const daysLeft = useMemo(() => {
         const now = new Date();
         return Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     }, [expiryDate]);
     const isExpired = daysLeft <= 0;
 
-    if (!broker) return null;
+    // Show for any logged-in user (broker or admin viewing)
+    if (!user) return null;
 
     const copyReferralCode = () => {
+        if (!broker) return;
         navigator.clipboard.writeText(broker.referralCode);
         toast.success('Referral code copied!');
     };
 
     return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="border-primary/20 bg-white/50 backdrop-blur">
-                <CardHeader>
-                    <div className="flex justify-between items-start">
-                        <CardTitle className="text-xl">Subscription Status</CardTitle>
-                        <Badge variant={isExpired ? "destructive" : "default"}>
-                            {isExpired ? "Expired" : "Active"}
-                        </Badge>
-                    </div>
-                    <CardDescription>Your plan details and validity</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5 text-primary" />
-                        <div>
-                            <p className="text-sm font-medium">Expiry Date</p>
-                            <p className="text-2xl font-bold">{expiryDate.toLocaleDateString()}</p>
+            {broker && (
+                <Card className="border-primary/20 bg-white/50 backdrop-blur">
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                            <CardTitle className="text-xl">Subscription Status</CardTitle>
+                            <Badge variant={isExpired ? "destructive" : "default"}>
+                                {isExpired ? "Expired" : "Active"}
+                            </Badge>
                         </div>
-                    </div>
-                    <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
-                        <p className="text-sm text-primary font-medium">
-                            {daysLeft > 0
-                                ? `${daysLeft} days remaining in your ${daysLeft > 45 ? 'plan' : 'trial'}`
-                                : 'Subscription expired. Please pay to continue.'}
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
+                        <CardDescription>Your plan details and validity</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <Calendar className="h-5 w-5 text-primary" />
+                            <div>
+                                <p className="text-sm font-medium">Expiry Date</p>
+                                <p className="text-2xl font-bold">{expiryDate.toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+                            <p className="text-sm text-primary font-medium">
+                                {daysLeft > 0
+                                    ? `${daysLeft} days remaining in your ${daysLeft > 45 ? 'plan' : 'trial'}`
+                                    : 'Subscription expired. Please pay to continue.'}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             <Card className="border-primary/20 bg-white/50 backdrop-blur md:col-span-2 lg:col-span-1">
                 <CardHeader>
@@ -83,12 +86,14 @@ export function SubscriptionDashboard() {
                 </CardContent>
             </Card>
 
-            <div className="md:col-span-2 lg:col-span-3">
-                <ReferralBanner
-                    referralCode={broker.referralCode}
-                    uniqueBrokerId={broker.uniqueBrokerId}
-                />
-            </div>
+            {broker && (
+                <div className="md:col-span-2 lg:col-span-3">
+                    <ReferralBanner
+                        referralCode={broker.referralCode}
+                        uniqueBrokerId={broker.uniqueBrokerId}
+                    />
+                </div>
+            )}
         </div>
     );
 }

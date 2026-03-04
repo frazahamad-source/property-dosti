@@ -462,37 +462,47 @@ export function BrokerDashboard() {
         setIsUploadingAvatar(true);
         try {
             const fileExt = file.name.split('.').pop();
-            const fileName = `avatar_${user.id}_${Date.now()}.${fileExt}`;
-            const filePath = `avatars/${fileName}`;
+            const filePath = `${user.id}/avatar.${fileExt}`;
 
+            // Use upsert to overwrite existing avatar
             const { error: uploadError } = await supabase.storage
                 .from('property-images')
-                .upload(filePath, file);
+                .upload(filePath, file, { upsert: true });
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                console.error('Avatar upload error details:', JSON.stringify(uploadError));
+                throw uploadError;
+            }
 
             const { data: { publicUrl } } = supabase.storage
                 .from('property-images')
                 .getPublicUrl(filePath);
 
+            // Add cache-buster to force reload of new avatar
+            const avatarUrlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
+
             const { error: updateError } = await supabase
                 .from('profiles')
-                .update({ avatar_url: publicUrl })
+                .update({ avatar_url: avatarUrlWithCacheBuster })
                 .eq('id', user.id);
 
-            if (updateError) throw updateError;
+            if (updateError) {
+                console.error('Profile update error details:', JSON.stringify(updateError));
+                throw updateError;
+            }
 
             // Update local user state
-            setUser({ ...user, avatarUrl: publicUrl });
+            setUser({ ...user, avatarUrl: avatarUrlWithCacheBuster });
             toast.success('Profile picture updated!');
         } catch (err: unknown) {
             const error = err as Error;
-            console.error('Error uploading avatar:', error);
-            toast.error('Failed to upload profile picture');
+            console.error('Error uploading avatar:', error.message || error);
+            toast.error(`Failed to upload profile picture: ${error.message || 'Unknown error'}`);
         } finally {
             setIsUploadingAvatar(false);
         }
     };
+
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
