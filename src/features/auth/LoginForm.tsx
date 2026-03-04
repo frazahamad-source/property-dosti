@@ -109,6 +109,7 @@ export function LoginForm() {
                 referredBy: profile.referred_by,
                 referralCount: profile.referral_count || 0,
                 referralEarnings: profile.referral_earnings || 0,
+                uniqueBrokerId: profile.unique_broker_id || `PD-UNASSIGNED-${profile.id.substring(0, 4)}`,
                 whatsappNumber: profile.whatsapp_number,
                 companyName: profile.company_name,
                 designation: profile.designation,

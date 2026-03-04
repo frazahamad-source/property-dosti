@@ -94,7 +94,7 @@ export default function PropertyDetailPage() {
                         subscriptionExpiry: brokerData.subscription_expiry,
                         referralCode: brokerData.referral_code,
                         referralCount: brokerData.referral_count || brokerData.referrals_count || 0,
-                        uniqueBrokerId: brokerData.unique_broker_id,
+                        uniqueBrokerId: brokerData.unique_broker_id || `PD-UNASSIGNED-${brokerData.id.substring(0, 4)}`,
                         referralEarnings: brokerData.referral_earnings || 0
                     };
                     setBroker(mappedBroker);
