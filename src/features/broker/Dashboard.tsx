@@ -7,7 +7,7 @@ import { PropertyCard } from '@/components/PropertyCard';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, Share2, User as UserIcon, MoreVertical, Eye } from 'lucide-react';
+import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, Share2, User as UserIcon, MoreVertical, Eye, Gift } from 'lucide-react';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
@@ -71,6 +71,7 @@ export function BrokerDashboard() {
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const [listingSearch, setListingSearch] = useState('');
     const [amenitiesConfig, setAmenitiesConfig] = useState<any[]>([]);
+    const [referralStats, setReferralStats] = useState<any[]>([]);
 
     // Form Watch for Conditional Logic
     const { register, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm<PropertyFormValues>({
@@ -171,6 +172,24 @@ export function BrokerDashboard() {
         };
 
         fetchLeads();
+    }, [user]);
+
+    useEffect(() => {
+        const fetchReferrals = async () => {
+            if (!user) return;
+            const { data, error } = await supabase
+                .from('referrals')
+                .select('*')
+                .eq('referring_broker_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching referrals:', error.message || error, error.details, error.hint);
+            } else if (data) {
+                setReferralStats(data);
+            }
+        };
+        fetchReferrals();
     }, [user]);
 
     // Fetch amenities config
@@ -522,9 +541,12 @@ export function BrokerDashboard() {
                             <SubscriptionDashboard />
                         </div>
 
-                        {broker?.referralCode && (
+                        {broker?.uniqueBrokerId && (
                             <div className="mb-12">
-                                <ReferralBanner referralCode={broker.referralCode} />
+                                <ReferralBanner
+                                    referralCode={broker.referralCode}
+                                    uniqueBrokerId={broker.uniqueBrokerId}
+                                />
                             </div>
                         )}
 
@@ -705,8 +727,84 @@ export function BrokerDashboard() {
                 )}
 
                 {activeTab === 'subscription' && (
-                    <div className="max-w-4xl mx-auto py-10">
+                    <div className="max-w-4xl mx-auto py-10 space-y-12">
                         <SubscriptionDashboard />
+
+                        <Card className="border-none shadow-xl bg-white dark:bg-gray-900 overflow-hidden">
+                            <CardHeader className="bg-primary/5 border-b border-primary/10">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-xl font-bold flex items-center gap-2 text-primary">
+                                        <Gift className="h-5 w-5" />
+                                        Referral Rewards & History
+                                    </CardTitle>
+                                    <Badge variant="default" className="bg-primary text-white font-bold px-3">
+                                        Total Earnings: ₹{broker?.referralEarnings || 0}
+                                    </Badge>
+                                </div>
+                                <CardDescription>
+                                    Track your successful referrals and subscription extensions.
+                                    <span className="block mt-1 text-[10px] text-amber-600 font-medium italic">
+                                        * Rewards and extensions are granted only after the referred broker is approved by the Admin.
+                                    </span>
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 font-bold uppercase text-[10px] tracking-widest">
+                                            <tr>
+                                                <th className="px-6 py-4">Referred Broker</th>
+                                                <th className="px-6 py-4">Date</th>
+                                                <th className="px-6 py-4">Status</th>
+                                                <th className="px-6 py-4">Extension</th>
+                                                <th className="px-6 py-4 text-right">Reward</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                            {referralStats.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground italic">
+                                                        No referrals found. Start sharing your ID to earn rewards!
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                referralStats.map((ref, idx) => (
+                                                    <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                                                        <td className="px-6 py-4">
+                                                            <div className="font-bold text-gray-900 dark:text-gray-100">{ref.referred_person_name}</div>
+                                                            <div className="text-[10px] text-muted-foreground">{ref.referred_contact}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
+                                                            {new Date(ref.created_at).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <Badge
+                                                                variant={ref.admin_approval_status ? "success" : "secondary" as any}
+                                                                className={ref.admin_approval_status ? "bg-green-100 text-green-700" : ""}
+                                                            >
+                                                                {ref.admin_approval_status ? 'Approved' : 'Pending'}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            {ref.reward_status === 'applied' ? (
+                                                                <span className="flex items-center gap-1 text-green-600 font-bold text-[11px]">
+                                                                    <Check className="h-3 w-3" /> 1 Month Added
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-gray-400 text-[11px]">Waiting for approval</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-black text-primary">
+                                                            ₹{ref.reward_value}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 )}
 

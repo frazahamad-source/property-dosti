@@ -21,16 +21,90 @@ export function BrokerManager() {
     const approvedBrokers = brokers.filter(b => b.status === 'approved');
 
     const handleApprove = async (id: string, name: string) => {
-        const { error } = await supabase
-            .from('profiles')
-            .update({ status: 'approved' })
-            .eq('id', id);
+        try {
+            // 1. Fetch broker details for notification and referral check
+            const { data: broker, error: fetchError } = await supabase
+                .from('profiles')
+                .select('phone, unique_broker_id, referred_by, name')
+                .eq('id', id)
+                .single();
 
-        if (error) {
-            toast.error(`Failed to approve ${name}: ${error.message}`);
-        } else {
+            if (fetchError) throw fetchError;
+
+            // 2. Update status to approved
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ status: 'approved', approval_date: new Date().toISOString() })
+                .eq('id', id);
+
+            if (updateError) throw updateError;
+
+            // 3. Handle Referral Reward if applicable
+            if (broker.referred_by) {
+                // Fetch referrer
+                let { data: referrer, error: referrerError } = await supabase
+                    .from('profiles')
+                    .select('id, subscription_expiry, referral_count, referrals_count, referral_earnings')
+                    .eq('id', broker.referred_by)
+                    .single();
+
+                // FALLBACK: If referred_by is NOT a UUID (e.g. legacy code), try looking it up by code
+                if (referrerError || !referrer) {
+                    const { data: fallbackReferrer, error: fallbackError } = await supabase
+                        .from('profiles')
+                        .select('id, subscription_expiry, referral_count, referrals_count, referral_earnings')
+                        .or(`referral_code.eq."${broker.referred_by}",unique_broker_id.eq."${broker.referred_by}"`)
+                        .single();
+
+                    if (!fallbackError && fallbackReferrer) {
+                        // Update variables for logic below
+                        referrer = fallbackReferrer;
+                        referrerError = null;
+                    }
+                }
+
+                if (!referrerError && referrer) {
+                    // Extend subscription by 30 days (1 month)
+                    const currentExpiry = new Date(referrer.subscription_expiry);
+                    const newExpiry = new Date(currentExpiry);
+                    newExpiry.setDate(newExpiry.getDate() + 30);
+
+                    await supabase
+                        .from('profiles')
+                        .update({
+                            subscription_expiry: newExpiry.toISOString(),
+                            referral_count: (referrer.referral_count || 0) + 1,
+                            referrals_count: (referrer.referrals_count || 0) + 1, // update both for safety
+                            referral_earnings: (referrer.referral_earnings || 0) + 100
+                        })
+                        .eq('id', referrer.id);
+
+                    // Track in referrals table
+                    await supabase
+                        .from('referrals')
+                        .insert({
+                            referring_broker_id: referrer.id,
+                            referred_broker_id: id,
+                            referred_person_name: broker.name,
+                            referred_contact: broker.phone,
+                            admin_approval_status: true,
+                            approval_date: new Date().toISOString(),
+                            reward_status: 'applied',
+                            reward_value: 100
+                        });
+                }
+            }
+
+            // 4. Send WhatsApp Notification
+            const { sendWhatsAppNotification } = await import('@/lib/whatsapp');
+            await sendWhatsAppNotification(broker.phone, broker.unique_broker_id || 'PD-GENERATING', broker.name);
+
+            // 5. Update local state
             approveBroker(id);
-            toast.success(`Approved broker ${name}`);
+            toast.success(`Approved broker ${name} and notification sent.`);
+        } catch (error: any) {
+            console.error('Approval error:', error);
+            toast.error(`Failed to approve ${name}: ${error.message}`);
         }
     };
 
@@ -113,12 +187,12 @@ export function BrokerManager() {
                                             <span>{broker.phone}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">RERA:</span>
-                                            <span>{broker.reraNumber || 'N/A'}</span>
+                                            <span className="text-muted-foreground font-bold">Broker ID:</span>
+                                            <span className="font-bold text-primary">{broker.uniqueBrokerId || broker.broker_code}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Code:</span>
-                                            <span className="font-mono">{broker.broker_code}</span>
+                                            <span className="text-muted-foreground">RERA:</span>
+                                            <span>{broker.reraNumber || 'N/A'}</span>
                                         </div>
                                         {broker.companyName && (
                                             <div className="mt-2 pt-2 border-t text-xs">

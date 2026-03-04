@@ -93,7 +93,9 @@ export default function PropertyDetailPage() {
                         registeredAt: brokerData.registered_at,
                         subscriptionExpiry: brokerData.subscription_expiry,
                         referralCode: brokerData.referral_code,
-                        referralsCount: brokerData.referrals_count
+                        referralCount: brokerData.referral_count || brokerData.referrals_count || 0,
+                        uniqueBrokerId: brokerData.unique_broker_id,
+                        referralEarnings: brokerData.referral_earnings || 0
                     };
                     setBroker(mappedBroker);
                 }

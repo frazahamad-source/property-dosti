@@ -247,11 +247,17 @@ export const useStore = create<AppState>()(
             },
 
             approveBroker: (brokerId) =>
-                set((state) => ({
-                    brokers: state.brokers.map((b) =>
-                        b.id === brokerId ? { ...b, status: 'approved' } : b
-                    ),
-                })),
+                set((state) => {
+                    const brokerToApprove = state.brokers.find(b => b.id === brokerId);
+                    if (!brokerToApprove) return state;
+
+                    // If referred, handled in Component/API for DB, but update local state here if needed
+                    return {
+                        brokers: state.brokers.map((b) =>
+                            b.id === brokerId ? { ...b, status: 'approved' } : b
+                        ),
+                    };
+                }),
 
             rejectBroker: (brokerId) =>
                 set((state) => ({
@@ -277,7 +283,9 @@ export const useStore = create<AppState>()(
                         registeredAt: now.toISOString(),
                         subscriptionExpiry: trialExpiry.toISOString(),
                         referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-                        referralsCount: 0,
+                        referralCount: 0,
+                        referralEarnings: 0,
+                        uniqueBrokerId: `PD-PENDING-${Math.floor(Math.random() * 1000)}`,
                     };
                     return { brokers: [...state.brokers, newBroker] };
                 }),
@@ -355,7 +363,7 @@ export const useStore = create<AppState>()(
                                 expiry.setDate(expiry.getDate() + 30);
                                 return {
                                     ...b,
-                                    referralsCount: b.referralsCount + 1,
+                                    referralCount: (b.referralCount || 0) + 1,
                                     subscriptionExpiry: expiry.toISOString()
                                 };
                             }

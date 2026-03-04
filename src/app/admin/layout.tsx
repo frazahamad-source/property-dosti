@@ -66,9 +66,12 @@ export default function AdminLayout({
                         subscriptionExpiry: b.subscription_expiry || new Date().toISOString(),
                         referralCode: b.referral_code || '',
                         referredBy: b.referred_by,
-                        referralsCount: b.referrals_count || 0,
+                        referralCount: b.referrals_count || 0,
+                        referralEarnings: b.referral_earnings || 0,
+                        uniqueBrokerId: b.unique_broker_id,
                         companyName: b.company_name,
                         designation: b.designation,
+                        whatsappNumber: b.whatsapp_number,
                     }));
                     setBrokers(mappedBrokers);
                 }

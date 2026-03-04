@@ -71,18 +71,18 @@ export function SubscriptionDashboard() {
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                         <div className="flex-1 text-center">
-                            <p className="font-bold text-lg">{broker.referralsCount}</p>
+                            <p className="font-bold text-lg">{broker.referralCount}</p>
                             <p className="text-muted-foreground">Referrals</p>
                         </div>
                         <div className="w-px h-8 bg-border" />
                         <div className="flex-1 text-center">
-                            <p className="font-bold text-lg text-green-600">{broker.referralsCount * 30} Days</p>
+                            <p className="font-bold text-lg text-green-600">{broker.referralCount * 30} Days</p>
                             <p className="text-muted-foreground">Earned</p>
                         </div>
                     </div>
-                    {broker.referralsCount > 0 && (
+                    {broker.referralCount > 0 && (
                         <div className="text-[10px] text-center text-muted-foreground pt-2 border-t">
-                            <p>Reward: {broker.referralsCount} × 30 days extension</p>
+                            <p>Reward: {broker.referralCount} × 30 days extension</p>
                             <p>Next Reward: Complete next referral for +30 days</p>
                         </div>
                     )}

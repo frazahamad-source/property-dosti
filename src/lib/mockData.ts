@@ -16,7 +16,9 @@ export const MOCK_BROKERS: Broker[] = [
         registeredAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
         subscriptionExpiry: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString(),
         referralCode: "RAMESH123",
-        referralsCount: 2,
+        referralCount: 4,
+        referralEarnings: 400,
+        uniqueBrokerId: "PD-000001",
     },
     {
         id: "broker-2",
@@ -31,7 +33,9 @@ export const MOCK_BROKERS: Broker[] = [
         registeredAt: new Date().toISOString(),
         subscriptionExpiry: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
         referralCode: "SURESH456",
-        referralsCount: 0,
+        referralCount: 0,
+        referralEarnings: 0,
+        uniqueBrokerId: "PD-000002",
     },
 ];
 

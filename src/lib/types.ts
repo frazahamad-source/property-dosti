@@ -5,7 +5,8 @@ export interface Broker {
     email: string;
     phone: string;
 
-    broker_code: string; // Unique, auto-generated
+    broker_code: string; // Legacy Unique, auto-generated
+    uniqueBrokerId: string; // PD-XXXXXX
     reraNumber?: string;
     districts: string[]; // Dakshina Kannada, Moodbidri, Puttur, Udupi
     city?: string;
@@ -19,7 +20,10 @@ export interface Broker {
     subscriptionExpiry: string; // ISO date
     referralCode: string;
     referredBy?: string;
-    referralsCount: number;
+    referralCount: number;
+    referral_count?: number; // DB compatibility
+    referralEarnings: number;
+    whatsappNumber?: string;
     isAdmin?: boolean;
     avatarUrl?: string;
 }

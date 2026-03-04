@@ -94,7 +94,31 @@ export function LoginForm() {
             }
 
             // 3. Update local store
-            login(profile as any, false);
+            const mappedProfile = {
+                id: profile.id,
+                name: profile.name || 'Unknown',
+                email: profile.email || '',
+                phone: profile.phone || '',
+                broker_code: profile.broker_code || '',
+                uniqueBrokerId: profile.unique_broker_id,
+                role: 'broker',
+                status: profile.status || 'pending',
+                registeredAt: profile.registered_at || new Date().toISOString(),
+                subscriptionExpiry: profile.subscription_expiry || new Date().toISOString(),
+                referralCode: profile.referral_code || '',
+                referredBy: profile.referred_by,
+                referralCount: profile.referral_count || 0,
+                referralEarnings: profile.referral_earnings || 0,
+                whatsappNumber: profile.whatsapp_number,
+                companyName: profile.company_name,
+                designation: profile.designation,
+                reraNumber: profile.rera_number,
+                districts: profile.districts || [],
+                city: profile.city,
+                village: profile.village,
+                avatarUrl: profile.avatar_url,
+            };
+            login(mappedProfile as any, false);
             toast.success('Welcome back!');
             router.push('/dashboard');
         } catch (error: any) {
