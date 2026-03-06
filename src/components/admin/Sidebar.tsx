@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Image as ImageIcon, Settings, Users, Building2, LogOut, X, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, Settings, Users, Building2, LogOut, X, ChevronLeft, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/ui/Logo';
 
@@ -22,6 +22,7 @@ const sidebarItems: SidebarItem[] = [
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     { name: 'Brokers', href: '/admin?view=brokers', icon: Users },
     { name: 'Properties', href: '/admin?view=properties', icon: Building2 },
+    { name: 'Roles', href: '/admin?view=roles', icon: Shield },
 ];
 
 interface SidebarProps {

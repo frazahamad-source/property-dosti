@@ -7,12 +7,13 @@ import { useState, useEffect } from 'react';
 import { BrokerManager } from './BrokerManager';
 import { PropertyManager } from './PropertyManager';
 import { AmenitiesManager } from './AmenitiesManager';
-import { ListChecks } from 'lucide-react';
+import { RoleManager } from './RoleManager';
+import { ListChecks, Shield } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 
 interface AdminDashboardProps {
-    view?: 'overview' | 'brokers' | 'properties' | 'amenities';
+    view?: 'overview' | 'brokers' | 'properties' | 'amenities' | 'roles';
 }
 
 export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
@@ -75,6 +76,15 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
             color: "text-orange-600",
             bgColor: "bg-orange-50",
             targetView: 'amenities'
+        },
+        {
+            title: "Role Management",
+            value: "Manage",
+            icon: Shield,
+            description: "Manager & Supervisor roles",
+            color: "text-indigo-600",
+            bgColor: "bg-indigo-50",
+            targetView: 'roles'
         }
     ];
 
@@ -86,6 +96,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
                 return <PropertyManager />;
             case 'amenities':
                 return <AmenitiesManager />;
+            case 'roles':
+                return <RoleManager />;
             default:
                 return (
                     <>
@@ -142,7 +154,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
             <h1 className="text-3xl font-bold mb-8">
                 {view === 'overview' ? 'Admin Overview' :
                     view === 'brokers' ? 'Broker Management' :
-                        'Property Management'}
+                        view === 'roles' ? 'Role Management' :
+                            'Property Management'}
             </h1>
 
             {renderContent()}

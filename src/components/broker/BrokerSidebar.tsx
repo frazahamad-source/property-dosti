@@ -111,7 +111,7 @@ export function BrokerSidebar({ isOpen, onClose }: BrokerSidebarProps) {
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-white truncate">{user?.name || "Broker Name"}</p>
                         <p className="text-[10px] text-primary font-semibold truncate capitalize">
-                            {user && 'role' in user ? user.role : (user ? "Administrator" : "Professional Broker")}
+                            {user && 'role' in user && user.role ? String(user.role) : "Broker"}
                         </p>
                     </div>
                 </div>
