@@ -67,18 +67,24 @@ export function Footer() {
                     <div className="text-center md:text-left">
                         <h3 className="text-white font-bold mb-6">Contact Us</h3>
                         <ul className="space-y-4 text-sm">
-                            <li className="flex items-start justify-center md:justify-start gap-4">
-                                <Phone className="h-4 w-4 text-primary mt-0.5" />
-                                <span>{siteConfig?.contactPhone || '+91 77 60 70 44 00'}</span>
+                            <li className="flex justify-center md:justify-start">
+                                <span className="inline-flex items-start gap-2">
+                                    <Phone className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <span>{siteConfig?.contactPhone || '+91 77 60 70 44 00'}</span>
+                                </span>
                             </li>
-                            <li className="flex items-start justify-center md:justify-start gap-4">
-                                <Mail className="h-4 w-4 text-primary mt-0.5" />
-                                <span>{siteConfig?.contactEmail || 'support@propertydosti.com'}</span>
+                            <li className="flex justify-center md:justify-start">
+                                <span className="inline-flex items-start gap-2">
+                                    <Mail className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <span>{siteConfig?.contactEmail || 'support@propertydosti.com'}</span>
+                                </span>
                             </li>
-                            <li className="flex items-start justify-center md:justify-start gap-4">
-                                <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                                <span className="md:text-left whitespace-pre-line">
-                                    {siteConfig?.officeAddress || 'Ground Floor, Kankanady Gate Building,\nKankanady Cross Road, Kankanady,\nMangaluru - 575002'}
+                            <li className="flex justify-center md:justify-start">
+                                <span className="inline-flex items-start gap-2">
+                                    <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <span className="text-left whitespace-pre-line">
+                                        {siteConfig?.officeAddress || 'Ground Floor, Kankanady Gate Building,\nKankanady Cross Road, Kankanady,\nMangaluru - 575002'}
+                                    </span>
                                 </span>
                             </li>
 
