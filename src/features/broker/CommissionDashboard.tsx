@@ -16,7 +16,8 @@ import {
     Globe,
     UserPlus,
     Link as LinkIcon,
-    X
+    X,
+    Building2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
@@ -49,10 +50,24 @@ interface BrokerOption {
     email: string;
 }
 
+// Property info passed when clicking "Sold" on a property
+export interface SoldPropertyInfo {
+    propertyId: string;
+    title: string;
+    price: number;
+    location: string;
+    district: string;
+}
+
 type ViewMode = 'overview' | 'detail';
 type DealSource = 'property_dosti' | 'outside';
 
-export function CommissionDashboard() {
+interface CommissionDashboardProps {
+    soldProperty?: SoldPropertyInfo | null;
+    onSoldComplete?: () => void;
+}
+
+export function CommissionDashboard({ soldProperty, onSoldComplete }: CommissionDashboardProps) {
     const { user } = useStore();
     const [viewMode, setViewMode] = useState<ViewMode>('overview');
     const [currentSource, setCurrentSource] = useState<DealSource>('property_dosti');
@@ -66,6 +81,22 @@ export function CommissionDashboard() {
     const [newCommissionTotal, setNewCommissionTotal] = useState('');
     const [newTds, setNewTds] = useState('');
     const [newShares, setNewShares] = useState<{ brokerId: string; amount: string }[]>([]);
+    // Track handled soldProperty to prevent re-opening
+    const [handledSoldPropertyId, setHandledSoldPropertyId] = useState<string | null>(null);
+
+    // If a soldProperty is passed, auto-open the form in PD detail view
+    useEffect(() => {
+        if (soldProperty && soldProperty.propertyId !== handledSoldPropertyId) {
+            setCurrentSource('property_dosti');
+            setViewMode('detail');
+            setNewDealValue(soldProperty.price > 0 ? String(soldProperty.price) : '');
+            setNewCommissionTotal('');
+            setNewTds('');
+            setNewShares([]);
+            setIsAddModalOpen(true);
+            setHandledSoldPropertyId(soldProperty.propertyId);
+        }
+    }, [soldProperty, handledSoldPropertyId]);
 
     // Fetch commission records
     const fetchRecords = useCallback(async () => {
@@ -154,8 +185,8 @@ export function CommissionDashboard() {
 
     // Generate next Property ID label
     const getNextPropertyIdLabel = () => {
-        const sourceRecords = records.filter(r => r.source === currentSource);
-        const maxNum = sourceRecords.reduce((max, r) => {
+        const allRecords = records;
+        const maxNum = allRecords.reduce((max, r) => {
             const match = r.property_id_label.match(/PD-(\d+)/);
             if (match) return Math.max(max, parseInt(match[1]));
             return max;
@@ -185,6 +216,7 @@ export function CommissionDashboard() {
                     broker_id: user.id,
                     source: currentSource,
                     property_id_label: propertyIdLabel,
+                    linked_property_id: soldProperty?.propertyId || null,
                     deal_value: dealValue,
                     commission_total: commTotal,
                     tds_amount: tds,
@@ -208,7 +240,24 @@ export function CommissionDashboard() {
                 }
             }
 
-            toast.success('Commission record added!');
+            // If this was a "Sold" flow, mark the property as sold
+            if (soldProperty) {
+                const { error: updateError } = await supabase
+                    .from('properties')
+                    .update({ is_active: false })
+                    .eq('id', soldProperty.propertyId);
+
+                if (updateError) {
+                    console.error('Error marking property as sold:', updateError);
+                    toast.error('Commission saved, but failed to mark property as sold.');
+                } else {
+                    toast.success('Property marked as Sold & Commission recorded!');
+                }
+                onSoldComplete?.();
+            } else {
+                toast.success('Commission record added!');
+            }
+
             setIsAddModalOpen(false);
             resetForm();
             fetchRecords();
@@ -354,7 +403,10 @@ export function CommissionDashboard() {
                 <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setViewMode('overview')}
+                    onClick={() => {
+                        setViewMode('overview');
+                        onSoldComplete?.();
+                    }}
                     className="shrink-0"
                 >
                     <ArrowLeft className="h-4 w-4 mr-1" /> Back
@@ -507,10 +559,32 @@ export function CommissionDashboard() {
             {/* Add Deal Modal */}
             <Modal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-                title={`Add ${currentSource === 'property_dosti' ? 'Property Dosti' : 'Outside'} Deal`}
+                onClose={() => {
+                    setIsAddModalOpen(false);
+                    if (soldProperty) onSoldComplete?.();
+                }}
+                title={soldProperty
+                    ? `Record Sale — ${soldProperty.title}`
+                    : `Add ${currentSource === 'property_dosti' ? 'Property Dosti' : 'Outside'} Deal`
+                }
             >
                 <div className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
+                    {/* Property info banner for Sold flow */}
+                    {soldProperty && (
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 space-y-1">
+                            <div className="flex items-center gap-2 text-green-700 dark:text-green-400 text-sm font-bold">
+                                <Building2 className="h-4 w-4" />
+                                Marking Property as Sold
+                            </div>
+                            <p className="text-xs text-green-600 dark:text-green-500">
+                                {soldProperty.title} — {soldProperty.location}, {soldProperty.district}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                Listed price: ₹{soldProperty.price.toLocaleString('en-IN')}
+                            </p>
+                        </div>
+                    )}
+
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 text-center">
                         <p className="text-[10px] text-muted-foreground uppercase font-semibold">Property ID</p>
                         <p className="text-lg font-black text-primary font-mono">{getNextPropertyIdLabel()}</p>
@@ -623,12 +697,12 @@ export function CommissionDashboard() {
                     </div>
 
                     <Button
-                        className="w-full"
+                        className={`w-full ${soldProperty ? 'bg-green-600 hover:bg-green-700' : ''}`}
                         onClick={handleAddRecord}
                         isLoading={isLoading}
                         disabled={!newDealValue || !newCommissionTotal}
                     >
-                        Save Commission Record
+                        {soldProperty ? '✓ Mark as Sold & Save Commission' : 'Save Commission Record'}
                     </Button>
                 </div>
             </Modal>

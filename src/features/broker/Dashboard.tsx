@@ -8,7 +8,7 @@ import { PropertyCard } from '@/components/PropertyCard';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, Share2, User as UserIcon, MoreVertical, Eye, Gift } from 'lucide-react';
+import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, Share2, User as UserIcon, MoreVertical, Eye, Gift, CheckCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
@@ -16,7 +16,7 @@ import { SubscriptionDashboard } from '@/features/subscription/SubscriptionDashb
 import { SmartSearchForm, SmartSearchFilters } from '@/components/SmartSearchForm';
 import { ReferralBanner } from '@/components/broker/ReferralBanner';
 import { ResponsibilitiesPanel } from '@/components/broker/ResponsibilitiesPanel';
-import { CommissionDashboard } from '@/features/broker/CommissionDashboard';
+import { CommissionDashboard, SoldPropertyInfo } from '@/features/broker/CommissionDashboard';
 import { AmenitySelector } from '@/components/broker/AmenitySelector';
 import { supabase } from '@/lib/supabaseClient';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -75,6 +75,7 @@ export function BrokerDashboard() {
     const [listingSearch, setListingSearch] = useState('');
     const [amenitiesConfig, setAmenitiesConfig] = useState<AmenityConfig[]>([]);
     const [referralStats, setReferralStats] = useState<Referral[]>([]);
+    const [soldProperty, setSoldProperty] = useState<SoldPropertyInfo | null>(null);
 
     // Form Watch for Conditional Logic
     const { register, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm<PropertyFormValues>({
@@ -653,6 +654,21 @@ export function BrokerDashboard() {
                                                     >
                                                         <Trash2 className="h-4 w-4" /> Delete
                                                     </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => {
+                                                            setSoldProperty({
+                                                                propertyId: p.id,
+                                                                title: p.title,
+                                                                price: p.price,
+                                                                location: p.location,
+                                                                district: p.district,
+                                                            });
+                                                            setActiveTab('commission');
+                                                        }}
+                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                    >
+                                                        <CheckCircle className="h-4 w-4" /> Sold
+                                                    </DropdownMenuItem>
                                                 </DropdownMenu>
                                             </div>
                                             <CardContent className="p-3 sm:p-4">
@@ -980,7 +996,41 @@ export function BrokerDashboard() {
                 )}
 
                 {activeTab === 'commission' && (
-                    <CommissionDashboard />
+                    <CommissionDashboard
+                        soldProperty={soldProperty}
+                        onSoldComplete={() => {
+                            setSoldProperty(null);
+                            // Re-fetch properties to reflect sold status
+                            const refetch = async () => {
+                                const { data } = await supabase
+                                    .from('properties')
+                                    .select('*, profiles(phone)')
+                                    .order('created_at', { ascending: false });
+                                if (data) {
+                                    const mapped = (data as unknown[]).map((item) => {
+                                        const p = item as any;
+                                        return {
+                                            id: p.id, brokerId: p.broker_id, title: p.title || 'No Title',
+                                            description: p.description || '', price: p.price || 0,
+                                            district: p.district || 'Unknown', location: p.location || 'Unknown',
+                                            type: p.type || 'sale', category: (p.category) || 'residential',
+                                            structureType: p.structure_type || '', landArea: p.land_area || 0,
+                                            floorNumber: p.floor_number || 0, floorDetail: p.floor_detail || '',
+                                            parkingSpaces: p.parking_spaces || 0, parkingType: (p.parking_type) || 'Open',
+                                            parkingAllocated: p.parking_allocated || '', facilities: p.facilities || [],
+                                            googleMapLink: p.google_map_link || '', images: p.images || [],
+                                            village: p.village || '', createdAt: p.created_at, updatedAt: p.updated_at,
+                                            expiresAt: p.expires_at, isActive: p.is_active ?? true,
+                                            likes: p.likes || 0, leadsCount: p.leads_count || 0,
+                                            amenities: p.amenities || [], brokerPhone: p.profiles?.phone || '',
+                                        };
+                                    });
+                                    setProperties(mapped);
+                                }
+                            };
+                            refetch();
+                        }}
+                    />
                 )}
 
                 <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Property">
