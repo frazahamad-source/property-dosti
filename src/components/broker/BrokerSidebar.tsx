@@ -11,7 +11,8 @@ import {
     User,
     Settings,
     LogOut,
-    ChevronLeft
+    ChevronLeft,
+    Banknote
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/ui/Logo';
@@ -23,6 +24,7 @@ const sidebarItems = [
     { name: 'My Listings', href: '/dashboard?view=listings', icon: Building2 },
     { name: 'Responses', href: '/dashboard?view=responses', icon: MessageSquare },
     { name: 'Subscription', href: '/dashboard?view=subscription', icon: CreditCard },
+    { name: 'Commission & Sharing', href: '/dashboard?view=commission', icon: Banknote },
     { name: 'Profile', href: '/dashboard?view=profile', icon: User },
     // { name: 'Settings', href: '/dashboard?view=settings', icon: Settings },
 ];

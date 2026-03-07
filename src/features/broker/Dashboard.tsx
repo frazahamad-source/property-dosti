@@ -16,6 +16,7 @@ import { SubscriptionDashboard } from '@/features/subscription/SubscriptionDashb
 import { SmartSearchForm, SmartSearchFilters } from '@/components/SmartSearchForm';
 import { ReferralBanner } from '@/components/broker/ReferralBanner';
 import { ResponsibilitiesPanel } from '@/components/broker/ResponsibilitiesPanel';
+import { CommissionDashboard } from '@/features/broker/CommissionDashboard';
 import { AmenitySelector } from '@/components/broker/AmenitySelector';
 import { supabase } from '@/lib/supabaseClient';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -68,7 +69,7 @@ export function BrokerDashboard() {
         propertyType: ''
     });
     const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-    const [activeTab, setActiveTab] = useState<'explore' | 'listings' | 'responses' | 'subscription' | 'profile'>('explore');
+    const [activeTab, setActiveTab] = useState<'explore' | 'listings' | 'responses' | 'subscription' | 'commission' | 'profile'>('explore');
     const [isLoading, setIsLoading] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const [listingSearch, setListingSearch] = useState('');
@@ -410,9 +411,9 @@ export function BrokerDashboard() {
     // Sync active tab with URL search param
     useEffect(() => {
         if (viewParam) {
-            const validTabs = ['explore', 'listings', 'responses', 'subscription', 'profile'];
+            const validTabs = ['explore', 'listings', 'responses', 'subscription', 'commission', 'profile'];
             if (validTabs.includes(viewParam)) {
-                setActiveTab(viewParam as 'explore' | 'listings' | 'responses' | 'subscription' | 'profile');
+                setActiveTab(viewParam as 'explore' | 'listings' | 'responses' | 'subscription' | 'commission' | 'profile');
             }
         } else {
             setActiveTab('explore');
@@ -534,6 +535,7 @@ export function BrokerDashboard() {
                             {activeTab === 'responses' && 'Customer Responses'}
                             {activeTab === 'subscription' && 'Membership & Rewards'}
                             {activeTab === 'profile' && 'My Profile'}
+                            {activeTab === 'commission' && 'Commission & Sharing'}
                         </h1>
                         <p className="text-muted-foreground">
                             {activeTab === 'explore' && 'Explore verified properties across the network.'}
@@ -541,6 +543,7 @@ export function BrokerDashboard() {
                             {activeTab === 'responses' && 'View and manage inquiries from interested buyers.'}
                             {activeTab === 'subscription' && 'Upgrade your account for premium features.'}
                             {activeTab === 'profile' && 'View and update your professional profile.'}
+                            {activeTab === 'commission' && 'Track your earnings and manage commission sharing.'}
                         </p>
                     </div>
                     {activeTab === 'listings' && (
@@ -974,6 +977,10 @@ export function BrokerDashboard() {
                             </Card>
                         </div>
                     </div>
+                )}
+
+                {activeTab === 'commission' && (
+                    <CommissionDashboard />
                 )}
 
                 <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Property">
