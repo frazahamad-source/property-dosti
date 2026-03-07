@@ -93,10 +93,18 @@ export function LoginForm() {
                 return;
             }
 
-            // 3. Update local store
+            // 3. Fetch user role from user_roles table (Manager/Supervisor)
+            const { data: userRole } = await supabase
+                .from('user_roles')
+                .select('*')
+                .eq('user_id', profile.id)
+                .single();
+
+            // 4. Update local store
+            const assignedRole = userRole?.role || 'broker';
             const mappedProfile = {
                 id: profile.id,
-                role: profile.role as 'broker',
+                role: assignedRole as 'broker' | 'manager' | 'supervisor',
                 name: profile.name || 'Unknown',
                 email: profile.email || '',
                 phone: profile.phone || '',
@@ -117,6 +125,13 @@ export function LoginForm() {
                 city: profile.city,
                 village: profile.village,
                 avatarUrl: profile.avatar_url,
+                userPermissions: userRole ? {
+                    can_view_leads: userRole.can_view_leads,
+                    can_reply_chats: userRole.can_reply_chats,
+                    can_change_logo: userRole.can_change_logo,
+                    can_edit_footer: userRole.can_edit_footer,
+                    can_approve_brokers: userRole.can_approve_brokers,
+                } : undefined,
             };
             login(mappedProfile, false);
             toast.success('Welcome back!');

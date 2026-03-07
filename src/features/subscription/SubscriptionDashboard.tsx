@@ -14,6 +14,8 @@ export function SubscriptionDashboard() {
     const { user } = useStore();
     const broker = user && 'referralCode' in user ? user : null;
 
+    const isExempt = broker && (broker.role === 'manager' || broker.role === 'supervisor');
+
     const expiryDate = useMemo(() => broker ? new Date(broker.subscriptionExpiry) : new Date(), [broker]);
     const daysLeft = useMemo(() => {
         const now = new Date();
@@ -29,6 +31,48 @@ export function SubscriptionDashboard() {
         navigator.clipboard.writeText(broker.referralCode);
         toast.success('Referral code copied!');
     };
+
+    // If Manager/Supervisor, show exempt status
+    if (isExempt) {
+        return (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Card className="border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/20 backdrop-blur md:col-span-2 lg:col-span-2">
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                            <CardTitle className="text-xl">Subscription Status</CardTitle>
+                            <Badge className="bg-indigo-600 text-white font-bold">Exempt</Badge>
+                        </div>
+                        <CardDescription>Your role includes full platform access</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                                <Calendar className="h-5 w-5 text-indigo-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Account Type</p>
+                                <p className="text-lg font-bold capitalize">{broker.role}</p>
+                            </div>
+                        </div>
+                        <div className="p-3 bg-indigo-100/50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                            <p className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">
+                                ✅ No subscription required — your {broker.role.charAt(0).toUpperCase() + broker.role.slice(1)} role includes full access to all features.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {broker && (
+                    <div className="md:col-span-2 lg:col-span-3">
+                        <ReferralBanner
+                            referralCode={broker.referralCode}
+                            uniqueBrokerId={broker.uniqueBrokerId}
+                        />
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

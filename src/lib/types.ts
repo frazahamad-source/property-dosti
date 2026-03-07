@@ -13,7 +13,14 @@ export interface Broker {
     village?: string;
     companyName?: string;
     designation?: string;
-    role: 'broker';
+    role: 'broker' | 'manager' | 'supervisor';
+    userPermissions?: {
+        can_view_leads: boolean;
+        can_reply_chats: boolean;
+        can_change_logo: boolean;
+        can_edit_footer: boolean;
+        can_approve_brokers: boolean;
+    };
     status: 'pending' | 'approved' | 'rejected';
     password?: string; // In real app, this would be hashed
     registeredAt: string; // ISO date

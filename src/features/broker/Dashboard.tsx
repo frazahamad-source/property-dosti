@@ -15,6 +15,7 @@ import { Modal } from '@/components/ui/Modal';
 import { SubscriptionDashboard } from '@/features/subscription/SubscriptionDashboard';
 import { SmartSearchForm, SmartSearchFilters } from '@/components/SmartSearchForm';
 import { ReferralBanner } from '@/components/broker/ReferralBanner';
+import { ResponsibilitiesPanel } from '@/components/broker/ResponsibilitiesPanel';
 import { AmenitySelector } from '@/components/broker/AmenitySelector';
 import { supabase } from '@/lib/supabaseClient';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -90,7 +91,8 @@ export function BrokerDashboard() {
     const priceValue = watch('price');
 
     const broker = user && 'subscriptionExpiry' in user ? user : null;
-    const isSubscriptionExpired = broker ? new Date(broker.subscriptionExpiry) < new Date() : false;
+    const isManagerOrSupervisor = broker && (broker.role === 'manager' || broker.role === 'supervisor');
+    const isSubscriptionExpired = isManagerOrSupervisor ? false : (broker ? new Date(broker.subscriptionExpiry) < new Date() : false);
 
     const myProperties = properties.filter(p => p.brokerId === user?.id);
     const filteredMyProperties = myProperties.filter(p =>
@@ -570,6 +572,9 @@ export function BrokerDashboard() {
                             </h2>
                             <SubscriptionDashboard />
                         </div>
+
+                        {/* Assigned Responsibilities - Manager/Supervisor only */}
+                        <ResponsibilitiesPanel />
 
                         <div className="mb-10">
                             <SmartSearchForm
