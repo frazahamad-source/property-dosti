@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -11,7 +12,8 @@ import {
     UserCheck,
     Shield,
     CheckCircle2,
-    XCircle
+    XCircle,
+    ArrowRight
 } from 'lucide-react';
 
 interface Responsibility {
@@ -20,10 +22,12 @@ interface Responsibility {
     description: string;
     icon: React.ElementType;
     enabled: boolean;
+    href: string;
 }
 
 export function ResponsibilitiesPanel() {
     const { user } = useStore();
+    const router = useRouter();
     const broker = user && 'role' in user ? user : null;
 
     // Only show for Manager/Supervisor
@@ -41,6 +45,7 @@ export function ResponsibilitiesPanel() {
             description: 'Access and review all incoming property leads and enquiries from buyers.',
             icon: Eye,
             enabled: permissions.can_view_leads,
+            href: '/dashboard?view=responses',
         },
         {
             key: 'can_reply_chats',
@@ -48,6 +53,7 @@ export function ResponsibilitiesPanel() {
             description: 'Respond to chat messages from users and brokers on the platform.',
             icon: MessageSquare,
             enabled: permissions.can_reply_chats,
+            href: '/dashboard?view=responses',
         },
         {
             key: 'can_change_logo',
@@ -55,6 +61,7 @@ export function ResponsibilitiesPanel() {
             description: 'Update the application logo and branding across the platform.',
             icon: ImageIcon,
             enabled: permissions.can_change_logo,
+            href: '/admin/settings',
         },
         {
             key: 'can_edit_footer',
@@ -62,6 +69,7 @@ export function ResponsibilitiesPanel() {
             description: 'Modify the footer content including contact info and links.',
             icon: FileEdit,
             enabled: permissions.can_edit_footer,
+            href: '/admin/settings',
         },
         {
             key: 'can_approve_brokers',
@@ -69,10 +77,17 @@ export function ResponsibilitiesPanel() {
             description: 'Review and approve or reject new broker registration requests.',
             icon: UserCheck,
             enabled: permissions.can_approve_brokers,
+            href: '/admin?view=brokers',
         },
     ];
 
     const enabledCount = responsibilities.filter(r => r.enabled).length;
+
+    const handleCardClick = (resp: Responsibility) => {
+        if (resp.enabled) {
+            router.push(resp.href);
+        }
+    };
 
     return (
         <div className="mb-12">
@@ -95,9 +110,10 @@ export function ResponsibilitiesPanel() {
                 {responsibilities.map((resp) => (
                     <Card
                         key={resp.key}
-                        className={`transition-all ${resp.enabled
-                                ? 'border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/20 shadow-sm'
-                                : 'opacity-50 border-gray-200 dark:border-gray-800'
+                        onClick={() => handleCardClick(resp)}
+                        className={`transition-all duration-200 ${resp.enabled
+                                ? 'border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/20 shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] hover:border-indigo-400 active:scale-[0.98]'
+                                : 'opacity-50 border-gray-200 dark:border-gray-800 cursor-not-allowed'
                             }`}
                     >
                         <CardHeader className="pb-3">
@@ -127,6 +143,12 @@ export function ResponsibilitiesPanel() {
                             <CardDescription className="text-xs leading-relaxed">
                                 {resp.description}
                             </CardDescription>
+                            {resp.enabled && (
+                                <div className="mt-3 flex items-center gap-1 text-xs text-indigo-600 font-medium">
+                                    <span>Open</span>
+                                    <ArrowRight className="h-3 w-3" />
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 ))}
