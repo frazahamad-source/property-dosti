@@ -96,6 +96,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
     const [newCommissionTotal, setNewCommissionTotal] = useState('');
     const [newTds, setNewTds] = useState('');
     const [newShares, setNewShares] = useState<{ brokerId: string; amount: string }[]>([]);
+    const [newDealSource, setNewDealSource] = useState<DealSource>('property_dosti');
     const [handledSoldPropertyId, setHandledSoldPropertyId] = useState<string | null>(null);
 
     // If a soldProperty is passed, auto-open the form in PD detail view
@@ -107,6 +108,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
             setNewCommissionTotal('');
             setNewTds('');
             setNewShares([]);
+            setNewDealSource('property_dosti');
             setIsAddModalOpen(true);
             setHandledSoldPropertyId(soldProperty.propertyId);
         }
@@ -298,8 +300,8 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                 .from('commission_records')
                 .insert({
                     broker_id: user.id,
-                    source: currentSource,
-                    property_id_label: propertyIdLabel,
+                    source: newDealSource,
+                    property_id_label: newDealSource === 'property_dosti' ? propertyIdLabel : '-',
                     linked_property_id: soldProperty?.propertyId || null,
                     deal_value: dealValue,
                     commission_total: commTotal,
@@ -408,6 +410,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
         setNewCommissionTotal('');
         setNewTds('');
         setNewShares([]);
+        setNewDealSource(currentSource);
     };
 
     const addShareRow = () => {
@@ -442,12 +445,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
     // Overview: Two cards
     if (viewMode === 'overview') {
         return (
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Commission & Sharing</h1>
-                    <p className="text-muted-foreground">Track your earnings from all deals.</p>
-                </div>
-
+            <div className="space-y-6 pt-2">
                 <div className="grid grid-cols-2 gap-4 md:gap-6">
                     {/* Property Dosti Deals Card */}
                     <Card
@@ -570,8 +568,8 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
 
             {/* Summary Card */}
             <div className={`rounded-xl p-4 ${currentSource === 'property_dosti'
-                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800'
-                    : 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800'
+                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800'
+                : 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800'
                 }`}>
                 <div className="flex items-center justify-between">
                     <div>
@@ -781,10 +779,25 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                         </div>
                     )}
 
-                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 text-center">
-                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">Property ID</p>
-                        <p className="text-lg font-black text-primary font-mono">{getNextPropertyIdLabel()}</p>
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold">Deal Type</label>
+                        <select
+                            className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                            value={newDealSource}
+                            onChange={(e) => setNewDealSource(e.target.value as DealSource)}
+                            disabled={!!soldProperty}
+                        >
+                            <option value="property_dosti">Property Dosti Deal</option>
+                            <option value="outside">Outside Deal</option>
+                        </select>
                     </div>
+
+                    {newDealSource === 'property_dosti' && (
+                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 text-center">
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Property ID</p>
+                            <p className="text-lg font-black text-primary font-mono">{getNextPropertyIdLabel()}</p>
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <label className="text-sm font-semibold">Deal Value (₹)</label>

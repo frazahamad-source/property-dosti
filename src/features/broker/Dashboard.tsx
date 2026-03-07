@@ -431,6 +431,26 @@ export function BrokerDashboard() {
                 router.replace(`/dashboard?${newParams.toString()}`);
             }
         }
+
+        // Handle Sold Property redirection
+        const soldPropertyId = searchParams.get('soldPropertyId');
+        if (soldPropertyId) {
+            setSoldProperty({
+                propertyId: soldPropertyId,
+                title: searchParams.get('soldTitle') || '',
+                price: parseFloat(searchParams.get('soldPrice') || '0'),
+                location: searchParams.get('soldLocation') || '',
+                district: searchParams.get('soldDistrict') || ''
+            });
+            // Clear the params from URL
+            const newParams = new URLSearchParams(searchParams.toString());
+            newParams.delete('soldPropertyId');
+            newParams.delete('soldTitle');
+            newParams.delete('soldPrice');
+            newParams.delete('soldLocation');
+            newParams.delete('soldDistrict');
+            router.replace(`/dashboard?${newParams.toString()}`);
+        }
     }, [viewParam, editParam, properties, user, handleEdit, router, searchParams]);
 
     const handleDelete = async (id: string) => {

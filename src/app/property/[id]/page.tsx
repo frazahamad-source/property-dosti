@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink, Pencil, Trash2, Car } from 'lucide-react';
+import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink, Pencil, Trash2, Car, CheckCircle } from 'lucide-react';
 import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -236,6 +236,24 @@ export default function PropertyDetailPage() {
                                 onClick={() => window.location.href = `/dashboard?view=listings&edit=${property.id}`}
                             >
                                 <Pencil className="h-4 w-4" /> Edit Listing
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 sm:flex-none gap-2 font-bold border-green-200 text-green-600 hover:bg-green-50 bg-green-50/50"
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        view: 'commission',
+                                        soldPropertyId: property.id,
+                                        soldTitle: property.title,
+                                        soldPrice: String(property.price),
+                                        soldLocation: property.location,
+                                        soldDistrict: property.district,
+                                    });
+                                    window.location.href = `/dashboard?${params.toString()}`;
+                                }}
+                            >
+                                <CheckCircle className="h-4 w-4" /> Sold
                             </Button>
                             <Button
                                 variant="ghost"
