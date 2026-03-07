@@ -17,7 +17,8 @@ import {
     UserPlus,
     Link as LinkIcon,
     X,
-    Building2
+    Building2,
+    ArrowDownLeft
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
@@ -42,6 +43,19 @@ interface CommissionShare {
     shared_with_broker_id: string;
     amount: number;
     broker_name?: string;
+}
+
+interface ReceivedShare {
+    id: string;
+    commission_id: string;
+    amount: number;
+    created_at: string;
+    source: 'property_dosti' | 'outside';
+    property_id_label: string;
+    linked_property_id: string | null;
+    deal_value: number;
+    shared_by_name: string;
+    shared_by_id: string;
 }
 
 interface BrokerOption {
@@ -72,6 +86,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
     const [viewMode, setViewMode] = useState<ViewMode>('overview');
     const [currentSource, setCurrentSource] = useState<DealSource>('property_dosti');
     const [records, setRecords] = useState<CommissionRecord[]>([]);
+    const [receivedShares, setReceivedShares] = useState<ReceivedShare[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [brokers, setBrokers] = useState<BrokerOption[]>([]);
@@ -81,7 +96,6 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
     const [newCommissionTotal, setNewCommissionTotal] = useState('');
     const [newTds, setNewTds] = useState('');
     const [newShares, setNewShares] = useState<{ brokerId: string; amount: string }[]>([]);
-    // Track handled soldProperty to prevent re-opening
     const [handledSoldPropertyId, setHandledSoldPropertyId] = useState<string | null>(null);
 
     // If a soldProperty is passed, auto-open the form in PD detail view
@@ -98,7 +112,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
         }
     }, [soldProperty, handledSoldPropertyId]);
 
-    // Fetch commission records
+    // Fetch own commission records
     const fetchRecords = useCallback(async () => {
         if (!user) return;
         setIsLoading(true);
@@ -112,7 +126,6 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
         if (error) {
             console.error('Error fetching commissions:', error);
         } else if (data) {
-            // Fetch shares for each record
             const recordsWithShares: CommissionRecord[] = [];
             for (const rec of data) {
                 const { data: shares } = await supabase
@@ -120,7 +133,6 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                     .select('*')
                     .eq('commission_id', rec.id);
 
-                // Get broker names for shares
                 const sharesWithNames: CommissionShare[] = [];
                 if (shares) {
                     for (const share of shares) {
@@ -146,6 +158,60 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
         setIsLoading(false);
     }, [user]);
 
+    // Fetch received shares (commissions shared WITH this user)
+    const fetchReceivedShares = useCallback(async () => {
+        if (!user) return;
+
+        const { data: shares, error } = await supabase
+            .from('commission_shares')
+            .select('*')
+            .eq('shared_with_broker_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching received shares:', error);
+            return;
+        }
+
+        if (!shares || shares.length === 0) {
+            setReceivedShares([]);
+            return;
+        }
+
+        const received: ReceivedShare[] = [];
+        for (const share of shares) {
+            // Fetch parent commission record
+            const { data: rec } = await supabase
+                .from('commission_records')
+                .select('*')
+                .eq('id', share.commission_id)
+                .single();
+
+            if (rec) {
+                // Fetch sharer's name
+                const { data: sharerProfile } = await supabase
+                    .from('profiles')
+                    .select('name')
+                    .eq('id', rec.broker_id)
+                    .single();
+
+                received.push({
+                    id: share.id,
+                    commission_id: share.commission_id,
+                    amount: share.amount,
+                    created_at: share.created_at,
+                    source: rec.source,
+                    property_id_label: rec.property_id_label,
+                    linked_property_id: rec.linked_property_id,
+                    deal_value: rec.deal_value,
+                    shared_by_name: sharerProfile?.name || 'Unknown',
+                    shared_by_id: rec.broker_id,
+                });
+            }
+        }
+        setReceivedShares(received);
+    }, [user]);
+
     // Fetch broker list for sharing
     const fetchBrokers = useCallback(async () => {
         if (!user) return;
@@ -162,26 +228,37 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
 
     useEffect(() => {
         fetchRecords();
+        fetchReceivedShares();
         fetchBrokers();
-    }, [fetchRecords, fetchBrokers]);
+    }, [fetchRecords, fetchReceivedShares, fetchBrokers]);
 
-    // Computed totals
+    // Computed totals — own records
     const pdRecords = records.filter(r => r.source === 'property_dosti');
     const outsideRecords = records.filter(r => r.source === 'outside');
 
-    const getPDTotal = () => {
+    // Received shares by source
+    const pdReceivedShares = receivedShares.filter(r => r.source === 'property_dosti');
+    const outsideReceivedShares = receivedShares.filter(r => r.source === 'outside');
+
+    const getOwnPDTotal = () => {
         return pdRecords.reduce((sum, r) => {
             const totalShared = r.shares.reduce((s, sh) => s + sh.amount, 0);
             return sum + r.commission_earned - totalShared;
         }, 0);
     };
 
-    const getOutsideTotal = () => {
+    const getOwnOutsideTotal = () => {
         return outsideRecords.reduce((sum, r) => {
             const totalShared = r.shares.reduce((s, sh) => s + sh.amount, 0);
             return sum + r.commission_earned - totalShared;
         }, 0);
     };
+
+    const getReceivedPDTotal = () => pdReceivedShares.reduce((sum, r) => sum + r.amount, 0);
+    const getReceivedOutsideTotal = () => outsideReceivedShares.reduce((sum, r) => sum + r.amount, 0);
+
+    const getPDTotal = () => getOwnPDTotal() + getReceivedPDTotal();
+    const getOutsideTotal = () => getOwnOutsideTotal() + getReceivedOutsideTotal();
 
     // Generate next Property ID label
     const getNextPropertyIdLabel = () => {
@@ -192,6 +269,13 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
             return max;
         }, 0);
         return `PD-${String(maxNum + 1).padStart(3, '0')}`;
+    };
+
+    // Send notification to a broker
+    const sendNotification = async (brokerId: string, message: string) => {
+        await supabase
+            .from('broker_notifications')
+            .insert({ broker_id: brokerId, message });
     };
 
     // Add new commission record
@@ -226,17 +310,34 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
 
             if (error) throw error;
 
-            // Add shares
+            // Get current user's name for notification
+            const { data: myProfile } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', user.id)
+                .single();
+            const myName = myProfile?.name || 'A broker';
+
+            // Add shares and send notifications
             for (const share of newShares) {
                 if (share.brokerId && parseFloat(share.amount) > 0) {
+                    const shareAmount = parseFloat(share.amount);
                     const { error: shareError } = await supabase
                         .from('commission_shares')
                         .insert({
                             commission_id: newRec.id,
                             shared_with_broker_id: share.brokerId,
-                            amount: parseFloat(share.amount),
+                            amount: shareAmount,
                         });
-                    if (shareError) console.error('Error adding share:', shareError);
+                    if (shareError) {
+                        console.error('Error adding share:', shareError);
+                    } else {
+                        // Notify recipient
+                        await sendNotification(
+                            share.brokerId,
+                            `You received ₹${shareAmount.toLocaleString('en-IN')} commission from ${myName} (${propertyIdLabel}). Contact them for details.`
+                        );
+                    }
                 }
             }
 
@@ -261,6 +362,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
             setIsAddModalOpen(false);
             resetForm();
             fetchRecords();
+            fetchReceivedShares();
         } catch (err: unknown) {
             const error = err as Error;
             toast.error(error.message || 'Failed to add record');
@@ -269,18 +371,35 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
         }
     };
 
-    // Delete record
-    const handleDeleteRecord = async (id: string) => {
+    // Delete record — cascade deletes shares, notify affected brokers
+    const handleDeleteRecord = async (rec: CommissionRecord) => {
+        // Get current user's name
+        const { data: myProfile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', user!.id)
+            .single();
+        const myName = myProfile?.name || 'A broker';
+
+        // Notify all share recipients before deletion
+        for (const share of rec.shares) {
+            await sendNotification(
+                share.shared_with_broker_id,
+                `Commission share of ₹${share.amount.toLocaleString('en-IN')} (${rec.property_id_label}) was removed by ${myName}. Contact them for details.`
+            );
+        }
+
         const { error } = await supabase
             .from('commission_records')
             .delete()
-            .eq('id', id);
+            .eq('id', rec.id);
 
         if (error) {
             toast.error('Failed to delete record');
         } else {
             toast.success('Record deleted');
             fetchRecords();
+            fetchReceivedShares();
         }
     };
 
@@ -313,6 +432,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
     const formRemainingBalance = formNetCommission - formTotalShared;
 
     const currentRecords = currentSource === 'property_dosti' ? pdRecords : outsideRecords;
+    const currentReceivedShares = currentSource === 'property_dosti' ? pdReceivedShares : outsideReceivedShares;
 
     const openDetail = (source: DealSource) => {
         setCurrentSource(source);
@@ -352,10 +472,15 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                                     ₹{getPDTotal().toLocaleString('en-IN')}
                                 </p>
                             </div>
-                            <div className="mt-3 flex items-center gap-1">
+                            <div className="mt-3 flex items-center gap-1 flex-wrap">
                                 <Badge className="bg-white/20 text-white text-[9px] border-0">
-                                    {pdRecords.length} {pdRecords.length === 1 ? 'deal' : 'deals'}
+                                    {pdRecords.length} own {pdRecords.length === 1 ? 'deal' : 'deals'}
                                 </Badge>
+                                {pdReceivedShares.length > 0 && (
+                                    <Badge className="bg-white/30 text-white text-[9px] border-0">
+                                        +{pdReceivedShares.length} received
+                                    </Badge>
+                                )}
                             </div>
                         </div>
                     </Card>
@@ -383,10 +508,15 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                                     ₹{getOutsideTotal().toLocaleString('en-IN')}
                                 </p>
                             </div>
-                            <div className="mt-3 flex items-center gap-1">
+                            <div className="mt-3 flex items-center gap-1 flex-wrap">
                                 <Badge className="bg-white/20 text-white text-[9px] border-0">
-                                    {outsideRecords.length} {outsideRecords.length === 1 ? 'deal' : 'deals'}
+                                    {outsideRecords.length} own {outsideRecords.length === 1 ? 'deal' : 'deals'}
                                 </Badge>
+                                {outsideReceivedShares.length > 0 && (
+                                    <Badge className="bg-white/30 text-white text-[9px] border-0">
+                                        +{outsideReceivedShares.length} received
+                                    </Badge>
+                                )}
                             </div>
                         </div>
                     </Card>
@@ -450,30 +580,18 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                             ₹{(currentSource === 'property_dosti' ? getPDTotal() : getOutsideTotal()).toLocaleString('en-IN')}
                         </p>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                        {currentRecords.length} {currentRecords.length === 1 ? 'deal' : 'deals'}
-                    </Badge>
+                    <div className="text-right">
+                        <Badge variant="outline" className="text-xs">
+                            {currentRecords.length} own + {currentReceivedShares.length} received
+                        </Badge>
+                    </div>
                 </div>
             </div>
 
-            {/* Records Table */}
-            {currentRecords.length === 0 ? (
-                <Card className="p-12 text-center">
-                    <IndianRupee className="h-12 w-12 mx-auto text-muted-foreground/20 mb-4" />
-                    <p className="text-muted-foreground">No deals recorded yet.</p>
-                    <Button
-                        variant="outline"
-                        className="mt-4"
-                        onClick={() => {
-                            resetForm();
-                            setIsAddModalOpen(true);
-                        }}
-                    >
-                        Record Your First Deal
-                    </Button>
-                </Card>
-            ) : (
-                <div className="space-y-4">
+            {/* ---- Own Deals Section ---- */}
+            {currentRecords.length > 0 && (
+                <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Your Deals</h3>
                     {currentRecords.map((rec, idx) => {
                         const totalShared = rec.shares.reduce((s, sh) => s + sh.amount, 0);
                         const remaining = rec.commission_earned - totalShared;
@@ -504,7 +622,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                                             variant="ghost"
                                             size="sm"
                                             className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
-                                            onClick={() => handleDeleteRecord(rec.id)}
+                                            onClick={() => handleDeleteRecord(rec)}
                                         >
                                             <Trash2 className="h-3.5 w-3.5" />
                                         </Button>
@@ -531,7 +649,6 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                                         </div>
                                     </div>
 
-                                    {/* Shares */}
                                     {rec.shares.length > 0 && (
                                         <div className="border-t pt-3 mt-3 space-y-2">
                                             <p className="text-[10px] text-muted-foreground uppercase font-semibold flex items-center gap-1">
@@ -554,6 +671,85 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                         );
                     })}
                 </div>
+            )}
+
+            {/* ---- Received Shares Section ---- */}
+            {currentReceivedShares.length > 0 && (
+                <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <ArrowDownLeft className="h-4 w-4 text-green-500" />
+                        Received from Other Brokers
+                    </h3>
+                    {currentReceivedShares.map((rs, idx) => (
+                        <Card key={rs.id} className="overflow-hidden border-green-100 dark:border-green-900 bg-green-50/30 dark:bg-green-950/10 hover:shadow-sm transition-shadow">
+                            <CardContent className="p-4">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-sm font-mono bg-green-100 dark:bg-green-900 px-2 py-1 rounded font-bold text-green-700 dark:text-green-400">
+                                            R{idx + 1}
+                                        </div>
+                                        {rs.linked_property_id ? (
+                                            <a
+                                                href={`/property/${rs.linked_property_id}`}
+                                                target="_blank"
+                                                className="flex items-center gap-1 text-sm font-bold text-primary hover:underline"
+                                            >
+                                                <LinkIcon className="h-3 w-3" />
+                                                {rs.property_id_label}
+                                            </a>
+                                        ) : (
+                                            <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                                                {rs.property_id_label}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[9px]">
+                                        Received
+                                    </Badge>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                                    <div>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">Deal Value</p>
+                                        <p className="font-bold">₹{rs.deal_value.toLocaleString('en-IN')}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">Your Share</p>
+                                        <p className="font-bold text-green-600">₹{rs.amount.toLocaleString('en-IN')}</p>
+                                    </div>
+                                </div>
+
+                                <div className="border-t pt-3 mt-1">
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <UserPlus className="h-3 w-3" />
+                                        Shared by <span className="font-semibold text-foreground">{rs.shared_by_name}</span>
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-1">
+                                        {new Date(rs.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
+
+            {/* Empty state when no records and no received */}
+            {currentRecords.length === 0 && currentReceivedShares.length === 0 && (
+                <Card className="p-12 text-center">
+                    <IndianRupee className="h-12 w-12 mx-auto text-muted-foreground/20 mb-4" />
+                    <p className="text-muted-foreground">No deals recorded yet.</p>
+                    <Button
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => {
+                            resetForm();
+                            setIsAddModalOpen(true);
+                        }}
+                    >
+                        Record Your First Deal
+                    </Button>
+                </Card>
             )}
 
             {/* Add Deal Modal */}
