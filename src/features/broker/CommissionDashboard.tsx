@@ -19,8 +19,18 @@ import {
     X,
     Building2,
     ArrowDownLeft,
-    Edit
+    Edit,
+    Download,
+    Mail,
+    FileText,
+    FileSpreadsheet,
+    Calendar,
+    Info,
+    ChevronDown
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuItem } from '@/components/ui/DropdownMenu';
+import { getFinancialYearDates, getFinancialYearString, getReportPeriodDates, ReportPeriod, DateRange } from '@/lib/dateUtils';
+import { exportCommissionToExcel as exportExcel, exportCommissionToPDF as exportPDF, CommissionExportData } from '@/lib/exportUtils';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 
@@ -101,6 +111,12 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
     const [newDealSource, setNewDealSource] = useState<DealSource>('property_dosti');
     const [editRecordId, setEditRecordId] = useState<string | null>(null);
     const [handledSoldPropertyId, setHandledSoldPropertyId] = useState<string | null>(null);
+
+    // Export State
+    const [isExporting, setIsExporting] = useState(false);
+    const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
+    const [customRange, setCustomRange] = useState({ start: '', end: '' });
+    const [pendingExportAction, setPendingExportAction] = useState<{ type: 'excel' | 'pdf' | 'email', period: ReportPeriod } | null>(null);
 
     // If a soldProperty is passed, auto-open the form in PD detail view
     useEffect(() => {
@@ -246,22 +262,30 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
     const pdReceivedShares = receivedShares.filter(r => r.source === 'property_dosti');
     const outsideReceivedShares = receivedShares.filter(r => r.source === 'outside');
 
+    // Filter for Financial Year Total
+    const fyDates = getFinancialYearDates();
+
+    const filterByFY = (item: any) => {
+        const itemDate = new Date(item.created_at || item.dealDate || new Date());
+        return itemDate >= fyDates.start && itemDate <= fyDates.end;
+    };
+
     const getOwnPDTotal = () => {
-        return pdRecords.reduce((sum, r) => {
+        return pdRecords.filter(filterByFY).reduce((sum, r) => {
             const totalShared = r.shares.reduce((s, sh) => s + Number(sh.amount || 0), 0);
             return sum + Number(r.commission_earned || 0) - totalShared;
         }, 0);
     };
 
     const getOwnOutsideTotal = () => {
-        return outsideRecords.reduce((sum, r) => {
+        return outsideRecords.filter(filterByFY).reduce((sum, r) => {
             const totalShared = r.shares.reduce((s, sh) => s + Number(sh.amount || 0), 0);
             return sum + Number(r.commission_earned || 0) - totalShared;
         }, 0);
     };
 
-    const getReceivedPDTotal = () => pdReceivedShares.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-    const getReceivedOutsideTotal = () => outsideReceivedShares.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+    const getReceivedPDTotal = () => pdReceivedShares.filter(filterByFY).reduce((sum, r) => sum + Number(r.amount || 0), 0);
+    const getReceivedOutsideTotal = () => outsideReceivedShares.filter(filterByFY).reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
     const getPDTotal = () => getOwnPDTotal() + getReceivedPDTotal();
     const getOutsideTotal = () => getOwnOutsideTotal() + getReceivedOutsideTotal();
@@ -444,6 +468,150 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
             }
             fetchRecords();
             fetchReceivedShares();
+        }
+    };
+
+    const openCustomDateRange = (actionType: 'excel' | 'pdf' | 'email') => {
+        setPendingExportAction({ type: actionType, period: 'custom' });
+        setCustomRange({ start: '', end: '' });
+        setIsCustomDateOpen(true);
+    };
+
+    const executeExport = async (type: 'excel' | 'pdf' | 'email', period: ReportPeriod, customDates?: DateRange) => {
+        setIsExporting(true);
+        try {
+            const dateRange = getReportPeriodDates(period, customDates);
+
+            // Generate standard label strings
+            const periodLabels: Record<ReportPeriod, string> = {
+                monthly: 'Monthly',
+                quarterly: 'Quarterly',
+                half_yearly: 'Half-Yearly',
+                yearly: 'Yearly (Current FY)',
+                previous_year: 'Previous FY',
+                custom: 'Custom Range'
+            };
+            const periodLabel = periodLabels[period];
+
+            // Format dates
+            const formatDate = (d: Date) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            const dateRangeStr = `${formatDate(dateRange.start)} to ${formatDate(dateRange.end)}`;
+
+            // Filter all relevant current tab records
+            const rawRecords = currentSource === 'property_dosti' ? pdRecords : outsideRecords;
+            const periodRecords = rawRecords.filter(r => {
+                const itemDate = new Date(r.created_at);
+                return itemDate >= dateRange.start && itemDate <= dateRange.end;
+            });
+
+            if (periodRecords.length === 0) {
+                toast.error('No deals found in this period.');
+                setIsExporting(false);
+                return;
+            }
+
+            // Build metrics
+            let totalGross = 0;
+            let totalTds = 0;
+            let totalShared = 0;
+            let netPayable = 0;
+
+            const mappedRecords = periodRecords.map(r => {
+                const dealShared = r.shares.reduce((s, sh) => s + Number(sh.amount || 0), 0);
+                const dealNet = Number(r.commission_earned || 0) - dealShared;
+
+                totalGross += Number(r.commission_total || 0);
+                totalTds += Number(r.tds_amount || 0);
+                totalShared += dealShared;
+                netPayable += dealNet;
+
+                return {
+                    id: r.id,
+                    referenceId: r.property_id_label,
+                    dealType: r.source,
+                    dealDate: r.created_at,
+                    dealValue: Number(r.deal_value || 0),
+                    tds: Number(r.tds_amount || 0),
+                    sharedAmount: dealShared,
+                    netCommission: dealNet,
+                    status: 'Active'
+                };
+            });
+
+            const exportData: CommissionExportData = {
+                periodLabel,
+                agentName: user?.email || 'Broker', // Replace with real name if fetched into user struct
+                dateRangeStr,
+                metrics: {
+                    totalGross,
+                    totalTds,
+                    totalShared,
+                    netPayable,
+                    dealCount: mappedRecords.length
+                },
+                records: mappedRecords
+            };
+
+            // Dispatch Action
+            if (type === 'excel') {
+                exportExcel(exportData);
+                toast.success('Excel statement downloaded!');
+            } else if (type === 'pdf') {
+                exportPDF(exportData);
+                toast.success('PDF statement downloaded!');
+            } else if (type === 'email') {
+                const req = await fetch('/api/email-statement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: user?.email,
+                        agentName: user?.email,
+                        periodLabel,
+                        dateRangeStr,
+                        statementData: exportData
+                    })
+                });
+
+                if (req.ok) {
+                    toast.success('Statement has been emailed successfully!');
+                } else {
+                    throw new Error('Email delivery failed');
+                }
+            }
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.error('Failed to generate statement. Try again.');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleExportAction = (type: 'excel' | 'pdf' | 'email', period: ReportPeriod) => {
+        if (period === 'custom') {
+            openCustomDateRange(type);
+        } else {
+            executeExport(type, period);
+        }
+    };
+
+    const handleCustomDateSubmit = () => {
+        if (!customRange.start || !customRange.end) {
+            toast.error('Please select both start and end dates');
+            return;
+        }
+
+        const startNode = new Date(customRange.start);
+        const endNode = new Date(customRange.end);
+
+        if (startNode > endNode) {
+            toast.error('Start date cannot be after end date');
+            return;
+        }
+
+        setIsCustomDateOpen(false);
+        if (pendingExportAction) {
+            executeExport(pendingExportAction.type, 'custom', { start: startNode, end: endNode });
+            setPendingExportAction(null);
         }
     };
 
@@ -638,21 +806,60 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
             </div>
 
             {/* Summary Card */}
-            <div className={`rounded-xl p-4 ${currentSource === 'property_dosti'
+            <div className={`rounded-xl p-4 md:p-6 shadow-sm ${currentSource === 'property_dosti'
                 ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800'
                 : 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800'
                 }`}>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <p className="text-sm text-muted-foreground">Your Remaining Balance</p>
-                        <p className="text-2xl font-black">
+                        <div className="flex items-center gap-2 mb-1">
+                            <h2 className="text-sm md:text-base font-bold text-gray-700 dark:text-gray-300">Total Earned Commission</h2>
+                            <Badge variant="secondary" className="font-mono text-[10px] md:text-xs tracking-tight">
+                                {getFinancialYearString()}
+                            </Badge>
+                            <div className="group relative">
+                                <Info className="h-4 w-4 text-gray-400 cursor-help" />
+                                <div className="pointer-events-none absolute left-0 bottom-full mb-2 w-48 opacity-0 transition-opacity group-hover:opacity-100 bg-gray-900 text-white text-[10px] p-2 rounded z-50">
+                                    Calculated from April 1st to March 31st. Includes received shares and deducts TDS & shares given.
+                                </div>
+                            </div>
+                        </div>
+                        <p className={`text-3xl md:text-4xl font-black ${(currentSource === 'property_dosti' ? getPDTotal() : getOutsideTotal()) > 0 ? 'text-green-600 dark:text-green-500' : 'text-gray-900 dark:text-white'}`}>
                             ₹{(currentSource === 'property_dosti' ? getPDTotal() : getOutsideTotal()).toLocaleString('en-IN')}
                         </p>
                     </div>
-                    <div className="text-right">
-                        <Badge variant="outline" className="text-xs">
-                            {currentRecords.length} own + {currentReceivedShares.length} received
-                        </Badge>
+
+                    <div className="flex flex-col sm:flex-row gap-2 self-start md:self-end">
+                        {/* Download Statement Dropdown */}
+                        <DropdownMenu align="right" trigger={
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto bg-white dark:bg-gray-900 justify-between sm:justify-center px-4" disabled={isExporting}>
+                                {isExporting ? (
+                                    <span className="animate-pulse">Loading...</span>
+                                ) : (
+                                    <>
+                                        <Download className="h-4 w-4 mr-2 text-primary" />
+                                        <span>Download Statement</span>
+                                        <ChevronDown className="h-3 w-3 ml-2 opacity-50" />
+                                    </>
+                                )}
+                            </Button>
+                        }>
+                            <div className="px-2 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Select Period (Excel)</div>
+                            <DropdownMenuItem onClick={() => handleExportAction('excel', 'monthly')}><FileSpreadsheet className="h-4 w-4 text-green-600" /> Monthly</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportAction('excel', 'quarterly')}><FileSpreadsheet className="h-4 w-4 text-green-600" /> Quarterly</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportAction('excel', 'half_yearly')}><FileSpreadsheet className="h-4 w-4 text-green-600" /> Half-Yearly</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportAction('excel', 'yearly')}><FileSpreadsheet className="h-4 w-4 text-green-600" /> Yearly (Current FY)</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportAction('excel', 'previous_year')}><FileSpreadsheet className="h-4 w-4 text-green-600" /> Previous FY</DropdownMenuItem>
+
+                            <div className="border-t my-1"></div>
+                            <div className="px-2 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Select Period (PDF)</div>
+                            <DropdownMenuItem onClick={() => handleExportAction('pdf', 'monthly')}><FileText className="h-4 w-4 text-red-500" /> Monthly</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportAction('pdf', 'quarterly')}><FileText className="h-4 w-4 text-red-500" /> Quarterly</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportAction('pdf', 'yearly')}><FileText className="h-4 w-4 text-red-500" /> Yearly (Current FY)</DropdownMenuItem>
+
+                            <div className="border-t my-1"></div>
+                            <DropdownMenuItem onClick={() => openCustomDateRange('excel')}><Calendar className="h-4 w-4 text-blue-500" /> Custom Range...</DropdownMenuItem>
+                        </DropdownMenu>
                     </div>
                 </div>
             </div>
@@ -1036,6 +1243,48 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                     >
                         {soldProperty ? '✓ Mark as Sold & Save Commission' : editRecordId ? 'Update Commission Record' : 'Save Commission Record'}
                     </Button>
+                </div>
+            </Modal>
+
+            {/* Custom Date Range Modal */}
+            <Modal
+                isOpen={isCustomDateOpen}
+                onClose={() => setIsCustomDateOpen(false)}
+                title="Select Custom Date Range"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                        Select a start and end date to generate your custom commission statement.
+                    </p>
+                    <div className="space-y-3">
+                        <div>
+                            <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Start Date</label>
+                            <Input
+                                type="date"
+                                value={customRange.start}
+                                onChange={(e) => setCustomRange((prev) => ({ ...prev, start: e.target.value }))}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-700 dark:text-gray-300">End Date</label>
+                            <Input
+                                type="date"
+                                min={customRange.start}
+                                value={customRange.end}
+                                onChange={(e) => setCustomRange((prev) => ({ ...prev, end: e.target.value }))}
+                            />
+                        </div>
+                    </div>
+                    <div className="pt-4 flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setIsCustomDateOpen(false)}>Cancel</Button>
+                        <Button
+                            className="bg-primary hover:bg-primary/90 text-white"
+                            onClick={handleCustomDateSubmit}
+                            disabled={!customRange.start || !customRange.end}
+                        >
+                            Generate
+                        </Button>
+                    </div>
                 </div>
             </Modal>
         </div>
