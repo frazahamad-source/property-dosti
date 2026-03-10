@@ -93,6 +93,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
 
     // New record form state
     const [newDealValue, setNewDealValue] = useState('');
+    const [newCommissionPercentage, setNewCommissionPercentage] = useState('');
     const [newCommissionTotal, setNewCommissionTotal] = useState('');
     const [newTds, setNewTds] = useState('');
     const [newShares, setNewShares] = useState<{ brokerId: string; amount: string }[]>([]);
@@ -105,6 +106,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
             setCurrentSource('property_dosti');
             setViewMode('detail');
             setNewDealValue(soldProperty.price > 0 ? String(soldProperty.price) : '');
+            setNewCommissionPercentage('');
             setNewCommissionTotal('');
             setNewTds('');
             setNewShares([]);
@@ -407,6 +409,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
 
     const resetForm = () => {
         setNewDealValue('');
+        setNewCommissionPercentage('');
         setNewCommissionTotal('');
         setNewTds('');
         setNewShares([]);
@@ -759,7 +762,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                 }}
                 title={soldProperty
                     ? `Record Sale — ${soldProperty.title}`
-                    : `Add ${currentSource === 'property_dosti' ? 'Property Dosti' : 'Outside'} Deal`
+                    : `Add ${newDealSource === 'property_dosti' ? 'Property Dosti' : 'Outside'} Deal`
                 }
             >
                 <div className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
@@ -805,7 +808,41 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                             type="number"
                             placeholder="e.g. 5000000"
                             value={newDealValue}
-                            onChange={(e) => setNewDealValue(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setNewDealValue(val);
+                                // Auto-update total commission if percentage is set
+                                const pct = parseFloat(newCommissionPercentage);
+                                const dealVal = parseFloat(val);
+                                if (!isNaN(pct) && !isNaN(dealVal)) {
+                                    setNewCommissionTotal(Math.round(dealVal * (pct / 100)).toString());
+                                }
+                            }}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold">
+                            Commission Percentage (%) <span className="text-muted-foreground font-normal">— optional</span>
+                        </label>
+                        <Input
+                            type="number"
+                            placeholder="e.g. 2"
+                            step="0.01"
+                            value={newCommissionPercentage}
+                            onChange={(e) => {
+                                const pctVal = e.target.value;
+                                setNewCommissionPercentage(pctVal);
+
+                                const pct = parseFloat(pctVal);
+                                const dealVal = parseFloat(newDealValue);
+
+                                if (!isNaN(pct) && !isNaN(dealVal)) {
+                                    setNewCommissionTotal(Math.round(dealVal * (pct / 100)).toString());
+                                } else if (pctVal === '') {
+                                    // Optional: clear or leave total commission when percentage is cleared
+                                }
+                            }}
                         />
                     </div>
 
@@ -815,7 +852,13 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                             type="number"
                             placeholder="e.g. 100000"
                             value={newCommissionTotal}
-                            onChange={(e) => setNewCommissionTotal(e.target.value)}
+                            onChange={(e) => {
+                                setNewCommissionTotal(e.target.value);
+                                // Optional: You could update percentage backwards here, 
+                                // but the request says "If user manually enters a value... it should override" 
+                                // and "If user modifies percentage... it should recalculate". 
+                                // Leaving percentage unchanged but allowing manual override.
+                            }}
                         />
                     </div>
 
@@ -859,7 +902,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                         </div>
 
                         {newShares.map((share, i) => (
-                            <div key={i} className="flex items-center gap-2">
+                            <div key={i} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                 <select
                                     className="flex-1 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
                                     value={share.brokerId}
@@ -870,22 +913,24 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                                         <option key={b.id} value={b.id}>{b.name} ({b.email})</option>
                                     ))}
                                 </select>
-                                <Input
-                                    type="number"
-                                    placeholder="₹ Amount"
-                                    className="w-28"
-                                    value={share.amount}
-                                    onChange={(e) => updateShare(i, 'amount', e.target.value)}
-                                />
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 text-red-400 hover:text-red-600"
-                                    onClick={() => removeShareRow(i)}
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <Input
+                                        type="number"
+                                        placeholder="₹ Amount"
+                                        className="w-full sm:w-28"
+                                        value={share.amount}
+                                        onChange={(e) => updateShare(i, 'amount', e.target.value)}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-10 w-10 sm:h-8 sm:w-8 p-0 text-red-400 hover:text-red-600 shrink-0 border border-red-200 sm:border-transparent dark:border-red-900 sm:dark:border-transparent"
+                                        onClick={() => removeShareRow(i)}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         ))}
 
