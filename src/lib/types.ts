@@ -134,6 +134,7 @@ export interface Property {
     updatedAt: string; // ISO date
     expiresAt: string; // ISO date (45 days validity)
     isActive: boolean;
+    is_sold?: boolean;
     likes: number;
     leadsCount: number;
     brokerPhone?: string;

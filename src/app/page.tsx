@@ -49,7 +49,7 @@ export default function Home() {
             phone
           )
         `)
-        // .eq('is_active', true) // Temporarily disabled to debug missing properties
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       console.log('Home: Fetched raw properties:', data?.length, 'Error:', error);

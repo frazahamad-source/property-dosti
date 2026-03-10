@@ -18,7 +18,8 @@ import {
     Link as LinkIcon,
     X,
     Building2,
-    ArrowDownLeft
+    ArrowDownLeft,
+    Edit
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
@@ -98,6 +99,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
     const [newTds, setNewTds] = useState('');
     const [newShares, setNewShares] = useState<{ brokerId: string; amount: string }[]>([]);
     const [newDealSource, setNewDealSource] = useState<DealSource>('property_dosti');
+    const [editRecordId, setEditRecordId] = useState<string | null>(null);
     const [handledSoldPropertyId, setHandledSoldPropertyId] = useState<string | null>(null);
 
     // If a soldProperty is passed, auto-open the form in PD detail view
@@ -246,20 +248,20 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
 
     const getOwnPDTotal = () => {
         return pdRecords.reduce((sum, r) => {
-            const totalShared = r.shares.reduce((s, sh) => s + sh.amount, 0);
-            return sum + r.commission_earned - totalShared;
+            const totalShared = r.shares.reduce((s, sh) => s + Number(sh.amount || 0), 0);
+            return sum + Number(r.commission_earned || 0) - totalShared;
         }, 0);
     };
 
     const getOwnOutsideTotal = () => {
         return outsideRecords.reduce((sum, r) => {
-            const totalShared = r.shares.reduce((s, sh) => s + sh.amount, 0);
-            return sum + r.commission_earned - totalShared;
+            const totalShared = r.shares.reduce((s, sh) => s + Number(sh.amount || 0), 0);
+            return sum + Number(r.commission_earned || 0) - totalShared;
         }, 0);
     };
 
-    const getReceivedPDTotal = () => pdReceivedShares.reduce((sum, r) => sum + r.amount, 0);
-    const getReceivedOutsideTotal = () => outsideReceivedShares.reduce((sum, r) => sum + r.amount, 0);
+    const getReceivedPDTotal = () => pdReceivedShares.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+    const getReceivedOutsideTotal = () => outsideReceivedShares.reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
     const getPDTotal = () => getOwnPDTotal() + getReceivedPDTotal();
     const getOutsideTotal = () => getOwnOutsideTotal() + getReceivedOutsideTotal();
@@ -296,23 +298,54 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
 
         setIsLoading(true);
         try {
-            const propertyIdLabel = getNextPropertyIdLabel();
+            let recordId = '';
+            let propertyIdLabel = '';
 
-            const { data: newRec, error } = await supabase
-                .from('commission_records')
-                .insert({
-                    broker_id: user.id,
-                    source: newDealSource,
-                    property_id_label: newDealSource === 'property_dosti' ? propertyIdLabel : '-',
-                    linked_property_id: soldProperty?.propertyId || null,
-                    deal_value: dealValue,
-                    commission_total: commTotal,
-                    tds_amount: tds,
-                })
-                .select()
-                .single();
+            if (editRecordId) {
+                // Update existing record
+                const { error: updateError } = await supabase
+                    .from('commission_records')
+                    .update({
+                        deal_value: dealValue,
+                        commission_total: commTotal,
+                        tds_amount: tds,
+                    })
+                    .eq('id', editRecordId);
 
-            if (error) throw error;
+                if (updateError) throw updateError;
+                recordId = editRecordId;
+
+                // Delete old shares, we will re-insert them
+                await supabase
+                    .from('commission_shares')
+                    .delete()
+                    .eq('commission_id', editRecordId);
+
+                // Find property label for notifications
+                const existingRec = records.find(r => r.id === editRecordId);
+                propertyIdLabel = existingRec?.property_id_label || '-';
+
+            } else {
+                // Insert new record
+                propertyIdLabel = getNextPropertyIdLabel();
+
+                const { data: newRec, error } = await supabase
+                    .from('commission_records')
+                    .insert({
+                        broker_id: user.id,
+                        source: newDealSource,
+                        property_id_label: newDealSource === 'property_dosti' ? propertyIdLabel : '-',
+                        linked_property_id: soldProperty?.propertyId || null,
+                        deal_value: dealValue,
+                        commission_total: commTotal,
+                        tds_amount: tds,
+                    })
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                recordId = newRec.id;
+            }
 
             // Get current user's name for notification
             const { data: myProfile } = await supabase
@@ -329,7 +362,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                     const { error: shareError } = await supabase
                         .from('commission_shares')
                         .insert({
-                            commission_id: newRec.id,
+                            commission_id: recordId,
                             shared_with_broker_id: share.brokerId,
                             amount: shareAmount,
                         });
@@ -349,7 +382,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
             if (soldProperty) {
                 const { error: updateError } = await supabase
                     .from('properties')
-                    .update({ is_active: false })
+                    .update({ is_active: false, is_sold: true })
                     .eq('id', soldProperty.propertyId);
 
                 if (updateError) {
@@ -360,7 +393,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                 }
                 onSoldComplete?.();
             } else {
-                toast.success('Commission record added!');
+                toast.success(editRecordId ? 'Commission record updated!' : 'Commission record added!');
             }
 
             setIsAddModalOpen(false);
@@ -402,6 +435,13 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
             toast.error('Failed to delete record');
         } else {
             toast.success('Record deleted');
+            if (rec.linked_property_id && rec.source === 'property_dosti') {
+                const { error: updateError } = await supabase
+                    .from('properties')
+                    .update({ is_active: true, is_sold: false })
+                    .eq('id', rec.linked_property_id);
+                if (updateError) console.error('Error reactivating property:', updateError);
+            }
             fetchRecords();
             fetchReceivedShares();
         }
@@ -414,6 +454,34 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
         setNewTds('');
         setNewShares([]);
         setNewDealSource(currentSource);
+        setEditRecordId(null);
+    };
+
+    const handleEditRecord = (rec: CommissionRecord) => {
+        setEditRecordId(rec.id);
+        setNewDealSource(rec.source);
+        setNewDealValue(String(rec.deal_value || ''));
+        setNewCommissionTotal(String(rec.commission_total || ''));
+        setNewTds(String(rec.tds_amount || ''));
+
+        // Derive percentage if it exists smoothly without overwriting manual total
+        if (rec.deal_value && rec.commission_total) {
+            const pct = (rec.commission_total / rec.deal_value) * 100;
+            // Only set if it's a clean float to 2 decimals
+            if (Number.isInteger(pct) || pct.toFixed(2).endsWith('0')) {
+                setNewCommissionPercentage(pct.toString());
+            } else {
+                setNewCommissionPercentage(pct.toFixed(2));
+            }
+        } else {
+            setNewCommissionPercentage('');
+        }
+
+        setNewShares(rec.shares.map(sh => ({
+            brokerId: sh.shared_with_broker_id,
+            amount: String(sh.amount)
+        })));
+        setIsAddModalOpen(true);
     };
 
     const addShareRow = () => {
@@ -468,7 +536,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                                 Earnings from PD platform
                             </p>
                             <div className="mt-auto">
-                                <p className="text-[10px] text-blue-200 uppercase font-semibold tracking-wider">Total Earnings</p>
+                                <p className="text-[10px] text-blue-200 uppercase font-semibold tracking-wider">Your Remaining Balance</p>
                                 <p className="text-xl sm:text-2xl font-black">
                                     ₹{getPDTotal().toLocaleString('en-IN')}
                                 </p>
@@ -504,7 +572,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                                 Earnings from external deals
                             </p>
                             <div className="mt-auto">
-                                <p className="text-[10px] text-emerald-200 uppercase font-semibold tracking-wider">Total Earnings</p>
+                                <p className="text-[10px] text-emerald-200 uppercase font-semibold tracking-wider">Your Remaining Balance</p>
                                 <p className="text-xl sm:text-2xl font-black">
                                     ₹{getOutsideTotal().toLocaleString('en-IN')}
                                 </p>
@@ -576,7 +644,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                 }`}>
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm text-muted-foreground">Net Earnings</p>
+                        <p className="text-sm text-muted-foreground">Your Remaining Balance</p>
                         <p className="text-2xl font-black">
                             ₹{(currentSource === 'property_dosti' ? getPDTotal() : getOutsideTotal()).toLocaleString('en-IN')}
                         </p>
@@ -594,8 +662,8 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                 <div className="space-y-3">
                     <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Your Deals</h3>
                     {currentRecords.map((rec, idx) => {
-                        const totalShared = rec.shares.reduce((s, sh) => s + sh.amount, 0);
-                        const remaining = rec.commission_earned - totalShared;
+                        const totalShared = rec.shares.reduce((s, sh) => s + Number(sh.amount || 0), 0);
+                        const remaining = Number(rec.commission_earned || 0) - totalShared;
                         return (
                             <Card key={rec.id} className="overflow-hidden border-gray-100 dark:border-gray-800 hover:shadow-sm transition-shadow">
                                 <CardContent className="p-4">
@@ -619,14 +687,24 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                                                 </span>
                                             )}
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
-                                            onClick={() => handleDeleteRecord(rec)}
-                                        >
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                        </Button>
+                                        <div className="flex items-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 w-7 p-0 text-gray-400 hover:text-primary hover:bg-primary/10"
+                                                onClick={() => handleEditRecord(rec)}
+                                            >
+                                                <Edit className="h-3.5 w-3.5" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
+                                                onClick={() => handleDeleteRecord(rec)}
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3 text-sm mb-3">
@@ -788,14 +866,14 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                             className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
                             value={newDealSource}
                             onChange={(e) => setNewDealSource(e.target.value as DealSource)}
-                            disabled={!!soldProperty}
+                            disabled={!!soldProperty || !!editRecordId}
                         >
                             <option value="property_dosti">Property Dosti Deal</option>
                             <option value="outside">Outside Deal</option>
                         </select>
                     </div>
 
-                    {newDealSource === 'property_dosti' && (
+                    {newDealSource === 'property_dosti' && !editRecordId && (
                         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 text-center">
                             <p className="text-[10px] text-muted-foreground uppercase font-semibold">Property ID</p>
                             <p className="text-lg font-black text-primary font-mono">{getNextPropertyIdLabel()}</p>
@@ -956,7 +1034,7 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                         isLoading={isLoading}
                         disabled={!newDealValue || !newCommissionTotal}
                     >
-                        {soldProperty ? '✓ Mark as Sold & Save Commission' : 'Save Commission Record'}
+                        {soldProperty ? '✓ Mark as Sold & Save Commission' : editRecordId ? 'Update Commission Record' : 'Save Commission Record'}
                     </Button>
                 </div>
             </Modal>

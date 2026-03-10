@@ -149,6 +149,7 @@ export function BrokerDashboard() {
                         updatedAt: p.updated_at,
                         expiresAt: p.expires_at,
                         isActive: p.is_active ?? true,
+                        is_sold: p.is_sold ?? false,
                         likes: p.likes || 0,
                         leadsCount: p.leads_count || 0,
                         amenities: p.amenities || [],
@@ -348,6 +349,7 @@ export function BrokerDashboard() {
                 updatedAt: p.updated_at,
                 expiresAt: p.expires_at,
                 isActive: p.is_active,
+                is_sold: p.is_sold,
                 likes: p.likes,
                 leadsCount: p.leads_count,
                 amenities: p.amenities,
@@ -712,10 +714,10 @@ export function BrokerDashboard() {
                                                                 <Badge
                                                                     className={cn(
                                                                         "px-1.5 py-0 text-[10px] uppercase font-bold",
-                                                                        p.isActive ? "bg-green-500" : "bg-gray-400"
+                                                                        p.is_sold ? "bg-purple-600 text-white" : p.isActive ? "bg-green-500" : "bg-gray-400"
                                                                     )}
                                                                 >
-                                                                    {p.isActive ? "Live" : "Draft"}
+                                                                    {p.is_sold ? "Sold" : p.isActive ? "Live" : "Draft"}
                                                                 </Badge>
                                                             </div>
                                                         </div>
@@ -1041,6 +1043,7 @@ export function BrokerDashboard() {
                                             googleMapLink: p.google_map_link || '', images: p.images || [],
                                             village: p.village || '', createdAt: p.created_at, updatedAt: p.updated_at,
                                             expiresAt: p.expires_at, isActive: p.is_active ?? true,
+                                            is_sold: p.is_sold ?? false,
                                             likes: p.likes || 0, leadsCount: p.leads_count || 0,
                                             amenities: p.amenities || [], brokerPhone: p.profiles?.phone || '',
                                         };
