@@ -54,6 +54,7 @@ interface CommissionShare {
     shared_with_broker_id: string;
     amount: number;
     broker_name?: string;
+    unique_broker_id?: string;
 }
 
 interface ReceivedShare {
@@ -160,12 +161,13 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                     for (const share of shares) {
                         const { data: profile } = await supabase
                             .from('profiles')
-                            .select('name')
+                            .select('name, unique_broker_id')
                             .eq('id', share.shared_with_broker_id)
                             .single();
                         sharesWithNames.push({
                             ...share,
                             broker_name: profile?.name || 'Unknown',
+                            unique_broker_id: profile?.unique_broker_id || 'N/A',
                         });
                     }
                 }
@@ -520,6 +522,11 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                 const dealShared = r.shares.reduce((s, sh) => s + Number(sh.amount || 0), 0);
                 const dealNet = Number(r.commission_earned || 0) - dealShared;
 
+                // Create a string of shared broker details
+                const sharedDetails = r.shares.length > 0
+                    ? r.shares.map(sh => `${sh.broker_name || 'Unknown'} (${sh.unique_broker_id || 'N/A'}): Rs. ${Number(sh.amount || 0).toLocaleString('en-IN')}`).join(' | ')
+                    : 'None';
+
                 totalGross += Number(r.commission_total || 0);
                 totalTds += Number(r.tds_amount || 0);
                 totalShared += dealShared;
@@ -533,14 +540,18 @@ export function CommissionDashboard({ soldProperty, onSoldComplete }: Commission
                     dealValue: Number(r.deal_value || 0),
                     tds: Number(r.tds_amount || 0),
                     sharedAmount: dealShared,
+                    sharedDetails: sharedDetails,
                     netCommission: dealNet,
                     status: 'Active'
                 };
             });
 
+            // Use type casting to safely access name property
+            const agentName = (user as any)?.name || user?.email || 'Broker';
+
             const exportData: CommissionExportData = {
                 periodLabel,
-                agentName: user?.email || 'Broker', // Replace with real name if fetched into user struct
+                agentName,
                 dateRangeStr,
                 metrics: {
                     totalGross,

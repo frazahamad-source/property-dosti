@@ -23,6 +23,7 @@ export interface CommissionExportData {
         dealValue: number;
         tds: number;
         sharedAmount: number;
+        sharedDetails: string;
         netCommission: number;
         status: string;
     }[];
@@ -53,6 +54,7 @@ export const exportCommissionToExcel = (data: CommissionExportData) => {
             'Total Deal Value',
             'TDS Deducted',
             'Shared with Brokers',
+            'Shared Details (Broker Name & ID)',
             'Your Commission (Net)',
             'Status'
         ]
@@ -66,6 +68,7 @@ export const exportCommissionToExcel = (data: CommissionExportData) => {
         r.dealValue,
         r.tds,
         r.sharedAmount,
+        r.sharedDetails,
         r.netCommission,
         r.status
     ]);
@@ -84,7 +87,8 @@ export const exportCommissionToExcel = (data: CommissionExportData) => {
         { wch: 15 }, // Date
         { wch: 18 }, // Value
         { wch: 15 }, // TDS
-        { wch: 20 }, // Shared
+        { wch: 18 }, // Shared
+        { wch: 45 }, // Shared Details
         { wch: 22 }, // Net
         { wch: 10 }  // Status
     ];
@@ -148,10 +152,10 @@ export const exportCommissionToPDF = (data: CommissionExportData) => {
         "Value",
         "TDS",
         "Shared",
+        "Shared Details",
         "Net"
     ];
 
-    // Strip "status" off for PDF space constraint, or keep it short
     const tableRows = data.records.map((r, i) => [
         (i + 1).toString(),
         r.referenceId,
@@ -160,6 +164,7 @@ export const exportCommissionToPDF = (data: CommissionExportData) => {
         r.dealValue.toLocaleString('en-IN'),
         r.tds.toLocaleString('en-IN'),
         r.sharedAmount.toLocaleString('en-IN'),
+        r.sharedDetails,
         r.netCommission.toLocaleString('en-IN')
     ]);
 
@@ -169,13 +174,14 @@ export const exportCommissionToPDF = (data: CommissionExportData) => {
         startY: startY + 75,
         theme: 'striped',
         headStyles: { fillColor: [63, 81, 181] }, // Indigo-ish header
-        styles: { fontSize: 8 },
+        styles: { fontSize: 7, cellPadding: 1 },
         columnStyles: {
-            0: { cellWidth: 10 },
+            0: { cellWidth: 8 },
             4: { halign: 'right' },
             5: { halign: 'right' },
             6: { halign: 'right' },
-            7: { halign: 'right', fontStyle: 'bold' }
+            7: { cellWidth: 35 },
+            8: { halign: 'right', fontStyle: 'bold' }
         }
     });
 
