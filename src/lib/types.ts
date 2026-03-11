@@ -109,10 +109,18 @@ export interface Property {
     district: string;
     location: string; // City/Area
     village?: string;
-    type: 'sale' | 'rent' | 'lease';
+    type: 'sale' | 'rent' | 'lease' | 'joint_venture';
     hidePrice?: boolean;
-    category: 'residential' | 'commercial' | 'land' | 'villa' | 'apartment' | 'offices' | 'farmhouse' | 'godown' | 'residential' | 'commercial' | 'land';
+    category: 'residential' | 'commercial' | 'land' | 'villa' | 'apartment' | 'offices' | 'farmhouse' | 'godown';
     structureType?: string; // Villa, Apartment, Farmhouse, Land, Godown, Office, etc.
+    areaOfVilla?: number;
+    villaType?: string;
+    anyStructure?: boolean;
+    structureCategory?: string;
+    structureSpecification?: string;
+    advanceAmount?: number;
+    sharingRatio?: string;
+    goodwillAmount?: number;
     landArea?: number;
     floorNumber?: number;
     floorDetail?: string;
@@ -198,6 +206,13 @@ export interface AmenityConfig {
     id: string;
     name: string;
     property_types: string[]; // Association with Apartment, Villa, etc.
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface VillaTypeConfig {
+    id: string;
+    name: string;
     created_at?: string;
     updated_at?: string;
 }

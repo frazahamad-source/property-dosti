@@ -8,7 +8,7 @@ function AdminContent() {
     const { isAdmin, hasHydrated } = useStore();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const view = (searchParams.get('view') as 'properties' | 'brokers' | 'amenities' | 'roles' | 'overview' | null) || 'overview';
+    const view = (searchParams.get('view') as 'properties' | 'brokers' | 'amenities' | 'villaTypes' | 'roles' | 'overview' | null) || 'overview';
 
     useEffect(() => {
         if (hasHydrated && !isAdmin) {

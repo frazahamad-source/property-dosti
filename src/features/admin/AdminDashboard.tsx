@@ -7,13 +7,14 @@ import { useState, useEffect } from 'react';
 import { BrokerManager } from './BrokerManager';
 import { PropertyManager } from './PropertyManager';
 import { AmenitiesManager } from './AmenitiesManager';
+import { VillaTypesManager } from './VillaTypesManager';
 import { RoleManager } from './RoleManager';
-import { ListChecks, Shield } from 'lucide-react';
+import { ListChecks, Shield, Home } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 
 interface AdminDashboardProps {
-    view?: 'overview' | 'brokers' | 'properties' | 'amenities' | 'roles';
+    view?: 'overview' | 'brokers' | 'properties' | 'amenities' | 'villaTypes' | 'roles';
 }
 
 export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
@@ -78,6 +79,15 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
             targetView: 'amenities'
         },
         {
+            title: "Villa Types Config",
+            value: "Manage",
+            icon: Home,
+            description: "Dynamic villa type options",
+            color: "text-teal-600",
+            bgColor: "bg-teal-50",
+            targetView: 'villaTypes'
+        },
+        {
             title: "Role Management",
             value: "Manage",
             icon: Shield,
@@ -96,6 +106,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
                 return <PropertyManager />;
             case 'amenities':
                 return <AmenitiesManager />;
+            case 'villaTypes':
+                return <VillaTypesManager />;
             case 'roles':
                 return <RoleManager />;
             default:
@@ -155,7 +167,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
                 {view === 'overview' ? 'Admin Overview' :
                     view === 'brokers' ? 'Broker Management' :
                         view === 'roles' ? 'Role Management' :
-                            'Property Management'}
+                            view === 'villaTypes' ? 'Villa Types Management' :
+                                'Property Management'}
             </h1>
 
             {renderContent()}

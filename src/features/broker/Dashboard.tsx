@@ -29,13 +29,21 @@ import { toast } from 'sonner';
 const propertySchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters"),
     description: z.string().min(10, "Description must be at least 10 characters"),
-    price: z.coerce.number().min(1, "Price is required"),
+    price: z.coerce.number().optional().nullable(),
     district: z.string().min(1, "District is mandatory"),
     location: z.string().min(2, "Village/City/Area is required"),
-    type: z.enum(['sale', 'rent', 'lease']),
+    type: z.enum(['sale', 'rent', 'lease', 'joint_venture']),
     category: z.string().optional().nullable().or(z.literal('')),
     structureType: z.string().optional().nullable().or(z.literal('')),
     landArea: z.coerce.number().optional().nullable(),
+    areaOfVilla: z.coerce.number().optional().nullable(),
+    villaType: z.string().optional().nullable(),
+    anyStructure: z.boolean().optional(),
+    structureCategory: z.string().optional().nullable(),
+    structureSpecification: z.string().optional().nullable(),
+    advanceAmount: z.coerce.number().optional().nullable(),
+    sharingRatio: z.string().optional().nullable(),
+    goodwillAmount: z.coerce.number().optional().nullable(),
     floorNumber: z.coerce.number().optional().nullable(),
     floorDetail: z.string().optional().nullable(),
     parkingSpaces: z.coerce.number().optional().nullable(),
@@ -45,6 +53,12 @@ const propertySchema = z.object({
     googleMapLink: z.string().optional().nullable().or(z.literal('')),
     village: z.string().optional().nullable(),
     hidePrice: z.boolean().optional(),
+}).refine(data => {
+    if (data.type === 'joint_venture') return true;
+    return (data.price && data.price > 0) || data.hidePrice;
+}, {
+    message: "Either Price or 'Call for quote' is required",
+    path: ["price"]
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -76,6 +90,7 @@ export function BrokerDashboard() {
     const [amenitiesConfig, setAmenitiesConfig] = useState<AmenityConfig[]>([]);
     const [referralStats, setReferralStats] = useState<Referral[]>([]);
     const [soldProperty, setSoldProperty] = useState<SoldPropertyInfo | null>(null);
+    const [villaTypesConfig, setVillaTypesConfig] = useState<any[]>([]);
 
     // Form Watch for Conditional Logic
     const { register, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm<PropertyFormValues>({
@@ -90,7 +105,9 @@ export function BrokerDashboard() {
 
     const structureType = watch('structureType');
     const parkingSpaces = watch('parkingSpaces');
-    const priceValue = watch('price');
+    const watchType = watch('type');
+    const watchAnyStructure = watch('anyStructure');
+    const watchStructureCategory = watch('structureCategory');
 
     const broker = user && 'subscriptionExpiry' in user ? user : null;
     const isManagerOrSupervisor = broker && (broker.role === 'manager' || broker.role === 'supervisor');
@@ -217,6 +234,22 @@ export function BrokerDashboard() {
         fetchAmenities();
     }, []);
 
+    // Fetch villa types config
+    useEffect(() => {
+        const fetchVillaTypes = async () => {
+            const { data, error } = await supabase
+                .from('villa_types_config')
+                .select('*')
+                .order('name');
+            if (error) {
+                console.error('Error fetching villa types:', error);
+            } else if (data) {
+                setVillaTypesConfig(data);
+            }
+        };
+        fetchVillaTypes();
+    }, []);
+
     const markLeadAsRead = async (leadId: string) => {
         // Optimistic update
         setPropertyLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: 'read' } : l));
@@ -316,6 +349,14 @@ export function BrokerDashboard() {
                     hide_price: data.hidePrice || false,
                     images: uploadedImages,
                     amenities: [], // Can extended similarly later
+                    area_of_villa: data.areaOfVilla || null,
+                    villa_type: data.villaType || null,
+                    any_structure: data.anyStructure || false,
+                    structure_category: data.structureCategory || null,
+                    structure_specification: data.structureSpecification || null,
+                    advance_amount: data.advanceAmount || null,
+                    sharing_ratio: data.sharingRatio || null,
+                    goodwill_amount: data.goodwillAmount || null,
                 })
                 .select()
                 .single();
@@ -353,6 +394,14 @@ export function BrokerDashboard() {
                 likes: p.likes,
                 leadsCount: p.leads_count,
                 amenities: p.amenities,
+                areaOfVilla: p.area_of_villa,
+                villaType: p.villa_type,
+                anyStructure: p.any_structure,
+                structureCategory: p.structure_category,
+                structureSpecification: p.structure_specification,
+                advanceAmount: p.advance_amount,
+                sharingRatio: p.sharing_ratio,
+                goodwillAmount: p.goodwill_amount,
             };
 
             addProperty(newProperty);
@@ -407,6 +456,14 @@ export function BrokerDashboard() {
         setValue('facilities', property.facilities || []);
         setValue('googleMapLink', property.googleMapLink || '');
         setValue('village', property.village || '');
+        setValue('areaOfVilla', property.areaOfVilla);
+        setValue('villaType', property.villaType);
+        setValue('anyStructure', property.anyStructure);
+        setValue('structureCategory', property.structureCategory);
+        setValue('structureSpecification', property.structureSpecification);
+        setValue('advanceAmount', property.advanceAmount);
+        setValue('sharingRatio', property.sharingRatio);
+        setValue('goodwillAmount', property.goodwillAmount);
 
         setIsEditModalOpen(true);
     }, [setValue]);
@@ -569,7 +626,7 @@ export function BrokerDashboard() {
                             {activeTab === 'commission' && 'Track your earnings and manage commission sharing.'}
                         </p>
                     </div>
-                    {activeTab === 'listings' && (
+                    {(activeTab === 'listings' || activeTab === 'explore') && (
                         <Button
                             onClick={() => {
                                 if (isSubscriptionExpired) {
@@ -580,10 +637,16 @@ export function BrokerDashboard() {
                                     setUploadedImages([]);
                                 }
                             }}
-                            className="shadow-lg shadow-primary/20"
+                            className="shadow-lg shadow-primary/20 relative"
                             variant={isSubscriptionExpired ? "outline" : "default"}
                         >
-                            <Plus className="mr-2 h-4 w-4" /> Add Property
+                            {activeTab === 'explore' && (
+                                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                </span>
+                            )}
+                            <Plus className="mr-2 h-4 w-4" /> {activeTab === 'explore' ? 'Quick Add Property' : 'Add Property'}
                         </Button>
                     )}
                 </div>
@@ -1078,11 +1141,26 @@ export function BrokerDashboard() {
 
                         {/* Villa / Farmhouse Fields */}
                         {(structureType === 'Villa' || structureType === 'Farmhouse') && (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4 mt-2">
                                 <div className="col-span-2">
                                     <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
                                     <Input type="number" {...register('landArea')} step="0.01" />
                                 </div>
+                                <div>
+                                    <label className="text-sm font-medium">Area of Villa (SQFT)</label>
+                                    <Input type="number" {...register('areaOfVilla')} step="0.01" />
+                                </div>
+                                {villaTypesConfig.length > 0 && (
+                                    <div>
+                                        <label className="text-sm font-medium">Villa Type</label>
+                                        <select {...register('villaType')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                            <option value="">Select Type</option>
+                                            {villaTypesConfig.map(v => (
+                                                <option key={v.id} value={v.name}>{v.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -1216,36 +1294,45 @@ export function BrokerDashboard() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Price (₹)</label>
-                                <Input type="number" {...register('price')} />
-                                <div className="flex items-center gap-2 py-1">
-                                    <div className="h-[1px] flex-1 bg-border/50"></div>
-                                    <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">OR</span>
-                                    <div className="h-[1px] flex-1 bg-border/50"></div>
+                            {watchType === 'joint_venture' ? (
+                                <div className="space-y-4 col-span-1">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Advance Amount (₹)</label>
+                                        <Input type="number" {...register('advanceAmount')} />
+                                        {errors.advanceAmount?.message && <p className="text-xs text-red-500">{errors.advanceAmount.message}</p>}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Sharing Ratio</label>
+                                        <Input {...register('sharingRatio')} placeholder="e.g. 50:50" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Goodwill Amount (Optional)</label>
+                                        <Input type="number" {...register('goodwillAmount')} />
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <input type="checkbox" {...register('hidePrice')} id="hidePriceAdd" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                                    <label htmlFor="hidePriceAdd" className="text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Call or Message for quote</label>
+                            ) : (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Price (₹)</label>
+                                    <Input type="number" {...register('price')} />
+                                    <div className="flex items-center gap-2 py-1">
+                                        <div className="h-[1px] flex-1 bg-border/50"></div>
+                                        <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">OR</span>
+                                        <div className="h-[1px] flex-1 bg-border/50"></div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input type="checkbox" {...register('hidePrice')} id="hidePriceAdd" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                                        <label htmlFor="hidePriceAdd" className="text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Call or Message for quote</label>
+                                    </div>
+                                    {errors.price?.message && <p className="text-xs text-red-500">{errors.price.message}</p>}
                                 </div>
-                                {errors.price?.message && <p className="text-xs text-red-500">{errors.price.message}</p>}
-                            </div>
+                            )}
                             <div>
                                 <label className="text-sm font-medium">Google Map Link (Optional)</label>
                                 <Input {...register('googleMapLink')} placeholder="https://maps.google.com/..." />
                             </div>
                         </div>
 
-                        {/* Hidden type field if structure selected automatically implies it, otherwise show it */}
-                        {/* We keep type as separate for Sale/Rent decision */}
-                        <div>
-                            <label className="text-sm font-medium">Transaction Type</label>
-                            <select {...register('type')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="sale">Sale</option>
-                                <option value="rent">Rent</option>
-                                <option value="lease">Lease</option>
-                            </select>
-                        </div>
+
 
                         <div>
                             <label className="text-sm font-medium">Property Photos (Max 3)</label>
@@ -1329,7 +1416,15 @@ export function BrokerDashboard() {
                                     google_map_link: data.googleMapLink,
                                     hide_price: data.hidePrice || false,
                                     images: uploadedImages,
-                                    updated_at: new Date().toISOString()
+                                    updated_at: new Date().toISOString(),
+                                    area_of_villa: data.areaOfVilla || null,
+                                    villa_type: data.villaType || null,
+                                    any_structure: data.anyStructure || false,
+                                    structure_category: data.structureCategory || null,
+                                    structure_specification: data.structureSpecification || null,
+                                    advance_amount: data.advanceAmount || null,
+                                    sharing_ratio: data.sharingRatio || null,
+                                    goodwill_amount: data.goodwillAmount || null,
                                 })
                                 .eq('id', selectedProperty.id);
 
@@ -1357,8 +1452,16 @@ export function BrokerDashboard() {
                                 googleMapLink: data.googleMapLink ?? undefined,
                                 hidePrice: data.hidePrice ?? undefined,
                                 images: uploadedImages,
-                                updatedAt: new Date().toISOString()
-                            });
+                                updatedAt: new Date().toISOString(),
+                                areaOfVilla: data.areaOfVilla ?? undefined,
+                                villaType: data.villaType ?? undefined,
+                                anyStructure: data.anyStructure ?? undefined,
+                                structureCategory: data.structureCategory ?? undefined,
+                                structureSpecification: data.structureSpecification ?? undefined,
+                                advanceAmount: data.advanceAmount ?? undefined,
+                                sharingRatio: data.sharingRatio ?? undefined,
+                                goodwillAmount: data.goodwillAmount ?? undefined,
+                            } as Property);
 
                             toast.success('Property updated successfully!');
                             setIsEditModalOpen(false);
@@ -1376,6 +1479,17 @@ export function BrokerDashboard() {
                         const fieldNames = Object.keys(errors).join(', ');
                         toast.error(`Please check these fields: ${fieldNames}`);
                     })} className="space-y-4">
+
+                        {/* 0. Transaction Type */}
+                        <div>
+                            <label className="text-sm font-medium">Transaction Type</label>
+                            <select {...register('type')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                <option value="sale">Sale</option>
+                                <option value="joint_venture">Joint Venture</option>
+                                <option value="rent">Rent</option>
+                                <option value="lease">Lease</option>
+                            </select>
+                        </div>
 
                         {/* 1. Structure Type */}
                         <div>
@@ -1396,12 +1510,27 @@ export function BrokerDashboard() {
 
                         {/* Villa / Farmhouse Fields */}
                         {(structureType === 'Villa' || structureType === 'Farmhouse') && (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4 mt-2">
                                 <div className="col-span-2">
                                     <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
                                     <Input type="number" {...register('landArea')} step="0.01" />
                                     {errors.landArea?.message && <p className="text-xs text-red-500">{errors.landArea.message}</p>}
                                 </div>
+                                <div>
+                                    <label className="text-sm font-medium">Area of Villa (SQFT)</label>
+                                    <Input type="number" {...register('areaOfVilla')} step="0.01" />
+                                </div>
+                                {villaTypesConfig.length > 0 && (
+                                    <div>
+                                        <label className="text-sm font-medium">Villa Type</label>
+                                        <select {...register('villaType')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                            <option value="">Select Type</option>
+                                            {villaTypesConfig.map(v => (
+                                                <option key={v.id} value={v.name}>{v.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -1470,22 +1599,52 @@ export function BrokerDashboard() {
 
                         {/* Land Fields */}
                         {structureType === 'Land' && (
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium">Category</label>
-                                    <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                        <option value="residential">Residential</option>
-                                        <option value="commercial">Commercial</option>
-                                    </select>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-sm font-medium">Category</label>
+                                        <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                            <option value="residential">Residential</option>
+                                            <option value="commercial">Commercial</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium">Total Area</label>
+                                        <Input
+                                            type="number"
+                                            {...register('landArea')}
+                                            placeholder="Sqft / Cents"
+                                        />
+                                    </div>
                                 </div>
+
                                 <div>
-                                    <label className="text-sm font-medium">Total Area</label>
-                                    <Input
-                                        type="number"
-                                        {...register('landArea')}
-                                        placeholder="Sqft / Cents"
-                                    />
+                                    <label className="flex items-center gap-2 text-sm font-medium">
+                                        <input type="checkbox" {...register('anyStructure')} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                                        Any structure on the land?
+                                    </label>
                                 </div>
+                                {watchAnyStructure && (
+                                    <div className="grid grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
+                                        <div>
+                                            <label className="text-sm font-medium">Structure Category</label>
+                                            <select {...register('structureCategory')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="">Select Structure</option>
+                                                <option value="Villa">Villa / Independent House</option>
+                                                <option value="Showroom">Showroom</option>
+                                                <option value="Godown">Godown</option>
+                                                <option value="Commercial">Commercial</option>
+                                                <option value="Others">Others</option>
+                                            </select>
+                                        </div>
+                                        {watchStructureCategory === 'Others' && (
+                                            <div>
+                                                <label className="text-sm font-medium">Specification</label>
+                                                <Input {...register('structureSpecification')} placeholder="Specify structure..." />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -1532,20 +1691,38 @@ export function BrokerDashboard() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Price (₹)</label>
-                                <Input type="number" {...register('price')} />
-                                <div className="flex items-center gap-2 py-1">
-                                    <div className="h-[1px] flex-1 bg-border/50"></div>
-                                    <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">OR</span>
-                                    <div className="h-[1px] flex-1 bg-border/50"></div>
+                            {watchType === 'joint_venture' ? (
+                                <div className="space-y-4 col-span-1">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Advance Amount (₹)</label>
+                                        <Input type="number" {...register('advanceAmount')} />
+                                        {errors.advanceAmount?.message && <p className="text-xs text-red-500">{errors.advanceAmount.message}</p>}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Sharing Ratio</label>
+                                        <Input {...register('sharingRatio')} placeholder="e.g. 50:50" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Goodwill Amount (Optional)</label>
+                                        <Input type="number" {...register('goodwillAmount')} />
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <input type="checkbox" {...register('hidePrice')} id="hidePriceEdit" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                                    <label htmlFor="hidePriceEdit" className="text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Call or Message for quote</label>
+                            ) : (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Price (₹)</label>
+                                    <Input type="number" {...register('price')} />
+                                    <div className="flex items-center gap-2 py-1">
+                                        <div className="h-[1px] flex-1 bg-border/50"></div>
+                                        <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">OR</span>
+                                        <div className="h-[1px] flex-1 bg-border/50"></div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input type="checkbox" {...register('hidePrice')} id="hidePriceEdit" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                                        <label htmlFor="hidePriceEdit" className="text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Call or Message for quote</label>
+                                    </div>
+                                    {errors.price?.message && <p className="text-xs text-red-500">{errors.price.message}</p>}
                                 </div>
-                                {errors.price?.message && <p className="text-xs text-red-500">{errors.price.message}</p>}
-                            </div>
+                            )}
                             <div>
                                 <label className="text-sm font-medium">Google Map Link (Optional)</label>
                                 <Input {...register('googleMapLink')} placeholder="https://maps.google.com/..." />
@@ -1553,17 +1730,8 @@ export function BrokerDashboard() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-2">
-                                <label className="text-sm font-medium">Transaction Type</label>
-                                <select {...register('type')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="sale">Sale</option>
-                                    <option value="rent">Rent</option>
-                                    <option value="lease">Lease</option>
-                                </select>
-                                {errors.type?.message && <p className="text-xs text-red-500">{errors.type.message}</p>}
-                            </div>
-                            <div className="flex flex-col gap-2">
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                            <div className="flex flex-col gap-2 col-span-2">
                                 <label className="text-sm font-medium">Photos (Max 3)</label>
                                 <div className="flex gap-2">
                                     {uploadedImages.map((img, idx) => (
