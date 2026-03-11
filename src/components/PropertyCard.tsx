@@ -79,7 +79,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     </div>
                 </div>
                 <div className="text-lg font-bold text-primary mt-1">
-                    ₹{property.price.toLocaleString('en-IN')}
+                    {property.hidePrice ? (
+                        <span className="text-sm">Please Message/ call Broker for Price</span>
+                    ) : property.type === 'joint_venture' ? (
+                        <span>Advance: ₹{property.advanceAmount?.toLocaleString('en-IN') || '0'}</span>
+                    ) : (
+                        <span>₹{property.price.toLocaleString('en-IN')}</span>
+                    )}
                 </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col justify-between">
