@@ -111,7 +111,7 @@ export interface Property {
     village?: string;
     type: 'sale' | 'rent' | 'lease' | 'joint_venture';
     hidePrice?: boolean;
-    category: 'residential' | 'commercial' | 'land' | 'villa' | 'apartment' | 'offices' | 'farmhouse' | 'godown';
+    category: 'residential' | 'commercial' | 'land' | 'villa' | 'apartment' | 'offices' | 'farmhouse' | 'godown' | 'both';
     structureType?: string; // Villa, Apartment, Farmhouse, Land, Godown, Office, etc.
     areaOfVilla?: number;
     villaType?: string;

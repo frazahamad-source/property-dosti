@@ -325,7 +325,9 @@ export function BrokerDashboard() {
 
         // Determine category based on structure type if needed
         let finalCategory = data.category;
-        if (data.structureType === 'Land' && data.category) {
+        if (data.type === 'joint_venture') {
+            // Keep user selection for Joint Venture
+        } else if (data.structureType === 'Land' && data.category) {
             // Keep user selection for Land
         } else {
             // Default mapping
@@ -1330,19 +1332,71 @@ export function BrokerDashboard() {
 
                         <div className="grid grid-cols-2 gap-4">
                             {watchType === 'joint_venture' ? (
-                                <div className="space-y-4 col-span-1">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Advance Amount (₹)</label>
-                                        <Input type="number" {...register('advanceAmount')} />
-                                        {errors.advanceAmount?.message && <p className="text-xs text-red-500">{errors.advanceAmount.message}</p>}
+                                <div className="space-y-4 col-span-2">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Category</label>
+                                            <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="residential">Residential</option>
+                                                <option value="commercial">Commercial</option>
+                                                <option value="both">Both</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium">Any structure on land?</label>
+                                            <select
+                                                {...register('anyStructure', { setValueAs: v => v === 'true' })}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                            >
+                                                <option value="false">No</option>
+                                                <option value="true">Yes</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Sharing Ratio</label>
-                                        <Input {...register('sharingRatio')} placeholder="e.g. 50:50" />
+
+                                    {watchAnyStructure && (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-sm font-medium">Structure Type</label>
+                                                <select {...register('structureCategory')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                    <option value="">Select Type</option>
+                                                    <option value="Villa">Villa</option>
+                                                    <option value="Showroom">Showroom</option>
+                                                    <option value="Shops">Shops</option>
+                                                    <option value="Godown">Godown</option>
+                                                    <option value="Pump Shed">Pump Shed</option>
+                                                    <option value="Others">Others</option>
+                                                </select>
+                                            </div>
+                                            {watchStructureCategory === 'Others' && (
+                                                <div>
+                                                    <label className="text-sm font-medium">Specification</label>
+                                                    <Input {...register('structureSpecification')} placeholder="Specify structure details" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Total Area (Optional for JV)</label>
+                                            <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium">Advance Amount (₹)</label>
+                                            <Input type="number" {...register('advanceAmount')} />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Goodwill Amount (Optional)</label>
-                                        <Input type="number" {...register('goodwillAmount')} />
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Sharing Ratio</label>
+                                            <Input {...register('sharingRatio')} placeholder="e.g. 50:50" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium">Goodwill Amount (Optional)</label>
+                                            <Input type="number" {...register('goodwillAmount')} />
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
@@ -1439,7 +1493,7 @@ export function BrokerDashboard() {
                                     location: data.location,
                                     village: data.village,
                                     type: data.type,
-                                    category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'residential' : data.category,
+                                    category: (data.type === 'joint_venture' || (data.structureType === 'Land')) ? data.category : (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') ? 'residential' : data.category),
                                     structure_type: data.structureType,
                                     land_area: data.landArea || null,
                                     floor_number: data.floorNumber || null,
@@ -1727,19 +1781,71 @@ export function BrokerDashboard() {
 
                         <div className="grid grid-cols-2 gap-4">
                             {watchType === 'joint_venture' ? (
-                                <div className="space-y-4 col-span-1">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Advance Amount (₹)</label>
-                                        <Input type="number" {...register('advanceAmount')} />
-                                        {errors.advanceAmount?.message && <p className="text-xs text-red-500">{errors.advanceAmount.message}</p>}
+                                <div className="space-y-4 col-span-2">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Category</label>
+                                            <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="residential">Residential</option>
+                                                <option value="commercial">Commercial</option>
+                                                <option value="both">Both</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium">Any structure on land?</label>
+                                            <select
+                                                {...register('anyStructure', { setValueAs: v => v === 'true' })}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                            >
+                                                <option value="false">No</option>
+                                                <option value="true">Yes</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Sharing Ratio</label>
-                                        <Input {...register('sharingRatio')} placeholder="e.g. 50:50" />
+
+                                    {watchAnyStructure && (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-sm font-medium">Structure Type</label>
+                                                <select {...register('structureCategory')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                    <option value="">Select Type</option>
+                                                    <option value="Villa">Villa</option>
+                                                    <option value="Showroom">Showroom</option>
+                                                    <option value="Shops">Shops</option>
+                                                    <option value="Godown">Godown</option>
+                                                    <option value="Pump Shed">Pump Shed</option>
+                                                    <option value="Others">Others</option>
+                                                </select>
+                                            </div>
+                                            {watchStructureCategory === 'Others' && (
+                                                <div>
+                                                    <label className="text-sm font-medium">Specification</label>
+                                                    <Input {...register('structureSpecification')} placeholder="Specify structure details" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Total Area (Optional for JV)</label>
+                                            <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium">Advance Amount (₹)</label>
+                                            <Input type="number" {...register('advanceAmount')} />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Goodwill Amount (Optional)</label>
-                                        <Input type="number" {...register('goodwillAmount')} />
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Sharing Ratio</label>
+                                            <Input {...register('sharingRatio')} placeholder="e.g. 50:50" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium">Goodwill Amount (Optional)</label>
+                                            <Input type="number" {...register('goodwillAmount')} />
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
