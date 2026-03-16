@@ -1256,7 +1256,7 @@ export function BrokerDashboard() {
                         {structureType === 'Land' && watchType !== 'joint_venture' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium">Total Area</label>
+                                    <label className="text-sm font-medium">Total Land Area</label>
                                     <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
                                 </div>
                             </div>
@@ -1688,7 +1688,7 @@ export function BrokerDashboard() {
                         {structureType === 'Land' && watchType !== 'joint_venture' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium">Total Area</label>
+                                    <label className="text-sm font-medium">Total Land Area</label>
                                     <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
                                 </div>
                             </div>
