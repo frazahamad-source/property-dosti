@@ -117,6 +117,7 @@ export interface Property {
     villaType?: string;
     anyStructure?: boolean;
     structureCategory?: string;
+    structureArea?: number;
     structureSpecification?: string;
     advanceAmount?: number;
     sharingRatio?: string;

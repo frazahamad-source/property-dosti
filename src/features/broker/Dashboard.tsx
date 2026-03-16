@@ -40,6 +40,7 @@ const propertySchema = z.object({
     villaType: z.string().optional().nullable(),
     anyStructure: z.boolean().optional(),
     structureCategory: z.string().optional().nullable(),
+    structureArea: z.coerce.number().optional().nullable(),
     structureSpecification: z.string().optional().nullable(),
     advanceAmount: z.coerce.number().optional().nullable(),
     sharingRatio: z.string().optional().nullable(),
@@ -176,6 +177,7 @@ export function BrokerDashboard() {
                         villaType: p.villa_type,
                         anyStructure: p.any_structure,
                         structureCategory: p.structure_category,
+                        structureArea: p.structure_area,
                         structureSpecification: p.structure_specification,
                         advanceAmount: p.advance_amount,
                         sharingRatio: p.sharing_ratio,
@@ -364,6 +366,7 @@ export function BrokerDashboard() {
                     villa_type: data.villaType || null,
                     any_structure: data.anyStructure || false,
                     structure_category: data.structureCategory || null,
+                    structure_area: data.structureArea || null,
                     structure_specification: data.structureSpecification || null,
                     advance_amount: data.advanceAmount || null,
                     sharing_ratio: data.sharingRatio || null,
@@ -409,6 +412,7 @@ export function BrokerDashboard() {
                 villaType: p.villa_type,
                 anyStructure: p.any_structure,
                 structureCategory: p.structure_category,
+                structureArea: p.structure_area,
                 structureSpecification: p.structure_specification,
                 advanceAmount: p.advance_amount,
                 sharingRatio: p.sharing_ratio,
@@ -471,6 +475,7 @@ export function BrokerDashboard() {
         setValue('villaType', property.villaType);
         setValue('anyStructure', property.anyStructure);
         setValue('structureCategory', property.structureCategory);
+        setValue('structureArea', property.structureArea);
         setValue('structureSpecification', property.structureSpecification);
         setValue('advanceAmount', property.advanceAmount);
         setValue('sharingRatio', property.sharingRatio);
@@ -1131,6 +1136,7 @@ export function BrokerDashboard() {
                                             villaType: p.villa_type,
                                             anyStructure: p.any_structure,
                                             structureCategory: p.structure_category,
+                                            structureArea: p.structure_area,
                                             structureSpecification: p.structure_specification,
                                             advanceAmount: p.advance_amount,
                                             sharingRatio: p.sharing_ratio,
@@ -1305,8 +1311,14 @@ export function BrokerDashboard() {
                                                 <option value="Others">Others</option>
                                             </select>
                                         </div>
-                                        {watchStructureCategory === 'Others' && (
+                                        {watchStructureCategory && (
                                             <div>
+                                                <label className="text-sm font-medium">Area (SQFT)</label>
+                                                <Input type="number" {...register('structureArea')} placeholder="e.g. 1500" />
+                                            </div>
+                                        )}
+                                        {watchStructureCategory === 'Others' && (
+                                            <div className="col-span-2">
                                                 <label className="text-sm font-medium">Specification</label>
                                                 <Input {...register('structureSpecification')} placeholder="Specify structure details" />
                                             </div>
@@ -1502,6 +1514,7 @@ export function BrokerDashboard() {
                                     villa_type: data.villaType || null,
                                     any_structure: data.anyStructure || false,
                                     structure_category: data.structureCategory || null,
+                                    structure_area: data.structureArea || null,
                                     structure_specification: data.structureSpecification || null,
                                     advance_amount: data.advanceAmount || null,
                                     sharing_ratio: data.sharingRatio || null,
@@ -1538,6 +1551,7 @@ export function BrokerDashboard() {
                                 villaType: data.villaType ?? undefined,
                                 anyStructure: data.anyStructure ?? undefined,
                                 structureCategory: data.structureCategory ?? undefined,
+                                structureArea: data.structureArea ?? undefined,
                                 structureSpecification: data.structureSpecification ?? undefined,
                                 advanceAmount: data.advanceAmount ?? undefined,
                                 sharingRatio: data.sharingRatio ?? undefined,
@@ -1720,8 +1734,14 @@ export function BrokerDashboard() {
                                                 <option value="Others">Others</option>
                                             </select>
                                         </div>
-                                        {watchStructureCategory === 'Others' && (
+                                        {watchStructureCategory && (
                                             <div>
+                                                <label className="text-sm font-medium">Area (SQFT)</label>
+                                                <Input type="number" {...register('structureArea')} placeholder="e.g. 1500" />
+                                            </div>
+                                        )}
+                                        {watchStructureCategory === 'Others' && (
+                                            <div className="col-span-2">
                                                 <label className="text-sm font-medium">Specification</label>
                                                 <Input {...register('structureSpecification')} placeholder="Specify structure details" />
                                             </div>
