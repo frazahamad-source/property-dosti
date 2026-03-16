@@ -1179,10 +1179,12 @@ export function BrokerDashboard() {
                         {/* Villa / Farmhouse Fields */}
                         {(structureType === 'Villa' || structureType === 'Farmhouse') && (
                             <div className="grid grid-cols-2 gap-4 mt-2">
-                                <div className="col-span-2">
-                                    <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
-                                    <Input type="number" {...register('landArea')} step="0.01" />
-                                </div>
+                                {watchType !== 'joint_venture' && (
+                                    <div className="col-span-2">
+                                        <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
+                                        <Input type="number" {...register('landArea')} step="0.01" />
+                                    </div>
+                                )}
                                 <div>
                                     <label className="text-sm font-medium">Area of Villa (SQFT)</label>
                                     <Input type="number" {...register('areaOfVilla')} step="0.01" />
@@ -1264,24 +1266,62 @@ export function BrokerDashboard() {
                             </div>
                         )}
 
-                        {/* Land Fields */}
-                        {structureType === 'Land' && (
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium">Category</label>
-                                    <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                        <option value="residential">Residential</option>
-                                        <option value="commercial">Commercial</option>
-                                    </select>
+                        {/* 2. Category, Any Structure Built, Structure Type, and Total Area */}
+                        {(watchType === 'joint_venture' || structureType === 'Land') && (
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    {!(watchType === 'joint_venture' && structureType === 'Land') && (
+                                        <div>
+                                            <label className="text-sm font-medium">Category</label>
+                                            <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="residential">Residential</option>
+                                                <option value="commercial">Commercial</option>
+                                            </select>
+                                        </div>
+                                    )}
+                                    <div className={watchType === 'joint_venture' && structureType === 'Land' ? "col-span-2" : ""}>
+                                        <label className="text-sm font-medium">Any Structure Built</label>
+                                        <select
+                                            {...register('anyStructure', { setValueAs: v => v === 'true' })}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        >
+                                            <option value="false">No</option>
+                                            <option value="true">Yes</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="text-sm font-medium">Total Area</label>
-                                    <Input
-                                        type="number"
-                                        {...register('landArea')}
-                                        placeholder="Sqft / Cents"
-                                    />
-                                </div>
+
+                                {watchAnyStructure && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Structure Type</label>
+                                            <select {...register('structureCategory')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="">Select Type</option>
+                                                <option value="Villa">Villa</option>
+                                                <option value="Showroom">Showroom</option>
+                                                <option value="Shops">Shops</option>
+                                                <option value="Godown">Godown</option>
+                                                <option value="Pump Shed">Pump Shed</option>
+                                                <option value="Others">Others</option>
+                                            </select>
+                                        </div>
+                                        {watchStructureCategory === 'Others' && (
+                                            <div>
+                                                <label className="text-sm font-medium">Specification</label>
+                                                <Input {...register('structureSpecification')} placeholder="Specify structure details" />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {!(watchType === 'joint_venture' && structureType === 'Land') && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Total Area</label>
+                                            <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -1335,64 +1375,16 @@ export function BrokerDashboard() {
                                 <div className="space-y-4 col-span-2">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-sm font-medium">Category</label>
-                                            <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                <option value="residential">Residential</option>
-                                                <option value="commercial">Commercial</option>
-                                                <option value="both">Both</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium">Any structure on land?</label>
-                                            <select
-                                                {...register('anyStructure', { setValueAs: v => v === 'true' })}
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                            >
-                                                <option value="false">No</option>
-                                                <option value="true">Yes</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {watchAnyStructure && (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-sm font-medium">Structure Type</label>
-                                                <select {...register('structureCategory')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                    <option value="">Select Type</option>
-                                                    <option value="Villa">Villa</option>
-                                                    <option value="Showroom">Showroom</option>
-                                                    <option value="Shops">Shops</option>
-                                                    <option value="Godown">Godown</option>
-                                                    <option value="Pump Shed">Pump Shed</option>
-                                                    <option value="Others">Others</option>
-                                                </select>
-                                            </div>
-                                            {watchStructureCategory === 'Others' && (
-                                                <div>
-                                                    <label className="text-sm font-medium">Specification</label>
-                                                    <Input {...register('structureSpecification')} placeholder="Specify structure details" />
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-medium">Total Area (Optional for JV)</label>
-                                            <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
-                                        </div>
-                                        <div>
                                             <label className="text-sm font-medium">Advance Amount (₹)</label>
                                             <Input type="number" {...register('advanceAmount')} />
                                         </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-sm font-medium">Sharing Ratio</label>
                                             <Input {...register('sharingRatio')} placeholder="e.g. 50:50" />
                                         </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-sm font-medium">Goodwill Amount (Optional)</label>
                                             <Input type="number" {...register('goodwillAmount')} />
@@ -1600,11 +1592,13 @@ export function BrokerDashboard() {
                         {/* Villa / Farmhouse Fields */}
                         {(structureType === 'Villa' || structureType === 'Farmhouse') && (
                             <div className="grid grid-cols-2 gap-4 mt-2">
-                                <div className="col-span-2">
-                                    <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
-                                    <Input type="number" {...register('landArea')} step="0.01" />
-                                    {errors.landArea?.message && <p className="text-xs text-red-500">{errors.landArea.message}</p>}
-                                </div>
+                                {watchType !== 'joint_venture' && (
+                                    <div className="col-span-2">
+                                        <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
+                                        <Input type="number" {...register('landArea')} step="0.01" />
+                                        {errors.landArea?.message && <p className="text-xs text-red-500">{errors.landArea.message}</p>}
+                                    </div>
+                                )}
                                 <div>
                                     <label className="text-sm font-medium">Area of Villa (SQFT)</label>
                                     <Input type="number" {...register('areaOfVilla')} step="0.01" />
@@ -1687,51 +1681,60 @@ export function BrokerDashboard() {
                         )}
 
                         {/* Land Fields */}
-                        {structureType === 'Land' && (
+                        {/* 1.1 Category, Any Structure Built, Structure Type, and Total Area */}
+                        {(watchType === 'joint_venture' || structureType === 'Land') && (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm font-medium">Category</label>
-                                        <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                            <option value="residential">Residential</option>
-                                            <option value="commercial">Commercial</option>
+                                    {!(watchType === 'joint_venture' && structureType === 'Land') && (
+                                        <div>
+                                            <label className="text-sm font-medium">Category</label>
+                                            <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="residential">Residential</option>
+                                                <option value="commercial">Commercial</option>
+                                            </select>
+                                        </div>
+                                    )}
+                                    <div className={watchType === 'joint_venture' && structureType === 'Land' ? "col-span-2" : ""}>
+                                        <label className="text-sm font-medium">Any Structure Built</label>
+                                        <select
+                                            {...register('anyStructure', { setValueAs: v => v === 'true' })}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        >
+                                            <option value="false">No</option>
+                                            <option value="true">Yes</option>
                                         </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium">Total Area</label>
-                                        <Input
-                                            type="number"
-                                            {...register('landArea')}
-                                            placeholder="Sqft / Cents"
-                                        />
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium">
-                                        <input type="checkbox" {...register('anyStructure')} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                                        Any structure on the land?
-                                    </label>
-                                </div>
                                 {watchAnyStructure && (
-                                    <div className="grid grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-sm font-medium">Structure Category</label>
+                                            <label className="text-sm font-medium">Structure Type</label>
                                             <select {...register('structureCategory')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                <option value="">Select Structure</option>
-                                                <option value="Villa">Villa / Independent House</option>
+                                                <option value="">Select Type</option>
+                                                <option value="Villa">Villa</option>
                                                 <option value="Showroom">Showroom</option>
+                                                <option value="Shops">Shops</option>
                                                 <option value="Godown">Godown</option>
-                                                <option value="Commercial">Commercial</option>
+                                                <option value="Pump Shed">Pump Shed</option>
                                                 <option value="Others">Others</option>
                                             </select>
                                         </div>
                                         {watchStructureCategory === 'Others' && (
                                             <div>
                                                 <label className="text-sm font-medium">Specification</label>
-                                                <Input {...register('structureSpecification')} placeholder="Specify structure..." />
+                                                <Input {...register('structureSpecification')} placeholder="Specify structure details" />
                                             </div>
                                         )}
+                                    </div>
+                                )}
+
+                                {!(watchType === 'joint_venture' && structureType === 'Land') && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Total Area</label>
+                                            <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -1784,64 +1787,16 @@ export function BrokerDashboard() {
                                 <div className="space-y-4 col-span-2">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-sm font-medium">Category</label>
-                                            <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                <option value="residential">Residential</option>
-                                                <option value="commercial">Commercial</option>
-                                                <option value="both">Both</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium">Any structure on land?</label>
-                                            <select
-                                                {...register('anyStructure', { setValueAs: v => v === 'true' })}
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                            >
-                                                <option value="false">No</option>
-                                                <option value="true">Yes</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {watchAnyStructure && (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-sm font-medium">Structure Type</label>
-                                                <select {...register('structureCategory')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                    <option value="">Select Type</option>
-                                                    <option value="Villa">Villa</option>
-                                                    <option value="Showroom">Showroom</option>
-                                                    <option value="Shops">Shops</option>
-                                                    <option value="Godown">Godown</option>
-                                                    <option value="Pump Shed">Pump Shed</option>
-                                                    <option value="Others">Others</option>
-                                                </select>
-                                            </div>
-                                            {watchStructureCategory === 'Others' && (
-                                                <div>
-                                                    <label className="text-sm font-medium">Specification</label>
-                                                    <Input {...register('structureSpecification')} placeholder="Specify structure details" />
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-medium">Total Area (Optional for JV)</label>
-                                            <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
-                                        </div>
-                                        <div>
                                             <label className="text-sm font-medium">Advance Amount (₹)</label>
                                             <Input type="number" {...register('advanceAmount')} />
                                         </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-sm font-medium">Sharing Ratio</label>
                                             <Input {...register('sharingRatio')} placeholder="e.g. 50:50" />
                                         </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-sm font-medium">Goodwill Amount (Optional)</label>
                                             <Input type="number" {...register('goodwillAmount')} />
