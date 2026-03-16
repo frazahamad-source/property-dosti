@@ -1252,6 +1252,16 @@ export function BrokerDashboard() {
                             </div>
                         )}
 
+                        {/* Total Area Details (For Land and Non-JV) */}
+                        {structureType === 'Land' && watchType !== 'joint_venture' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Total Area</label>
+                                    <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Dynamic Amenities */}
                         {structureType && (
                             <div className="space-y-2">
@@ -1674,6 +1684,16 @@ export function BrokerDashboard() {
                             </div>
                         )}
 
+                        {/* Total Area Details (For Land and Non-JV) */}
+                        {structureType === 'Land' && watchType !== 'joint_venture' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Total Area</label>
+                                    <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Dynamic Amenities */}
                         {structureType && (
                             <div className="space-y-2">
@@ -1749,14 +1769,6 @@ export function BrokerDashboard() {
                                     </div>
                                 )}
 
-                                {!(watchType === 'joint_venture' && structureType === 'Land') && (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-medium">Total Area</label>
-                                            <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         )}
 
