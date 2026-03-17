@@ -55,8 +55,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     )}
                 </Link>
                 <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
-                    <Badge variant={property.type === 'sale' ? 'default' : 'secondary'}>
-                        For {property.type === 'sale' ? 'Sale' : 'Rent'}
+                    <Badge variant={property.type === 'sale' ? 'default' : property.type === 'rent' ? 'secondary' : property.type === 'lease' ? 'outline' : 'destructive'}>
+                        {property.type === 'sale' ? 'For Sale' : property.type === 'rent' ? 'For Rent' : property.type === 'lease' ? 'For Lease' : 'Joint Venture'}
                     </Badge>
                     {property.structureType && (
                         <Badge variant="outline" className="bg-white/80 backdrop-blur text-black border-none text-[10px]">

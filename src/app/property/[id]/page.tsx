@@ -69,7 +69,20 @@ export default function PropertyDetailPage() {
                     parkingType: propData.parking_type,
                     googleMapLink: propData.google_map_link,
                     hidePrice: propData.hide_price,
-                    brokerPhone: propData.broker_phone
+                    brokerPhone: propData.broker_phone,
+                    landArea: propData.land_area,
+                    floorNumber: propData.floor_number,
+                    floorDetail: propData.floor_detail,
+                    parkingAllocated: propData.parking_allocated,
+                    areaOfVilla: propData.area_of_villa,
+                    villaType: propData.villa_type,
+                    anyStructure: propData.any_structure,
+                    structureCategory: propData.structure_category,
+                    structureArea: propData.structure_area,
+                    structureSpecification: propData.structure_specification,
+                    advanceAmount: propData.advance_amount,
+                    sharingRatio: propData.sharing_ratio,
+                    goodwillAmount: propData.goodwill_amount
                 };
                 setProperty(mappedProperty);
 
@@ -279,10 +292,10 @@ export default function PropertyDetailPage() {
                                 <div>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors uppercase tracking-wider text-[10px] font-bold">
-                                            {property.type === 'sale' ? 'For Sale' : property.type === 'rent' ? 'For Rent' : 'For Lease'}
+                                            {property.type === 'sale' ? 'For Sale' : property.type === 'rent' ? 'For Rent' : property.type === 'lease' ? 'For Lease' : 'Joint Venture'}
                                         </Badge>
                                         <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider">
-                                            {property.category}
+                                            {property.category === 'both' ? 'Residential & Commercial' : property.category}
                                         </Badge>
                                     </div>
                                     <h1 className="text-3xl md:text-4xl font-black mb-2 text-gray-900 dark:text-white tracking-tight leading-tight">{property.title}</h1>
@@ -348,24 +361,101 @@ export default function PropertyDetailPage() {
                                         <span className="w-8 h-1 bg-primary rounded-full"></span>
                                         Property Details
                                     </h3>
-                                    <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {/* Core Details */}
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100">
+                                        <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary text-left">Structure Type</div>
+                                        <div className="text-lg font-black text-left">{property.structureType || 'Not Specified'}</div>
+                                    </div>
+
+                                    {(property.landArea || property.areaOfVilla) ? (
                                         <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100">
-                                            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary text-left">Structure Type</div>
-                                            <div className="text-lg font-black text-left">{property.structureType || 'Residential'}</div>
-                                        </div>
-                                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100">
-                                            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary flex items-center gap-1 text-left">
-                                                <Car className="h-3 w-3" /> Car Parking
-                                            </div>
+                                            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary text-left">Total Area</div>
                                             <div className="text-lg font-black text-left">
-                                                {property.parkingType && property.parkingSpaces && property.parkingSpaces > 0
-                                                    ? `${property.parkingSpaces} (${property.parkingType})`
-                                                    : property.parkingSpaces && property.parkingSpaces > 0
-                                                        ? `${property.parkingSpaces} Spaces`
-                                                        : 'None'}
+                                                {property.landArea ? `${property.landArea} Sqft` : `${property.areaOfVilla} Sqft`}
                                             </div>
+                                        </div>
+                                    ) : null}
+
+                                    {property.villaType && (
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100">
+                                            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary text-left">Villa Type</div>
+                                            <div className="text-lg font-black text-left">{property.villaType}</div>
+                                        </div>
+                                    )}
+
+                                    {(property.floorNumber !== undefined && property.floorNumber !== null) && (
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100">
+                                            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary text-left">Floor Details</div>
+                                            <div className="text-lg font-black text-left">
+                                                {property.floorNumber} {property.floorDetail ? `(${property.floorDetail})` : ''}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100">
+                                        <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary flex items-center gap-1 text-left">
+                                            <Car className="h-3 w-3" /> Car Parking
+                                        </div>
+                                        <div className="text-lg font-black text-left">
+                                            {property.parkingSpaces && property.parkingSpaces > 0
+                                                ? `${property.parkingSpaces} ${property.parkingType ? `(${property.parkingType})` : 'Spaces'}`
+                                                : 'None'}
+                                            {property.parkingAllocated && <div className="text-sm font-medium mt-0.5 text-muted-foreground">Allocated: {property.parkingAllocated}</div>}
                                         </div>
                                     </div>
+
+                                    {/* Financial Specifics */}
+                                    {property.advanceAmount !== undefined && property.advanceAmount !== null && (
+                                        <div className="p-4 bg-green-50/50 dark:bg-green-900/10 rounded-xl border border-green-100">
+                                            <div className="text-[10px] text-green-700 font-bold uppercase tracking-widest mb-1 text-left">Advance Amount</div>
+                                            <div className="text-lg font-black text-left text-green-700">₹{property.advanceAmount.toLocaleString('en-IN')}</div>
+                                        </div>
+                                    )}
+
+                                    {property.goodwillAmount !== undefined && property.goodwillAmount !== null && (
+                                        <div className="p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-xl border border-purple-100">
+                                            <div className="text-[10px] text-purple-700 font-bold uppercase tracking-widest mb-1 text-left">Goodwill Amount</div>
+                                            <div className="text-lg font-black text-left text-purple-700">₹{property.goodwillAmount.toLocaleString('en-IN')}</div>
+                                        </div>
+                                    )}
+
+                                    {property.sharingRatio && (
+                                        <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100">
+                                            <div className="text-[10px] text-blue-700 font-bold uppercase tracking-widest mb-1 text-left">Sharing Ratio</div>
+                                            <div className="text-lg font-black text-left text-blue-700">{property.sharingRatio}</div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Any Structure Details Container */}
+                                {property.anyStructure && (
+                                    <div className="mt-4 p-5 bg-orange-50/30 rounded-xl border border-orange-100">
+                                        <h4 className="text-sm font-bold text-orange-800 mb-3 flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-orange-500"></div> Existing Structure Details
+                                        </h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            {property.structureCategory && (
+                                                <div>
+                                                    <div className="text-[10px] text-orange-600 font-bold uppercase tracking-widest mb-1 text-left">Structure Category</div>
+                                                    <div className="text-sm font-bold text-left text-orange-900">{property.structureCategory}</div>
+                                                </div>
+                                            )}
+                                            {property.structureArea && (
+                                                <div>
+                                                    <div className="text-[10px] text-orange-600 font-bold uppercase tracking-widest mb-1 text-left">Structure Area</div>
+                                                    <div className="text-sm font-bold text-left text-orange-900">{property.structureArea} Sqft</div>
+                                                </div>
+                                            )}
+                                            {property.structureSpecification && (
+                                                <div className="sm:col-span-3">
+                                                    <div className="text-[10px] text-orange-600 font-bold uppercase tracking-widest mb-1 text-left">Specification</div>
+                                                    <div className="text-sm font-medium text-left text-orange-900 bg-white/50 p-3 rounded-lg border border-orange-100/50">{property.structureSpecification}</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                                 </div>
 
                                 <div>
@@ -381,25 +471,38 @@ export default function PropertyDetailPage() {
                                 <div>
                                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                                         <span className="w-8 h-1 bg-primary rounded-full"></span>
-                                        Amenities
+                                        Facilities & Amenities
                                     </h3>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                        {property.amenities.map((amenity, idx) => (
-                                            <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 transition-all hover:shadow-md hover:border-primary/20">
-                                                <div className="bg-primary/10 p-2 rounded-lg">
-                                                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                                    {property.amenities.length > 0 ? (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                            {property.amenities.map((amenity, idx) => (
+                                                <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 transition-all hover:shadow-md hover:border-primary/20">
+                                                    <div className="bg-primary/10 p-2 rounded-lg">
+                                                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                    <span className="text-sm font-semibold">{amenity}</span>
                                                 </div>
-                                                <span className="text-sm font-semibold">{amenity}</span>
-                                            </div>
-                                        ))}
-                                    </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground italic bg-gray-50 p-4 rounded-xl border border-dashed border-gray-200">No specific facilities or amenities listed.</p>
+                                    )}
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                        <span className="w-8 h-1 bg-primary rounded-full"></span>
-                                        Location
-                                    </h3>
+                                    <div className="flex justify-between items-end mb-4">
+                                        <h3 className="text-xl font-bold flex items-center gap-2">
+                                            <span className="w-8 h-1 bg-primary rounded-full"></span>
+                                            Location
+                                        </h3>
+                                        {property.googleMapLink && (
+                                            <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 h-8 font-bold" asChild>
+                                                <Link href={property.googleMapLink} target="_blank">
+                                                    Open in Google Maps <ExternalLink className="h-3 w-3 ml-1" />
+                                                </Link>
+                                            </Button>
+                                        )}
+                                    </div>
                                     <div className="rounded-2xl overflow-hidden border shadow-sm ring-1 ring-black/5 h-[300px] sm:h-[400px]">
                                         <iframe
                                             width="100%"
