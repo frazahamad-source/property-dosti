@@ -396,7 +396,6 @@ export function BrokerDashboard() {
                 parkingSpaces: p.parking_spaces,
                 parkingType: p.parking_type,
                 parkingAllocated: p.parking_allocated,
-                facilities: p.facilities,
                 googleMapLink: p.google_map_link,
                 hidePrice: p.hide_price,
                 images: p.images,
@@ -1132,7 +1131,6 @@ export function BrokerDashboard() {
                                             is_sold: p.is_sold ?? false,
                                             likes: p.likes || 0, leadsCount: p.leads_count || 0,
                                             amenities: p.facilities || [], // Consistently map facilities to amenities
-                                            facilities: p.facilities || [],
                                             brokerPhone: p.profiles?.phone || '',
                                             hidePrice: p.hide_price ?? false,
                                             areaOfVilla: p.area_of_villa,
