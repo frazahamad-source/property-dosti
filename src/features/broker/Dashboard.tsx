@@ -159,7 +159,6 @@ export function BrokerDashboard() {
                         parkingSpaces: p.parking_spaces || 0,
                         parkingType: (p.parking_type as Property['parkingType']) || 'Open',
                         parkingAllocated: p.parking_allocated || '',
-                        facilities: p.facilities || [],
                         googleMapLink: p.google_map_link || '',
                         images: p.images || [],
                         village: p.village || '',
