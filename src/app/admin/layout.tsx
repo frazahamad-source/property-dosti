@@ -86,7 +86,7 @@ export default function AdminLayout({
                 if (propertyError) {
                     console.error('Error fetching properties:', propertyError);
                 } else if (propertyData) {
-                    const mappedProperties: Property[] = propertyData.map((p: { id: string; broker_id: string; title?: string; description?: string; price?: number; district?: string; location?: string; type?: 'sale' | 'rent' | 'lease'; category?: string; images?: string[]; created_at: string; updated_at: string; expires_at: string; is_active?: boolean; likes?: number; leads_count?: number; amenities?: string[]; }) => ({
+                    const mappedProperties: Property[] = propertyData.map((p: any) => ({
                         id: p.id,
                         brokerId: p.broker_id,
                         title: p.title || 'No Title',
@@ -96,6 +96,7 @@ export default function AdminLayout({
                         location: p.location || 'Unknown',
                         type: p.type || 'sale',
                         category: (p.category as Property['category']) || 'residential',
+                        structureType: p.structure_type || '',
                         images: p.images || [],
                         createdAt: p.created_at,
                         updatedAt: p.updated_at,
@@ -103,7 +104,25 @@ export default function AdminLayout({
                         isActive: p.is_active ?? true,
                         likes: p.likes || 0,
                         leadsCount: p.leads_count || 0,
-                        amenities: p.amenities || [],
+                        amenities: p.facilities || [], // Correct mapping
+                        facilities: p.facilities || [],
+                        hidePrice: p.hide_price ?? false,
+                        areaOfVilla: p.area_of_villa,
+                        villaType: p.villa_type,
+                        anyStructure: p.any_structure,
+                        structureCategory: p.structure_category,
+                        structureArea: p.structure_area,
+                        structureSpecification: p.structure_specification,
+                        advanceAmount: p.advance_amount,
+                        sharingRatio: p.sharing_ratio,
+                        goodwillAmount: p.goodwill_amount,
+                        landArea: p.land_area,
+                        floorNumber: p.floor_number,
+                        floorDetail: p.floor_detail,
+                        parkingSpaces: p.parking_spaces,
+                        parkingType: p.parking_type,
+                        parkingAllocated: p.parking_allocated,
+                        googleMapLink: p.google_map_link,
                     }));
                     setProperties(mappedProperties);
                 }

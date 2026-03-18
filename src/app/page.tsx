@@ -58,7 +58,7 @@ export default function Home() {
         console.error('Error fetching properties FULL:', JSON.stringify(error, null, 2));
         // Also log to toast if possible, or just console for now
       } else if (data) {
-        const mappedProperties: Property[] = data.map((p: { id: string; broker_id: string; title?: string; description?: string; price?: number; district?: string; location?: string; type?: 'sale' | 'rent' | 'lease'; category?: string; images?: string[]; created_at: string; updated_at: string; expires_at: string; is_active?: boolean; likes?: number; leads_count?: number; amenities?: string[]; profiles?: { phone: string }; }) => ({
+        const mappedProperties: Property[] = data.map((p: any) => ({
           id: p.id,
           brokerId: p.broker_id,
           title: p.title || 'No Title',
@@ -66,8 +66,10 @@ export default function Home() {
           price: p.price || 0,
           district: p.district || 'Unknown',
           location: p.location || 'Unknown',
+          village: p.village || '',
           type: p.type || 'sale',
           category: (p.category as Property['category']) || 'residential',
+          structureType: p.structure_type || '',
           images: p.images || [],
           createdAt: p.created_at,
           updatedAt: p.updated_at,
@@ -75,8 +77,26 @@ export default function Home() {
           isActive: p.is_active ?? true,
           likes: p.likes || 0,
           leadsCount: p.leads_count || 0,
-          amenities: p.amenities || [],
+          amenities: p.facilities || [], // Map facilities to amenities for UI
+          facilities: p.facilities || [],
           brokerPhone: p.profiles?.phone || '',
+          hidePrice: p.hide_price ?? false,
+          areaOfVilla: p.area_of_villa,
+          villaType: p.villa_type,
+          anyStructure: p.any_structure,
+          structureCategory: p.structure_category,
+          structureArea: p.structure_area,
+          structureSpecification: p.structure_specification,
+          advanceAmount: p.advance_amount,
+          sharingRatio: p.sharing_ratio,
+          goodwillAmount: p.goodwill_amount,
+          landArea: p.land_area,
+          floorNumber: p.floor_number,
+          floorDetail: p.floor_detail,
+          parkingSpaces: p.parking_spaces,
+          parkingType: p.parking_type,
+          parkingAllocated: p.parking_allocated,
+          googleMapLink: p.google_map_link,
         }));
         setProperties(mappedProperties);
       }
