@@ -91,9 +91,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
             <CardContent className="flex-1 flex flex-col justify-between">
                 <p className="text-sm text-gray-600 line-clamp-2 mb-4 whitespace-pre-line">{property.description}</p>
                 <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
-                    <div className="flex gap-2">
-                        {property.landArea ? <span className="bg-gray-100 px-2 py-1 rounded">{property.landArea} Sqft</span> : null}
-                        {property.parkingAllocated ? <span className="bg-gray-100 px-2 py-1 rounded">Pkng: {property.parkingAllocated}</span> : null}
+                    <div className="flex gap-2 text-[10px] font-bold">
+                        {property.landArea ? <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{property.landArea} {property.landAreaUnit || 'Cents'}</span> : null}
+                        {property.parkingAllocated ? <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Pkng: {property.parkingAllocated}</span> : null}
                     </div>
                 </div>
 

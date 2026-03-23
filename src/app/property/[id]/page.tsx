@@ -71,6 +71,7 @@ export default function PropertyDetailPage() {
                     hidePrice: propData.hide_price,
                     brokerPhone: propData.broker_phone,
                     landArea: propData.land_area,
+                    landAreaUnit: propData.land_area_unit,
                     floorNumber: propData.floor_number,
                     floorDetail: propData.floor_detail,
                     parkingAllocated: propData.parking_allocated,
@@ -370,9 +371,9 @@ export default function PropertyDetailPage() {
 
                                     {(property.landArea || property.areaOfVilla) ? (
                                         <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100">
-                                            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary text-left">Total Area</div>
+                                            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 text-primary text-left">Extent of Land</div>
                                             <div className="text-lg font-black text-left">
-                                                {property.landArea ? `${property.landArea} Sqft` : `${property.areaOfVilla} Sqft`}
+                                                {property.landArea ? `${property.landArea} ${property.landAreaUnit || 'Cents'}` : `${property.areaOfVilla} Sqft`}
                                             </div>
                                         </div>
                                     ) : null}

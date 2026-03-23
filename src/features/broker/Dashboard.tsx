@@ -36,6 +36,7 @@ const propertySchema = z.object({
     category: z.string().optional().nullable().or(z.literal('')),
     structureType: z.string().optional().nullable().or(z.literal('')),
     landArea: z.coerce.number().optional().nullable(),
+    landAreaUnit: z.enum(['Cents', 'Acres', 'Gunta', 'Ankanam', 'Hectare']).optional().nullable().default('Cents'),
     areaOfVilla: z.coerce.number().optional().nullable(),
     villaType: z.string().optional().nullable(),
     anyStructure: z.boolean().optional().nullable(),
@@ -100,7 +101,8 @@ export function BrokerDashboard() {
             district: '',
             structureType: 'Villa',
             type: 'sale',
-            category: 'residential'
+            category: 'residential',
+            landAreaUnit: 'Cents'
         }
     });
 
@@ -154,6 +156,7 @@ export function BrokerDashboard() {
                         category: (p.category as Property['category']) || 'residential',
                         structureType: p.structure_type || '',
                         landArea: p.land_area || 0,
+                        landAreaUnit: p.land_area_unit || 'Cents',
                         floorNumber: p.floor_number || 0,
                         floorDetail: p.floor_detail || '',
                         parkingSpaces: p.parking_spaces || 0,
@@ -352,6 +355,7 @@ export function BrokerDashboard() {
                     category: finalCategory,
                     structure_type: data.structureType,
                     land_area: data.landArea || null,
+                    land_area_unit: data.landAreaUnit || 'Cents',
                     floor_number: data.floorNumber || null,
                     floor_detail: data.floorDetail,
                     parking_spaces: data.parkingSpaces || 0,
@@ -391,6 +395,7 @@ export function BrokerDashboard() {
                 category: p.category,
                 structureType: p.structure_type,
                 landArea: p.land_area,
+                landAreaUnit: p.land_area_unit || 'Cents',
                 floorNumber: p.floor_number,
                 floorDetail: p.floor_detail,
                 parkingSpaces: p.parking_spaces,
@@ -463,6 +468,7 @@ export function BrokerDashboard() {
         setValue('category', property.category as Property['category']);
         setValue('structureType', (property.structureType as Property['structureType']) || 'Villa');
         setValue('landArea', property.landArea);
+        setValue('landAreaUnit', property.landAreaUnit || 'Cents');
         setValue('floorNumber', property.floorNumber);
         setValue('floorDetail', property.floorDetail);
         setValue('parkingSpaces', property.parkingSpaces);
@@ -1122,6 +1128,7 @@ export function BrokerDashboard() {
                                             district: p.district || 'Unknown', location: p.location || 'Unknown',
                                             type: p.type || 'sale', category: (p.category) || 'residential',
                                             structureType: p.structure_type || '', landArea: p.land_area || 0,
+                                            landAreaUnit: p.land_area_unit || 'Cents',
                                             floorNumber: p.floor_number || 0, floorDetail: p.floor_detail || '',
                                             parkingSpaces: p.parking_spaces || 0, parkingType: (p.parking_type) || 'Open',
                                             parkingAllocated: p.parking_allocated || '', facilities: p.facilities || [],
@@ -1188,8 +1195,17 @@ export function BrokerDashboard() {
                             <div className="grid grid-cols-2 gap-4 mt-2">
                                 {watchType !== 'joint_venture' && (
                                     <div className="col-span-2">
-                                        <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
-                                        <Input type="number" {...register('landArea')} step="0.01" />
+                                        <label className="text-sm font-medium">Extent of Land</label>
+                                        <div className="flex gap-2">
+                                            <Input type="number" {...register('landArea')} step="0.01" className="flex-1" />
+                                            <select {...register('landAreaUnit')} className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="Cents">Cents</option>
+                                                <option value="Acres">Acres</option>
+                                                <option value="Gunta">Gunta</option>
+                                                <option value="Ankanam">Ankanam</option>
+                                                <option value="Hectare">Hectare</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 )}
                                 <div>
@@ -1257,8 +1273,17 @@ export function BrokerDashboard() {
                         {structureType === 'Land' && watchType !== 'joint_venture' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium">Total Land Area</label>
-                                    <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
+                                    <label className="text-sm font-medium">Extent of Land</label>
+                                    <div className="flex gap-2">
+                                        <Input type="number" {...register('landArea')} placeholder="Value" className="flex-1" />
+                                        <select {...register('landAreaUnit')} className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                            <option value="Cents">Cents</option>
+                                            <option value="Acres">Acres</option>
+                                            <option value="Gunta">Gunta</option>
+                                            <option value="Ankanam">Ankanam</option>
+                                            <option value="Hectare">Hectare</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -1340,8 +1365,17 @@ export function BrokerDashboard() {
                                 {!(watchType === 'joint_venture' && structureType === 'Land') && (
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-sm font-medium">Total Area</label>
-                                            <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
+                                            <label className="text-sm font-medium">Extent of Land</label>
+                                            <div className="flex gap-2">
+                                                <Input type="number" {...register('landArea')} placeholder="Value" className="flex-1" />
+                                                <select {...register('landAreaUnit')} className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                    <option value="Cents">Cents</option>
+                                                    <option value="Acres">Acres</option>
+                                                    <option value="Gunta">Gunta</option>
+                                                    <option value="Ankanam">Ankanam</option>
+                                                    <option value="Hectare">Hectare</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -1511,6 +1545,7 @@ export function BrokerDashboard() {
                                     category: (data.type === 'joint_venture' || (data.structureType === 'Land')) ? data.category : (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') ? 'residential' : data.category),
                                     structure_type: data.structureType,
                                     land_area: data.landArea || null,
+                                    land_area_unit: data.landAreaUnit || 'Cents',
                                     floor_number: data.floorNumber || null,
                                     floor_detail: data.floorDetail,
                                     parking_spaces: data.parkingSpaces || 0,
@@ -1548,6 +1583,7 @@ export function BrokerDashboard() {
                                 category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'residential' : data.category as Property['category'],
                                 structureType: data.structureType ?? undefined,
                                 landArea: data.landArea ?? undefined,
+                                landAreaUnit: data.landAreaUnit || 'Cents',
                                 floorNumber: data.floorNumber ?? undefined,
                                 floorDetail: data.floorDetail ?? undefined,
                                 parkingSpaces: data.parkingSpaces ?? undefined,
@@ -1619,8 +1655,17 @@ export function BrokerDashboard() {
                             <div className="grid grid-cols-2 gap-4 mt-2">
                                 {watchType !== 'joint_venture' && (
                                     <div className="col-span-2">
-                                        <label className="text-sm font-medium">Land Area (Sqft/Cents)</label>
-                                        <Input type="number" {...register('landArea')} step="0.01" />
+                                        <label className="text-sm font-medium">Extent of Land</label>
+                                        <div className="flex gap-2">
+                                            <Input type="number" {...register('landArea')} step="0.01" className="flex-1" />
+                                            <select {...register('landAreaUnit')} className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="Cents">Cents</option>
+                                                <option value="Acres">Acres</option>
+                                                <option value="Gunta">Gunta</option>
+                                                <option value="Ankanam">Ankanam</option>
+                                                <option value="Hectare">Hectare</option>
+                                            </select>
+                                        </div>
                                         {errors.landArea?.message && <p className="text-xs text-red-500">{errors.landArea.message}</p>}
                                     </div>
                                 )}
@@ -1689,8 +1734,17 @@ export function BrokerDashboard() {
                         {structureType === 'Land' && watchType !== 'joint_venture' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium">Total Land Area</label>
-                                    <Input type="number" {...register('landArea')} placeholder="Sqft / Cents" />
+                                    <label className="text-sm font-medium">Extent of Land</label>
+                                    <div className="flex gap-2">
+                                        <Input type="number" {...register('landArea')} placeholder="Value" className="flex-1" />
+                                        <select {...register('landAreaUnit')} className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                            <option value="Cents">Cents</option>
+                                            <option value="Acres">Acres</option>
+                                            <option value="Gunta">Gunta</option>
+                                            <option value="Ankanam">Ankanam</option>
+                                            <option value="Hectare">Hectare</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -1770,6 +1824,23 @@ export function BrokerDashboard() {
                                     </div>
                                 )}
 
+                                {!(watchType === 'joint_venture' && structureType === 'Land') && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium">Extent of Land</label>
+                                            <div className="flex gap-2">
+                                                <Input type="number" {...register('landArea')} placeholder="Value" className="flex-1" />
+                                                <select {...register('landAreaUnit')} className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                    <option value="Cents">Cents</option>
+                                                    <option value="Acres">Acres</option>
+                                                    <option value="Gunta">Gunta</option>
+                                                    <option value="Ankanam">Ankanam</option>
+                                                    <option value="Hectare">Hectare</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 

@@ -123,6 +123,7 @@ export interface Property {
     sharingRatio?: string;
     goodwillAmount?: number;
     landArea?: number;
+    landAreaUnit?: 'Cents' | 'Acres' | 'Gunta' | 'Ankanam' | 'Hectare';
     floorNumber?: number;
     floorDetail?: string;
     parkingSpaces?: number;
