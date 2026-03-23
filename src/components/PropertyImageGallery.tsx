@@ -5,7 +5,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize, X } from 'lucide-react';
 
 interface PropertyImageGalleryProps {
     images: string[];
@@ -19,6 +19,8 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
         containScroll: 'keepSnaps',
         dragFree: true,
     });
+    const [isFullScreen, setIsFullScreen] = useState(false);
+    const [fullScreenIndex, setFullScreenIndex] = useState(0);
 
     const onThumbClick = useCallback(
         (index: number) => {
@@ -42,6 +44,18 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
         emblaMainApi.on('reInit', onSelect);
     }, [emblaMainApi, onSelect]);
 
+    // Handle body scroll locking when full screen is open
+    useEffect(() => {
+        if (isFullScreen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isFullScreen]);
+
     if (!images || images.length === 0) return null;
 
     return (
@@ -59,6 +73,17 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
                                     className="object-cover"
                                     priority={index === 0}
                                 />
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="absolute top-4 right-4 bg-white/80 hover:bg-white border-none shadow-lg rounded-full z-10"
+                                    onClick={() => {
+                                        setFullScreenIndex(index);
+                                        setIsFullScreen(true);
+                                    }}
+                                >
+                                    <Maximize className="h-5 w-5" />
+                                </Button>
                             </div>
                         ))}
                     </div>
@@ -109,6 +134,70 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
                     ))}
                 </div>
             </div>
+
+            {/* Full-Screen Overlay */}
+            {isFullScreen && (
+                <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center">
+                    {/* Header with Close Button */}
+                    <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/70 to-transparent z-[110]">
+                        <span className="text-white font-medium">
+                            {fullScreenIndex + 1} / {images.length}
+                        </span>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-white hover:bg-white/20 rounded-full"
+                            onClick={() => setIsFullScreen(false)}
+                        >
+                            <X className="h-8 w-8" />
+                        </Button>
+                    </div>
+
+                    {/* Main Image View */}
+                    <div className="relative w-full h-full flex items-center justify-center p-4 md:p-12">
+                        <div className="relative w-full h-full">
+                            <Image
+                                src={images[fullScreenIndex]}
+                                alt={title}
+                                fill
+                                className="object-contain"
+                                priority
+                                sizes="100vw"
+                            />
+                        </div>
+
+                        {/* Navigation inside Full-Screen */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full z-[110]"
+                            onClick={() => setFullScreenIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
+                        >
+                            <ChevronLeft className="h-10 w-10" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full z-[110]"
+                            onClick={() => setFullScreenIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
+                        >
+                            <ChevronRight className="h-10 w-10" />
+                        </Button>
+                    </div>
+
+                    {/* Simple Bottom Navigation Indicators */}
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-[110]">
+                        {images.map((_, i) => (
+                            <button
+                                key={i}
+                                className={`h-2 rounded-full transition-all ${i === fullScreenIndex ? 'w-8 bg-white' : 'w-2 bg-white/30'
+                                    }`}
+                                onClick={() => setFullScreenIndex(i)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
