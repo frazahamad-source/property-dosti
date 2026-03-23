@@ -1194,11 +1194,14 @@ export function BrokerDashboard() {
                         {(structureType === 'Villa' || structureType === 'Farmhouse') && (
                             <div className="grid grid-cols-2 gap-4 mt-2">
                                 {watchType !== 'joint_venture' && (
-                                    <div className="col-span-2">
-                                        <label className="text-sm font-medium">Extent of Land</label>
-                                        <div className="flex gap-2 w-full">
-                                            <Input type="number" {...register('landArea')} step="0.01" className="flex-[2] min-w-[120px]" />
-                                            <select {...register('landAreaUnit')} className="flex h-10 flex-1 min-w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <>
+                                        <div>
+                                            <label className="text-sm font-medium">Extent of Land</label>
+                                            <Input type="number" {...register('landArea')} step="0.01" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium opacity-0">Unit</label>
+                                            <select {...register('landAreaUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                                 <option value="Cents">Cents</option>
                                                 <option value="Acres">Acres</option>
                                                 <option value="Gunta">Gunta</option>
@@ -1206,7 +1209,7 @@ export function BrokerDashboard() {
                                                 <option value="Hectare">Hectare</option>
                                             </select>
                                         </div>
-                                    </div>
+                                    </>
                                 )}
                                 <div>
                                     <label className="text-sm font-medium">Area of Villa (SQFT)</label>
@@ -1274,16 +1277,17 @@ export function BrokerDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-sm font-medium">Extent of Land</label>
-                                    <div className="flex gap-2 w-full">
-                                        <Input type="number" {...register('landArea')} placeholder="Value" className="flex-[2] min-w-[120px]" />
-                                        <select {...register('landAreaUnit')} className="flex h-10 flex-1 min-w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                            <option value="Cents">Cents</option>
-                                            <option value="Acres">Acres</option>
-                                            <option value="Gunta">Gunta</option>
-                                            <option value="Ankanam">Ankanam</option>
-                                            <option value="Hectare">Hectare</option>
-                                        </select>
-                                    </div>
+                                    <Input type="number" {...register('landArea')} placeholder="Value" />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium opacity-0">Unit</label>
+                                    <select {...register('landAreaUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                        <option value="Cents">Cents</option>
+                                        <option value="Acres">Acres</option>
+                                        <option value="Gunta">Gunta</option>
+                                        <option value="Ankanam">Ankanam</option>
+                                        <option value="Hectare">Hectare</option>
+                                    </select>
                                 </div>
                             </div>
                         )}
@@ -1366,16 +1370,17 @@ export function BrokerDashboard() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-sm font-medium">Extent of Land</label>
-                                            <div className="flex gap-2">
-                                                <Input type="number" {...register('landArea')} placeholder="Value" className="flex-[2] min-w-[120px]" />
-                                                <select {...register('landAreaUnit')} className="flex h-10 flex-1 min-w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                    <option value="Cents">Cents</option>
-                                                    <option value="Acres">Acres</option>
-                                                    <option value="Gunta">Gunta</option>
-                                                    <option value="Ankanam">Ankanam</option>
-                                                    <option value="Hectare">Hectare</option>
-                                                </select>
-                                            </div>
+                                            <Input type="number" {...register('landArea')} placeholder="Value" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium opacity-0">Unit</label>
+                                            <select {...register('landAreaUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="Cents">Cents</option>
+                                                <option value="Acres">Acres</option>
+                                                <option value="Gunta">Gunta</option>
+                                                <option value="Ankanam">Ankanam</option>
+                                                <option value="Hectare">Hectare</option>
+                                            </select>
                                         </div>
                                     </div>
                                 )}
@@ -1654,11 +1659,15 @@ export function BrokerDashboard() {
                         {(structureType === 'Villa' || structureType === 'Farmhouse') && (
                             <div className="grid grid-cols-2 gap-4 mt-2">
                                 {watchType !== 'joint_venture' && (
-                                    <div className="col-span-2">
-                                        <label className="text-sm font-medium">Extent of Land</label>
-                                        <div className="flex gap-2 w-full">
-                                            <Input type="number" {...register('landArea')} step="0.01" className="flex-[2] min-w-[120px]" />
-                                            <select {...register('landAreaUnit')} className="flex h-10 flex-1 min-w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <>
+                                        <div>
+                                            <label className="text-sm font-medium">Extent of Land</label>
+                                            <Input type="number" {...register('landArea')} step="0.01" />
+                                            {errors?.landArea?.message && <p className="text-xs text-red-500">{errors.landArea.message}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium opacity-0">Unit</label>
+                                            <select {...register('landAreaUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                                 <option value="Cents">Cents</option>
                                                 <option value="Acres">Acres</option>
                                                 <option value="Gunta">Gunta</option>
@@ -1666,8 +1675,7 @@ export function BrokerDashboard() {
                                                 <option value="Hectare">Hectare</option>
                                             </select>
                                         </div>
-                                        {errors.landArea?.message && <p className="text-xs text-red-500">{errors.landArea.message}</p>}
-                                    </div>
+                                    </>
                                 )}
                                 <div>
                                     <label className="text-sm font-medium">Area of Villa (SQFT)</label>
@@ -1735,16 +1743,17 @@ export function BrokerDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-sm font-medium">Extent of Land</label>
-                                    <div className="flex gap-2 w-full">
-                                        <Input type="number" {...register('landArea')} placeholder="Value" className="flex-[2] min-w-[120px]" />
-                                        <select {...register('landAreaUnit')} className="flex h-10 flex-1 min-w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                            <option value="Cents">Cents</option>
-                                            <option value="Acres">Acres</option>
-                                            <option value="Gunta">Gunta</option>
-                                            <option value="Ankanam">Ankanam</option>
-                                            <option value="Hectare">Hectare</option>
-                                        </select>
-                                    </div>
+                                    <Input type="number" {...register('landArea')} placeholder="Value" />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium opacity-0">Unit</label>
+                                    <select {...register('landAreaUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                        <option value="Cents">Cents</option>
+                                        <option value="Acres">Acres</option>
+                                        <option value="Gunta">Gunta</option>
+                                        <option value="Ankanam">Ankanam</option>
+                                        <option value="Hectare">Hectare</option>
+                                    </select>
                                 </div>
                             </div>
                         )}
@@ -1828,16 +1837,17 @@ export function BrokerDashboard() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-sm font-medium">Extent of Land</label>
-                                            <div className="flex gap-2">
-                                                <Input type="number" {...register('landArea')} placeholder="Value" className="flex-[2] min-w-[120px]" />
-                                                <select {...register('landAreaUnit')} className="flex h-10 flex-1 min-w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                    <option value="Cents">Cents</option>
-                                                    <option value="Acres">Acres</option>
-                                                    <option value="Gunta">Gunta</option>
-                                                    <option value="Ankanam">Ankanam</option>
-                                                    <option value="Hectare">Hectare</option>
-                                                </select>
-                                            </div>
+                                            <Input type="number" {...register('landArea')} placeholder="Value" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium opacity-0">Unit</label>
+                                            <select {...register('landAreaUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="Cents">Cents</option>
+                                                <option value="Acres">Acres</option>
+                                                <option value="Gunta">Gunta</option>
+                                                <option value="Ankanam">Ankanam</option>
+                                                <option value="Hectare">Hectare</option>
+                                            </select>
                                         </div>
                                     </div>
                                 )}
