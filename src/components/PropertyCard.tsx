@@ -103,6 +103,15 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 <div className="text-lg font-bold text-primary mt-1">
                     {property.hidePrice ? (
                         <span className="text-sm">Please Message/ call Broker for Price</span>
+                    ) : property.structureType === 'TDR' ? (
+                        <div className="flex flex-col text-sm">
+                            <span className="text-primary font-black">
+                                {property.tdrTotalAreaAvailable} {property.tdrTotalAreaUnit}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground uppercase">
+                                @ ₹{property.tdrSaleValue?.toLocaleString('en-IN')} {property.tdrSaleValueUnit}
+                            </span>
+                        </div>
                     ) : property.type === 'joint_venture' ? (
                         <span>Advance: ₹{property.advanceAmount?.toLocaleString('en-IN') || '0'}</span>
                     ) : (
@@ -114,8 +123,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 <p className="text-sm text-gray-600 line-clamp-2 mb-4 whitespace-pre-line">{property.description}</p>
                 <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
                     <div className="flex gap-2 text-[10px] font-bold">
-                        {property.landArea ? <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{property.landArea} {property.landAreaUnit || 'Cents'}</span> : null}
-                        {property.parkingAllocated ? <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Pkng: {property.parkingAllocated}</span> : null}
+                        {property.landArea && property.structureType !== 'TDR' ? <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{property.landArea} {property.landAreaUnit || 'Cents'}</span> : null}
+                        {property.parkingAllocated && property.structureType !== 'TDR' ? <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Pkng: {property.parkingAllocated}</span> : null}
                     </div>
                 </div>
 
