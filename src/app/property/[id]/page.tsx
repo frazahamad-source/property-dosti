@@ -83,7 +83,19 @@ export default function PropertyDetailPage() {
                     structureSpecification: propData.structure_specification,
                     advanceAmount: propData.advance_amount,
                     sharingRatio: propData.sharing_ratio,
-                    goodwillAmount: propData.goodwill_amount
+                    goodwillAmount: propData.goodwill_amount,
+                    tdrCertNumber: propData.tdr_cert_number,
+                    tdrDateOfIssue: propData.tdr_date_of_issue,
+                    tdrIssuingAuthority: propData.tdr_issuing_authority,
+                    tdrIssuingAuthorityOther: propData.tdr_issuing_authority_other,
+                    tdrTotalAreaAvailable: propData.tdr_total_area_available,
+                    tdrTotalAreaUnit: propData.tdr_total_area_unit,
+                    tdrSaleValue: propData.tdr_sale_value,
+                    tdrSaleValueUnit: propData.tdr_sale_value_unit,
+                    tdrLocation: propData.tdr_location,
+                    tdrSurveyNumber: propData.tdr_survey_number,
+                    tdrZoneClassification: propData.tdr_zone_classification,
+                    tdrTotalSaleConsideration: propData.tdr_total_sale_consideration
                 };
                 setProperty(mappedProperty);
 
@@ -428,6 +440,85 @@ export default function PropertyDetailPage() {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* TDR Specific Details */}
+                                {property.structureType === 'TDR' && (
+                                    <div className="space-y-6">
+                                        <div className="mt-4 p-5 bg-blue-50/30 rounded-xl border border-blue-100">
+                                            <h4 className="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-blue-500"></div> TDR Certificate Details
+                                            </h4>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                                {property.tdrCertNumber && (
+                                                    <div>
+                                                        <div className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1 text-left">Cert Number</div>
+                                                        <div className="text-sm font-bold text-left text-blue-900">{property.tdrCertNumber}</div>
+                                                    </div>
+                                                )}
+                                                {property.tdrDateOfIssue && (
+                                                    <div>
+                                                        <div className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1 text-left">Date of Issue</div>
+                                                        <div className="text-sm font-bold text-left text-blue-900">{new Date(property.tdrDateOfIssue).toLocaleDateString()}</div>
+                                                    </div>
+                                                )}
+                                                {(property.tdrIssuingAuthority || property.tdrIssuingAuthorityOther) && (
+                                                    <div>
+                                                        <div className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1 text-left">Issuing Authority</div>
+                                                        <div className="text-sm font-bold text-left text-blue-900">
+                                                            {property.tdrIssuingAuthority === 'Other' ? property.tdrIssuingAuthorityOther : property.tdrIssuingAuthority}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {property.tdrTotalAreaAvailable && (
+                                                    <div>
+                                                        <div className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1 text-left">Total Area Available</div>
+                                                        <div className="text-sm font-bold text-left text-blue-900">{property.tdrTotalAreaAvailable} {property.tdrTotalAreaUnit}</div>
+                                                    </div>
+                                                )}
+                                                {property.tdrSaleValue && (
+                                                    <div>
+                                                        <div className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1 text-left">Sale Value</div>
+                                                        <div className="text-sm font-bold text-left text-blue-900">{property.tdrSaleValue} {property.tdrSaleValueUnit}</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {(property.tdrLocation || property.tdrSurveyNumber || property.tdrZoneClassification || property.tdrTotalSaleConsideration) && (
+                                            <div className="p-5 bg-gray-50/50 rounded-xl border border-gray-100">
+                                                <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-gray-400"></div> Original Property Details
+                                                </h4>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                                    {property.tdrLocation && (
+                                                        <div>
+                                                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 text-left">Location</div>
+                                                            <div className="text-sm font-bold text-left text-gray-900">{property.tdrLocation}</div>
+                                                        </div>
+                                                    )}
+                                                    {property.tdrSurveyNumber && (
+                                                        <div>
+                                                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 text-left">Survey / Khata No.</div>
+                                                            <div className="text-sm font-bold text-left text-gray-900">{property.tdrSurveyNumber}</div>
+                                                        </div>
+                                                    )}
+                                                    {property.tdrZoneClassification && (
+                                                        <div>
+                                                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 text-left">Zone Classification</div>
+                                                            <div className="text-sm font-bold text-left text-gray-900">{property.tdrZoneClassification}</div>
+                                                        </div>
+                                                    )}
+                                                    {property.tdrTotalSaleConsideration && (
+                                                        <div>
+                                                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 text-left">Total Sale Consideration</div>
+                                                            <div className="text-sm font-bold text-left text-gray-900">₹{property.tdrTotalSaleConsideration.toLocaleString('en-IN')}</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Any Structure Details Container */}
                                 {property.anyStructure && (

@@ -148,6 +148,19 @@ export interface Property {
     likes: number;
     leadsCount: number;
     brokerPhone?: string;
+    // TDR Specific Fields
+    tdrCertNumber?: string;
+    tdrDateOfIssue?: string;
+    tdrIssuingAuthority?: string;
+    tdrIssuingAuthorityOther?: string;
+    tdrTotalAreaAvailable?: number;
+    tdrTotalAreaUnit?: 'SqMtrs' | 'Cents' | 'Rupees';
+    tdrSaleValue?: number;
+    tdrSaleValueUnit?: 'SqMtrs' | 'Cents' | 'Rupees';
+    tdrLocation?: string;
+    tdrSurveyNumber?: string;
+    tdrZoneClassification?: string;
+    tdrTotalSaleConsideration?: number;
 }
 
 export interface PropertyLead {

@@ -55,6 +55,19 @@ const propertySchema = z.object({
     googleMapLink: z.string().optional().nullable().or(z.literal('')),
     village: z.string().optional().nullable(),
     hidePrice: z.boolean().optional(),
+    // TDR Fields
+    tdrCertNumber: z.string().optional().nullable(),
+    tdrDateOfIssue: z.string().optional().nullable(),
+    tdrIssuingAuthority: z.string().optional().nullable(),
+    tdrIssuingAuthorityOther: z.string().optional().nullable(),
+    tdrTotalAreaAvailable: z.coerce.number().optional().nullable(),
+    tdrTotalAreaUnit: z.enum(['SqMtrs', 'Cents', 'Rupees']).optional().nullable().default('SqMtrs'),
+    tdrSaleValue: z.coerce.number().optional().nullable(),
+    tdrSaleValueUnit: z.enum(['SqMtrs', 'Cents', 'Rupees']).optional().nullable().default('SqMtrs'),
+    tdrLocation: z.string().optional().nullable(),
+    tdrSurveyNumber: z.string().optional().nullable(),
+    tdrZoneClassification: z.string().optional().nullable(),
+    tdrTotalSaleConsideration: z.coerce.number().optional().nullable(),
 }).refine(data => {
     if (data.type === 'joint_venture') return true;
     return (data.price && data.price > 0) || data.hidePrice;
@@ -111,6 +124,9 @@ export function BrokerDashboard() {
     const watchType = watch('type');
     const watchAnyStructure = watch('anyStructure');
     const watchStructureCategory = watch('structureCategory');
+    const watchTdrIssuingAuthority = watch('tdrIssuingAuthority');
+
+    const isTDRSale = watchType === 'sale' && structureType === 'TDR';
 
     const broker = user && 'subscriptionExpiry' in user ? user : null;
     const isManagerOrSupervisor = broker && (broker.role === 'manager' || broker.role === 'supervisor');
@@ -185,6 +201,18 @@ export function BrokerDashboard() {
                         advanceAmount: p.advance_amount,
                         sharingRatio: p.sharing_ratio,
                         goodwillAmount: p.goodwill_amount,
+                        tdrCertNumber: p.tdr_cert_number,
+                        tdrDateOfIssue: p.tdr_date_of_issue,
+                        tdrIssuingAuthority: p.tdr_issuing_authority,
+                        tdrIssuingAuthorityOther: p.tdr_issuing_authority_other,
+                        tdrTotalAreaAvailable: p.tdr_total_area_available,
+                        tdrTotalAreaUnit: p.tdr_total_area_unit,
+                        tdrSaleValue: p.tdr_sale_value,
+                        tdrSaleValueUnit: p.tdr_sale_value_unit,
+                        tdrLocation: p.tdr_location,
+                        tdrSurveyNumber: p.tdr_survey_number,
+                        tdrZoneClassification: p.tdr_zone_classification,
+                        tdrTotalSaleConsideration: p.tdr_total_sale_consideration,
                     };
                 });
                 setProperties(mappedProperties);
@@ -373,8 +401,20 @@ export function BrokerDashboard() {
                     structure_area: data.structureArea || null,
                     structure_specification: data.structureSpecification || null,
                     advance_amount: data.advanceAmount || null,
-                    sharing_ratio: data.sharingRatio || null,
+                    sharing_ratio: data.sharingRatio,
                     goodwill_amount: data.goodwillAmount || null,
+                    tdr_cert_number: data.tdrCertNumber || null,
+                    tdr_date_of_issue: data.tdrDateOfIssue || null,
+                    tdr_issuing_authority: data.tdrIssuingAuthority || null,
+                    tdr_issuing_authority_other: data.tdrIssuingAuthorityOther || null,
+                    tdr_total_area_available: data.tdrTotalAreaAvailable || null,
+                    tdr_total_area_unit: data.tdrTotalAreaUnit || null,
+                    tdr_sale_value: data.tdrSaleValue || null,
+                    tdr_sale_value_unit: data.tdrSaleValueUnit || null,
+                    tdr_location: data.tdrLocation || null,
+                    tdr_survey_number: data.tdrSurveyNumber || null,
+                    tdr_zone_classification: data.tdrZoneClassification || null,
+                    tdr_total_sale_consideration: data.tdrTotalSaleConsideration || null,
                 })
                 .select()
                 .single();
@@ -422,6 +462,18 @@ export function BrokerDashboard() {
                 advanceAmount: p.advance_amount,
                 sharingRatio: p.sharing_ratio,
                 goodwillAmount: p.goodwill_amount,
+                tdrCertNumber: p.tdr_cert_number,
+                tdrDateOfIssue: p.tdr_date_of_issue,
+                tdrIssuingAuthority: p.tdr_issuing_authority,
+                tdrIssuingAuthorityOther: p.tdr_issuing_authority_other,
+                tdrTotalAreaAvailable: p.tdr_total_area_available,
+                tdrTotalAreaUnit: p.tdr_total_area_unit,
+                tdrSaleValue: p.tdr_sale_value,
+                tdrSaleValueUnit: p.tdr_sale_value_unit,
+                tdrLocation: p.tdr_location,
+                tdrSurveyNumber: p.tdr_survey_number,
+                tdrZoneClassification: p.tdr_zone_classification,
+                tdrTotalSaleConsideration: p.tdr_total_sale_consideration,
             };
 
             addProperty(newProperty);
@@ -479,13 +531,27 @@ export function BrokerDashboard() {
         setValue('village', property.village || '');
         setValue('areaOfVilla', property.areaOfVilla);
         setValue('villaType', property.villaType);
-        setValue('anyStructure', property.anyStructure);
-        setValue('structureCategory', property.structureCategory);
-        setValue('structureArea', property.structureArea);
-        setValue('structureSpecification', property.structureSpecification);
-        setValue('advanceAmount', property.advanceAmount);
-        setValue('sharingRatio', property.sharingRatio);
-        setValue('goodwillAmount', property.goodwillAmount);
+        setValue('anyStructure', property.anyStructure || false);
+        setValue('structureCategory', property.structureCategory || null);
+        setValue('structureArea', property.structureArea || null);
+        setValue('structureSpecification', property.structureSpecification || null);
+        setValue('advanceAmount', property.advanceAmount || null);
+        setValue('sharingRatio', property.sharingRatio || null);
+        setValue('goodwillAmount', property.goodwillAmount || null);
+        
+        // TDR Fields
+        setValue('tdrCertNumber', property.tdrCertNumber || null);
+        setValue('tdrDateOfIssue', property.tdrDateOfIssue || null);
+        setValue('tdrIssuingAuthority', property.tdrIssuingAuthority || null);
+        setValue('tdrIssuingAuthorityOther', property.tdrIssuingAuthorityOther || null);
+        setValue('tdrTotalAreaAvailable', property.tdrTotalAreaAvailable || null);
+        setValue('tdrTotalAreaUnit', property.tdrTotalAreaUnit || 'SqMtrs');
+        setValue('tdrSaleValue', property.tdrSaleValue || null);
+        setValue('tdrSaleValueUnit', property.tdrSaleValueUnit || 'SqMtrs');
+        setValue('tdrLocation', property.tdrLocation || null);
+        setValue('tdrSurveyNumber', property.tdrSurveyNumber || null);
+        setValue('tdrZoneClassification', property.tdrZoneClassification || null);
+        setValue('tdrTotalSaleConsideration', property.tdrTotalSaleConsideration || null);
 
         setIsEditModalOpen(true);
     }, [setValue]);
@@ -1184,10 +1250,107 @@ export function BrokerDashboard() {
                                 <option value="Farmhouse">Farmhouse</option>
                                 <option value="Land">Land / Plot</option>
                                 <option value="Commercial">Commercial (Office/Shop)</option>
+                                <option value="TDR">TDR</option>
                             </select>
                         </div>
-                        
-                        {/* Extent of Land (Centralized) */}
+
+                        {/* TDR Fields Section */}
+                        {isTDRSale && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                                {/* Sub-heading 1: TDR Certificate Details */}
+                                <div className="space-y-4 pt-2 border-t border-primary/10">
+                                    <h3 className="text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                                        <div className="h-1 w-1 rounded-full bg-primary" />
+                                        TDR Certificate Details
+                                    </h3>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="text-sm font-medium">TDR Cert Number</label>
+                                            <Input {...register('tdrCertNumber')} placeholder="Enter certificate number" />
+                                        </div>
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="text-sm font-medium">Date of Issue of TDR Cert</label>
+                                            <Input type="date" {...register('tdrDateOfIssue')} />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className={watchTdrIssuingAuthority === 'Other' ? "col-span-2 sm:col-span-1" : "col-span-2"}>
+                                            <label className="text-sm font-medium">Issuing Authority</label>
+                                            <select {...register('tdrIssuingAuthority')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="">Select Authority</option>
+                                                <option value="BDA">BDA</option>
+                                                <option value="BBMP">BBMP</option>
+                                                <option value="MUDA">MUDA</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        {watchTdrIssuingAuthority === 'Other' && (
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <label className="text-sm font-medium">Specify Other Authority</label>
+                                                <Input {...register('tdrIssuingAuthorityOther')} placeholder="Write authority name" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Total Area of TDR Available</label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <Input type="number" {...register('tdrTotalAreaAvailable')} step="0.01" placeholder="Area" />
+                                            <select {...register('tdrTotalAreaUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="SqMtrs">SqMtrs</option>
+                                                <option value="Cents">Cents</option>
+                                                <option value="Rupees">Rupees</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Sale Value</label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <Input type="number" {...register('tdrSaleValue')} step="0.01" placeholder="Value" />
+                                            <select {...register('tdrSaleValueUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="SqMtrs">SqMtrs</option>
+                                                <option value="Cents">Cents</option>
+                                                <option value="Rupees">Rupees</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Sub-heading 2: Original Property Details */}
+                                <div className="space-y-4 pt-4 border-t border-primary/10">
+                                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                        <div className="h-1 w-1 rounded-full bg-gray-400" />
+                                        Original Property Details <span className="text-[10px] lowercase text-muted-foreground font-normal">(Not Mandatory)</span>
+                                    </h3>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="col-span-2">
+                                            <label className="text-sm font-medium">Location</label>
+                                            <Input {...register('tdrLocation')} placeholder="e.g., Mangalore, Bangalore" />
+                                        </div>
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="text-sm font-medium">Survey Number / Khata Number</label>
+                                            <Input {...register('tdrSurveyNumber')} />
+                                        </div>
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="text-sm font-medium">Zone classification</label>
+                                            <Input {...register('tdrZoneClassification')} />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="text-sm font-medium">Total Sale Consideration</label>
+                                            <Input type="number" {...register('tdrTotalSaleConsideration')} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Standard Fields (Hidden if isTDRSale) */}
+                        {!isTDRSale && (
+                            <>
                         {((structureType === 'Land') || 
                           (watchType === 'joint_venture') || 
                           ((structureType === 'Villa' || structureType === 'Farmhouse') && (watchType as string) !== 'joint_venture')) && (
@@ -1447,6 +1610,8 @@ export function BrokerDashboard() {
                                 <Input {...register('googleMapLink')} placeholder="https://maps.google.com/..." />
                             </div>
                         </div>
+                            </>
+                        )}
 
                         <div>
                             <label className="text-sm font-medium">Property Photos (Max 3)</label>
@@ -1541,6 +1706,18 @@ export function BrokerDashboard() {
                                     advance_amount: data.advanceAmount || null,
                                     sharing_ratio: data.sharingRatio || null,
                                     goodwill_amount: data.goodwillAmount || null,
+                                    tdr_cert_number: data.tdrCertNumber || null,
+                                    tdr_date_of_issue: data.tdrDateOfIssue || null,
+                                    tdr_issuing_authority: data.tdrIssuingAuthority || null,
+                                    tdr_issuing_authority_other: data.tdrIssuingAuthorityOther || null,
+                                    tdr_total_area_available: data.tdrTotalAreaAvailable || null,
+                                    tdr_total_area_unit: data.tdrTotalAreaUnit || null,
+                                    tdr_sale_value: data.tdrSaleValue || null,
+                                    tdr_sale_value_unit: data.tdrSaleValueUnit || null,
+                                    tdr_location: data.tdrLocation || null,
+                                    tdr_survey_number: data.tdrSurveyNumber || null,
+                                    tdr_zone_classification: data.tdrZoneClassification || null,
+                                    tdr_total_sale_consideration: data.tdrTotalSaleConsideration || null,
                                 })
                                 .eq('id', selectedProperty.id);
 
@@ -1579,6 +1756,18 @@ export function BrokerDashboard() {
                                 advanceAmount: data.advanceAmount ?? undefined,
                                 sharingRatio: data.sharingRatio ?? undefined,
                                 goodwillAmount: data.goodwillAmount ?? undefined,
+                                tdrCertNumber: data.tdrCertNumber ?? undefined,
+                                tdrDateOfIssue: data.tdrDateOfIssue ?? undefined,
+                                tdrIssuingAuthority: data.tdrIssuingAuthority ?? undefined,
+                                tdrIssuingAuthorityOther: data.tdrIssuingAuthorityOther ?? undefined,
+                                tdrTotalAreaAvailable: data.tdrTotalAreaAvailable ?? undefined,
+                                tdrTotalAreaUnit: data.tdrTotalAreaUnit ?? undefined,
+                                tdrSaleValue: data.tdrSaleValue ?? undefined,
+                                tdrSaleValueUnit: data.tdrSaleValueUnit ?? undefined,
+                                tdrLocation: data.tdrLocation ?? undefined,
+                                tdrSurveyNumber: data.tdrSurveyNumber ?? undefined,
+                                tdrZoneClassification: data.tdrZoneClassification ?? undefined,
+                                tdrTotalSaleConsideration: data.tdrTotalSaleConsideration ?? undefined,
                             } as Property);
 
                             toast.success('Property updated successfully!');
@@ -1621,8 +1810,106 @@ export function BrokerDashboard() {
                                 <option value="Farmhouse">Farmhouse</option>
                                 <option value="Land">Land / Plot</option>
                                 <option value="Commercial">Commercial (Office/Shop)</option>
+                                <option value="TDR">TDR</option>
                             </select>
                         </div>
+
+                        {/* TDR Fields Section (Edit) */}
+                        {isTDRSale && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                                {/* Sub-heading 1: TDR Certificate Details */}
+                                <div className="space-y-4 pt-2 border-t border-primary/10">
+                                    <h3 className="text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                                        <div className="h-1 w-1 rounded-full bg-primary" />
+                                        TDR Certificate Details
+                                    </h3>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="text-sm font-medium">TDR Cert Number</label>
+                                            <Input {...register('tdrCertNumber')} placeholder="Enter certificate number" />
+                                        </div>
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="text-sm font-medium">Date of Issue of TDR Cert</label>
+                                            <Input type="date" {...register('tdrDateOfIssue')} />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className={watchTdrIssuingAuthority === 'Other' ? "col-span-2 sm:col-span-1" : "col-span-2"}>
+                                            <label className="text-sm font-medium">Issuing Authority</label>
+                                            <select {...register('tdrIssuingAuthority')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="">Select Authority</option>
+                                                <option value="BDA">BDA</option>
+                                                <option value="BBMP">BBMP</option>
+                                                <option value="MUDA">MUDA</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        {watchTdrIssuingAuthority === 'Other' && (
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <label className="text-sm font-medium">Specify Other Authority</label>
+                                                <Input {...register('tdrIssuingAuthorityOther')} placeholder="Write authority name" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Total Area of TDR Available</label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <Input type="number" {...register('tdrTotalAreaAvailable')} step="0.01" placeholder="Area" />
+                                            <select {...register('tdrTotalAreaUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="SqMtrs">SqMtrs</option>
+                                                <option value="Cents">Cents</option>
+                                                <option value="Rupees">Rupees</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Sale Value</label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <Input type="number" {...register('tdrSaleValue')} step="0.01" placeholder="Value" />
+                                            <select {...register('tdrSaleValueUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option value="SqMtrs">SqMtrs</option>
+                                                <option value="Cents">Cents</option>
+                                                <option value="Rupees">Rupees</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Sub-heading 2: Original Property Details */}
+                                <div className="space-y-4 pt-4 border-t border-primary/10">
+                                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                        <div className="h-1 w-1 rounded-full bg-gray-400" />
+                                        Original Property Details <span className="text-[10px] lowercase text-muted-foreground font-normal">(Not Mandatory)</span>
+                                    </h3>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="col-span-2">
+                                            <label className="text-sm font-medium">Location</label>
+                                            <Input {...register('tdrLocation')} placeholder="e.g., Mangalore, Bangalore" />
+                                        </div>
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="text-sm font-medium">Survey Number / Khata Number</label>
+                                            <Input {...register('tdrSurveyNumber')} />
+                                        </div>
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="text-sm font-medium">Zone classification</label>
+                                            <Input {...register('tdrZoneClassification')} />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="text-sm font-medium">Total Sale Consideration</label>
+                                            <Input type="number" {...register('tdrTotalSaleConsideration')} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {!isTDRSale && (
+                            <>
 
                         {/* Extent of Land (Centralized) */}
                         {((structureType === 'Land') || 
@@ -1883,6 +2170,8 @@ export function BrokerDashboard() {
                                 {errors.googleMapLink?.message && <p className="text-xs text-red-500">{errors.googleMapLink.message}</p>}
                             </div>
                         </div>
+                            </>
+                        )}
 
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div className="flex flex-col gap-2 col-span-2">

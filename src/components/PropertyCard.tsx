@@ -38,6 +38,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
         toast.success('Property liked!');
     };
 
+    const isTdrSale = property.type === 'sale' && property.structureType === 'TDR';
+
     return (
         <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
             <div className="aspect-[16/9] relative bg-gray-200">
@@ -50,10 +52,18 @@ export function PropertyCard({ property }: PropertyCardProps) {
                             className="object-cover transition-transform hover:scale-105 duration-300"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
+                    ) : isTdrSale ? (
+                        <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-primary/20 to-primary/5 text-primary p-4 text-center">
+                            <CardTitle className="text-xl font-black uppercase tracking-tighter leading-none mb-1">TDR</CardTitle>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-70">For Sale</span>
+                            <div className="mt-4 h-1 w-8 bg-primary/40 rounded-full" />
+                        </div>
                     ) : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">No Image</div>
                     )}
                 </Link>
+                
+                {/* Overlay Badges */}
                 <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
                     <Badge variant={property.type === 'sale' ? 'default' : property.type === 'rent' ? 'secondary' : property.type === 'lease' ? 'outline' : 'destructive'}>
                         {property.type === 'sale' ? 'For Sale' : property.type === 'rent' ? 'For Rent' : property.type === 'lease' ? 'For Lease' : 'Joint Venture'}
@@ -64,6 +74,16 @@ export function PropertyCard({ property }: PropertyCardProps) {
                         </Badge>
                     )}
                 </div>
+
+                {/* TDR Location Overlay */}
+                {property.structureType === 'TDR' && (
+                    <div className="absolute bottom-2 left-2 pointer-events-none">
+                        <Badge variant="secondary" className="bg-primary text-white border-none shadow-md flex items-center gap-1 font-bold">
+                            <MapPin className="h-3 w-3" />
+                            {property.village || property.location || property.tdrLocation || 'Location unknown'}
+                        </Badge>
+                    </div>
+                )}
             </div>
             <CardHeader>
                 <div className="flex justify-between items-start">
