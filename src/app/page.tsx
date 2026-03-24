@@ -97,6 +97,18 @@ export default function Home() {
           parkingType: p.parking_type,
           parkingAllocated: p.parking_allocated,
           googleMapLink: p.google_map_link,
+          tdrCertNumber: p.tdr_cert_number,
+          tdrDateOfIssue: p.tdr_date_of_issue,
+          tdrIssuingAuthority: p.tdr_issuing_authority,
+          tdrIssuingAuthorityOther: p.tdr_issuing_authority_other,
+          tdrTotalAreaAvailable: p.tdr_total_area_available,
+          tdrTotalAreaUnit: p.tdr_total_area_unit,
+          tdrSaleValue: p.tdr_sale_value,
+          tdrSaleValueUnit: p.tdr_sale_value_unit,
+          tdrLocation: p.tdr_location,
+          tdrSurveyNumber: p.tdr_survey_number,
+          tdrZoneClassification: p.tdr_zone_classification,
+          tdrTotalSaleConsideration: p.tdr_total_sale_consideration
         }));
         setProperties(mappedProperties);
       }
