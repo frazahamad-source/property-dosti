@@ -21,6 +21,8 @@ interface SmartSearchFormProps {
 export const PROPERTY_TYPES = [
     'Residential',
     'Commercial',
+    'Residential & Commercial',
+    'Industrial',
     'Villa',
     'Apartment',
     'Offices',

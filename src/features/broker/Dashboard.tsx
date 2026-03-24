@@ -146,7 +146,7 @@ export function BrokerDashboard() {
             district: '',
             structureType: 'Villa',
             type: 'sale',
-            category: 'residential',
+            category: 'Residential',
             landAreaUnit: 'Cents'
         }
     });
@@ -201,7 +201,7 @@ export function BrokerDashboard() {
                         district: p.district || 'Unknown',
                         location: p.location || 'Unknown',
                         type: p.type || 'sale',
-                        category: (p.category as Property['category']) || 'residential',
+                        category: (p.category as Property['category']) || 'Residential',
                         structureType: p.structure_type || '',
                         landArea: p.land_area || 0,
                         landAreaUnit: p.land_area_unit || 'Cents',
@@ -397,7 +397,7 @@ export function BrokerDashboard() {
         } else {
             // Default mapping
             if (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '')) {
-                finalCategory = 'residential';
+                finalCategory = 'Residential';
             }
         }
 
@@ -1223,7 +1223,7 @@ export function BrokerDashboard() {
                                             id: p.id, brokerId: p.broker_id, title: p.title || 'No Title',
                                             description: p.description || '', price: p.price || 0,
                                             district: p.district || 'Unknown', location: p.location || 'Unknown',
-                                            type: p.type || 'sale', category: (p.category) || 'residential',
+                                            type: p.type || 'sale', category: (p.category) || 'Residential',
                                             structureType: p.structure_type || '', landArea: p.land_area || 0,
                                             landAreaUnit: p.land_area_unit || 'Cents',
                                             floorNumber: p.floor_number || 0, floorDetail: p.floor_detail || '',
@@ -1383,6 +1383,18 @@ export function BrokerDashboard() {
                         {/* Standard Fields (Hidden if isTDRSale) */}
                         {!isTDRSale && (
                             <>
+                        {/* New Category Field for Land Sale */}
+                        {watchType === 'sale' && structureType === 'Land' && (
+                            <div className="mb-4">
+                                <label className="text-sm font-medium">Category</label>
+                                <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="Residential">Residential</option>
+                                    <option value="Commercial">Commercial</option>
+                                    <option value="Residential & Commercial">Residential & Commercial</option>
+                                    <option value="Industrial">Industrial</option>
+                                </select>
+                            </div>
+                        )}
                         {((structureType === 'Land') || 
                           (watchType === 'joint_venture') || 
                           ((structureType === 'Villa' || structureType === 'Farmhouse') && (watchType as string) !== 'joint_venture')) && (
@@ -1506,8 +1518,10 @@ export function BrokerDashboard() {
                                         <div>
                                             <label className="text-sm font-medium">Category</label>
                                             <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                <option value="residential">Residential</option>
-                                                <option value="commercial">Commercial</option>
+                                                <option value="Residential">Residential</option>
+                                                <option value="Commercial">Commercial</option>
+                                                <option value="Residential & Commercial">Residential & Commercial</option>
+                                                <option value="Industrial">Industrial</option>
                                             </select>
                                         </div>
                                     )}
@@ -1715,7 +1729,7 @@ export function BrokerDashboard() {
                                     location: data.location || (data.structureType === 'TDR' ? data.tdrLocation || 'TDR Location' : 'Unknown'),
                                     village: data.village,
                                     type: data.type,
-                                    category: (data.type === 'joint_venture' || (data.structureType === 'Land')) ? data.category : (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') ? 'residential' : data.category),
+                                    category: (data.type === 'joint_venture' || (data.structureType === 'Land')) ? data.category : (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') ? 'Residential' : data.category),
                                     structure_type: data.structureType,
                                     land_area: data.landArea || null,
                                     land_area_unit: data.landAreaUnit || 'Cents',
@@ -1765,7 +1779,7 @@ export function BrokerDashboard() {
                                 location: data.location,
                                 village: data.village ?? undefined,
                                 type: data.type,
-                                category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'residential' : data.category as Property['category'],
+                                category: (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') && data.structureType !== 'Land') ? 'Residential' : data.category as Property['category'],
                                 structureType: data.structureType ?? undefined,
                                 landArea: data.landArea ?? undefined,
                                 landAreaUnit: data.landAreaUnit || 'Cents',
@@ -1942,6 +1956,18 @@ export function BrokerDashboard() {
 
                         {!isTDRSale && (
                             <>
+                        {/* New Category Field for Land Sale (Edit) */}
+                        {watchType === 'sale' && structureType === 'Land' && (
+                            <div className="mb-4">
+                                <label className="text-sm font-medium">Category</label>
+                                <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="Residential">Residential</option>
+                                    <option value="Commercial">Commercial</option>
+                                    <option value="Residential & Commercial">Residential & Commercial</option>
+                                    <option value="Industrial">Industrial</option>
+                                </select>
+                            </div>
+                        )}
 
                         {/* Extent of Land (Centralized) */}
                         {((structureType === 'Land') || 
@@ -2068,8 +2094,10 @@ export function BrokerDashboard() {
                                         <div>
                                             <label className="text-sm font-medium">Category</label>
                                             <select {...register('category')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                <option value="residential">Residential</option>
-                                                <option value="commercial">Commercial</option>
+                                                <option value="Residential">Residential</option>
+                                                <option value="Commercial">Commercial</option>
+                                                <option value="Residential & Commercial">Residential & Commercial</option>
+                                                <option value="Industrial">Industrial</option>
                                             </select>
                                         </div>
                                     )}
