@@ -334,7 +334,7 @@ export default function PropertyDetailPage() {
                                         {property.structureType === 'TDR' ? (
                                             <div className="flex flex-col">
                                                 <span>{property.tdrTotalAreaAvailable} {property.tdrTotalAreaUnit}</span>
-                                                <span className="text-sm font-bold opacity-70">@ ₹{property.tdrSaleValue?.toLocaleString('en-IN')} {property.tdrSaleValueUnit}</span>
+                                                <span className="text-sm font-bold opacity-70">@ ₹{property.tdrSaleValue?.toLocaleString('en-IN')} {(property.tdrSaleValueUnit === 'SqMtrs' || property.tdrSaleValueUnit === 'Cents') ? `Per ${property.tdrSaleValueUnit}` : property.tdrSaleValueUnit}</span>
                                             </div>
                                         ) : displayPrice}
                                     </div>
@@ -497,7 +497,7 @@ export default function PropertyDetailPage() {
                                                 {property.tdrSaleValue && (
                                                     <div>
                                                         <div className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1 text-left">Sale Value</div>
-                                                        <div className="text-sm font-bold text-left text-blue-900">{property.tdrSaleValue} {property.tdrSaleValueUnit}</div>
+                                                        <div className="text-sm font-bold text-left text-blue-900">{property.tdrSaleValue} {(property.tdrSaleValueUnit === 'SqMtrs' || property.tdrSaleValueUnit === 'Cents') ? `Per ${property.tdrSaleValueUnit}` : property.tdrSaleValueUnit}</div>
                                                     </div>
                                                 )}
                                             </div>

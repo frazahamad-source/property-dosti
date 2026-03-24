@@ -909,9 +909,18 @@ export function BrokerDashboard() {
                                                     <div className="flex-1 flex flex-col justify-between py-1">
                                                         <div className="space-y-1.5">
                                                             <div className="space-y-0.5">
-                                                                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                                                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                                                                     {p.hidePrice ? (
                                                                         <span className="text-sm">Please Message/ call Broker for Price</span>
+                                                                    ) : p.structureType === 'TDR' ? (
+                                                                        <div className="flex flex-col text-sm">
+                                                                            <span className="text-primary font-black">
+                                                                                {p.tdrTotalAreaAvailable} {p.tdrTotalAreaUnit}
+                                                                            </span>
+                                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold">
+                                                                                @ ₹{p.tdrSaleValue?.toLocaleString('en-IN')} {(p.tdrSaleValueUnit === 'SqMtrs' || p.tdrSaleValueUnit === 'Cents') ? `Per ${p.tdrSaleValueUnit}` : p.tdrSaleValueUnit}
+                                                                            </span>
+                                                                        </div>
                                                                     ) : p.type === 'joint_venture' ? (
                                                                         <span>Advance: ₹{p.advanceAmount?.toLocaleString('en-IN') || '0'}</span>
                                                                     ) : (

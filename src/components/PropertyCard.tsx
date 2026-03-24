@@ -109,7 +109,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                                 {property.tdrTotalAreaAvailable} {property.tdrTotalAreaUnit}
                             </span>
                             <span className="text-[10px] text-muted-foreground uppercase">
-                                @ ₹{property.tdrSaleValue?.toLocaleString('en-IN')} {property.tdrSaleValueUnit}
+                                @ ₹{property.tdrSaleValue?.toLocaleString('en-IN')} {(property.tdrSaleValueUnit === 'SqMtrs' || property.tdrSaleValueUnit === 'Cents') ? `Per ${property.tdrSaleValueUnit}` : property.tdrSaleValueUnit}
                             </span>
                         </div>
                     ) : property.type === 'joint_venture' ? (
