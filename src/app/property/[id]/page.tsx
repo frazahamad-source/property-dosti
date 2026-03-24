@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { MapPin, MessageSquare, Heart, Share2, ArrowLeft, CheckCircle2, Phone, ExternalLink, Pencil, Trash2, Car, CheckCircle } from 'lucide-react';
 import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
@@ -297,7 +298,18 @@ export default function PropertyDetailPage() {
                     {/* Left Column: Property Details */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Image Gallery */}
-                        <PropertyImageGallery images={property.images} title={property.title} />
+                        {property.images.length > 0 ? (
+                            <PropertyImageGallery images={property.images} title={property.title} />
+                        ) : property.type === 'sale' && property.structureType === 'TDR' ? (
+                            <div className="relative aspect-[16/9] rounded-2xl overflow-hidden border-4 border-white shadow-xl bg-gray-100 mb-8">
+                                <Image
+                                    src="/tdr-placeholder.png"
+                                    alt="TDR For Sale"
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
+                        ) : null}
 
                         {/* Title and Info */}
                         <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border shadow-sm ring-1 ring-black/5">

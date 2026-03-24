@@ -27,11 +27,11 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 
 const propertySchema = z.object({
-    title: z.string().min(3, "Title must be at least 3 characters"),
-    description: z.string().min(10, "Description must be at least 10 characters"),
+    title: z.string().min(3, "Title must be at least 3 characters").optional().or(z.literal('')),
+    description: z.string().min(10, "Description must be at least 10 characters").optional().or(z.literal('')),
     price: z.coerce.number().optional().nullable(),
-    district: z.string().min(1, "District is mandatory"),
-    location: z.string().min(2, "Village/City/Area is required"),
+    district: z.string().min(1, "District is mandatory").optional().or(z.literal('')),
+    location: z.string().min(2, "Village/City/Area is required").optional().or(z.literal('')),
     type: z.enum(['sale', 'rent', 'lease', 'joint_venture']),
     category: z.string().optional().nullable().or(z.literal('')),
     structureType: z.string().optional().nullable().or(z.literal('')),
@@ -68,12 +68,44 @@ const propertySchema = z.object({
     tdrSurveyNumber: z.string().optional().nullable(),
     tdrZoneClassification: z.string().optional().nullable(),
     tdrTotalSaleConsideration: z.coerce.number().optional().nullable(),
-}).refine(data => {
-    if (data.type === 'joint_venture') return true;
-    return (data.price && data.price > 0) || data.hidePrice;
-}, {
-    message: "Either Price or 'Call for quote' is required",
-    path: ["price"]
+}).superRefine((data, ctx) => {
+    const isTDR = data.type === 'sale' && data.structureType === 'TDR';
+
+    if (isTDR) {
+        if (!data.tdrIssuingAuthority || data.tdrIssuingAuthority === '') {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Issuing Authority is mandatory", path: ["tdrIssuingAuthority"] });
+        }
+        if (!data.tdrTotalAreaAvailable || data.tdrTotalAreaAvailable === 0) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Total Area of TDR Available is mandatory", path: ["tdrTotalAreaAvailable"] });
+        }
+        if (!data.tdrSaleValue || data.tdrSaleValue === 0) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Sale Value is mandatory", path: ["tdrSaleValue"] });
+        }
+        if (!data.tdrLocation || data.tdrLocation === '') {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Location is mandatory", path: ["tdrLocation"] });
+        }
+    } else {
+        // Standard Mandatory Fields
+        if (!data.title || data.title.length < 3) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Title must be at least 3 characters", path: ["title"] });
+        }
+        if (!data.description || data.description.length < 10) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Description must be at least 10 characters", path: ["description"] });
+        }
+        if (!data.district || data.district === '') {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "District is mandatory", path: ["district"] });
+        }
+        if (!data.location || data.location.length < 2) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Village/City/Area is required", path: ["location"] });
+        }
+
+        // Price refinement
+        if (data.type !== 'joint_venture') {
+            if (!((data.price && data.price > 0) || data.hidePrice)) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Either Price or 'Call for quote' is required", path: ["price"] });
+            }
+        }
+    }
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -374,11 +406,11 @@ export function BrokerDashboard() {
                 .from('properties')
                 .insert({
                     broker_id: user.id,
-                    title: data.title,
-                    description: data.description,
-                    price: data.price,
-                    district: data.district,
-                    location: data.location,
+                    title: data.title || (data.structureType === 'TDR' ? `TDR - ${data.tdrLocation}` : 'Untitled Property'),
+                    description: data.description || (data.structureType === 'TDR' ? `TDR Certificate available at ${data.tdrLocation}` : ''),
+                    price: data.price || (data.structureType === 'TDR' ? data.tdrTotalSaleConsideration || 0 : 0),
+                    district: data.district || (data.structureType === 'TDR' ? 'TDR' : 'Unknown'),
+                    location: data.location || (data.structureType === 'TDR' ? data.tdrLocation || 'TDR Location' : 'Unknown'),
                     type: data.type,
                     category: finalCategory,
                     structure_type: data.structureType,
@@ -1311,8 +1343,8 @@ export function BrokerDashboard() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <Input type="number" {...register('tdrSaleValue')} step="0.01" placeholder="Value" />
                                             <select {...register('tdrSaleValueUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                <option value="SqMtrs">SqMtrs</option>
-                                                <option value="Cents">Cents</option>
+                                                <option value="SqMtrs">Per SqMtrs</option>
+                                                <option value="Cents">Per Cents</option>
                                                 <option value="Rupees">Rupees</option>
                                             </select>
                                         </div>
@@ -1323,7 +1355,7 @@ export function BrokerDashboard() {
                                 <div className="space-y-4 pt-4 border-t border-primary/10">
                                     <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                         <div className="h-1 w-1 rounded-full bg-gray-400" />
-                                        Original Property Details <span className="text-[10px] lowercase text-muted-foreground font-normal">(Not Mandatory)</span>
+                                        Original Property Details
                                     </h3>
                                     
                                     <div className="grid grid-cols-2 gap-4">
@@ -1653,7 +1685,7 @@ export function BrokerDashboard() {
                                 </div>
                             )}
                         </div>
-                        <Button type="submit" className="w-full" disabled={isLoading || uploadedImages.length === 0}>
+                        <Button type="submit" className="w-full" disabled={isLoading || (!isTDRSale && uploadedImages.length === 0)}>
                             {isLoading ? "Processing..." : "List Property"}
                         </Button>
                     </form>
@@ -1676,11 +1708,11 @@ export function BrokerDashboard() {
                             const { error } = await supabase
                                 .from('properties')
                                 .update({
-                                    title: data.title,
-                                    description: data.description,
-                                    price: data.price,
-                                    district: data.district,
-                                    location: data.location,
+                                    title: data.title || (data.structureType === 'TDR' ? `TDR - ${data.tdrLocation}` : 'Untitled Property'),
+                                    description: data.description || (data.structureType === 'TDR' ? `TDR Certificate available at ${data.tdrLocation}` : ''),
+                                    price: data.price || (data.structureType === 'TDR' ? data.tdrTotalSaleConsideration || 0 : 0),
+                                    district: data.district || (data.structureType === 'TDR' ? 'TDR' : 'Unknown'),
+                                    location: data.location || (data.structureType === 'TDR' ? data.tdrLocation || 'TDR Location' : 'Unknown'),
                                     village: data.village,
                                     type: data.type,
                                     category: (data.type === 'joint_venture' || (data.structureType === 'Land')) ? data.category : (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') ? 'residential' : data.category),
@@ -1871,8 +1903,8 @@ export function BrokerDashboard() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <Input type="number" {...register('tdrSaleValue')} step="0.01" placeholder="Value" />
                                             <select {...register('tdrSaleValueUnit')} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                <option value="SqMtrs">SqMtrs</option>
-                                                <option value="Cents">Cents</option>
+                                                <option value="SqMtrs">Per SqMtrs</option>
+                                                <option value="Cents">Per Cents</option>
                                                 <option value="Rupees">Rupees</option>
                                             </select>
                                         </div>
@@ -1883,7 +1915,7 @@ export function BrokerDashboard() {
                                 <div className="space-y-4 pt-4 border-t border-primary/10">
                                     <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                         <div className="h-1 w-1 rounded-full bg-gray-400" />
-                                        Original Property Details <span className="text-[10px] lowercase text-muted-foreground font-normal">(Not Mandatory)</span>
+                                        Original Property Details
                                     </h3>
                                     
                                     <div className="grid grid-cols-2 gap-4">
@@ -2222,7 +2254,7 @@ export function BrokerDashboard() {
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" className="flex-1" disabled={isLoading || uploadedImages.length === 0}>
+                            <Button type="submit" className="flex-1" disabled={isLoading || (!isTDRSale && uploadedImages.length === 0)}>
                                 {isLoading ? "Updating..." : "Save Changes"}
                             </Button>
                         </div>

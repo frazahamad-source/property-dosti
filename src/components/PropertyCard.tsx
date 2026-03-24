@@ -53,11 +53,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                     ) : isTdrSale ? (
-                        <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-primary/20 to-primary/5 text-primary p-4 text-center">
-                            <CardTitle className="text-xl font-black uppercase tracking-tighter leading-none mb-1">TDR</CardTitle>
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-70">For Sale</span>
-                            <div className="mt-4 h-1 w-8 bg-primary/40 rounded-full" />
-                        </div>
+                        <Image
+                            src="/tdr-placeholder.png"
+                            alt="TDR For Sale"
+                            fill
+                            className="object-cover transition-transform hover:scale-105 duration-300"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
                     ) : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">No Image</div>
                     )}
