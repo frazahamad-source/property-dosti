@@ -1,17 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { ChatWindow } from './ChatWindow';
-import { usePathname } from 'next/navigation';
+import { useStore } from '@/lib/store';
 
 export function GlobalChat() {
     const [isOpen, setIsOpen] = useState(false);
-    const pathname = usePathname();
+    const { user, chatMessages } = useStore();
 
-    // Don't show chat on auth pages if preferred, but user said "bottom of the app"
-    // Usually we hide it on landing pages or login pages if it's for registered users.
-    // However, the prompt says "bottom of the app", so let's keep it global.
+    const unreadCount = useMemo(() => {
+        if (!user?.id) return 0;
+        return chatMessages.filter(msg =>
+            msg.receiverId === user.id && !msg.isRead
+        ).length;
+    }, [chatMessages, user]);
 
     return (
         <>
@@ -19,9 +22,17 @@ export function GlobalChat() {
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 right-6 bg-primary text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-40 flex items-center justify-center animate-bounce"
+                    className={`fixed bottom-6 right-6 p-4 rounded-full shadow-2xl hover:scale-110 transition-all z-40 flex items-center justify-center animate-bounce ${unreadCount > 0
+                        ? 'bg-red-600 text-white ring-4 ring-red-600/20 shadow-red-600/40'
+                        : 'bg-primary text-white'
+                        }`}
                 >
                     <MessageSquare className="h-6 w-6" />
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-white text-red-600 text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center shadow-lg border-2 border-red-600 animate-pulse">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                    )}
                 </button>
             )}
 

@@ -41,6 +41,7 @@ export interface ChatMessage {
     receiverId: string; // 'bot' or unique user ID
     text: string;
     timestamp: string;
+    isRead: boolean;
 }
 
 export interface Banner {

@@ -6,7 +6,7 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Send, User, Bot, X, Search, ChevronLeft, MessageSquare, Check, CheckCheck } from 'lucide-react';
+import { Send, Bot, X, Search, ChevronLeft, MessageSquare, CheckCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Broker, ChatMessage, Admin } from '@/lib/types';
 import { supabase } from '@/lib/supabaseClient';
@@ -17,7 +17,7 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
-    const { user, brokers, chatMessages, addChatMessage, fetchChatMessages } = useStore();
+    const { user, brokers, chatMessages, addChatMessage, fetchChatMessages, markMessagesAsRead } = useStore();
     const [message, setMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedUser, setSelectedUser] = useState<Broker | 'bot' | null>(null);
@@ -32,6 +32,17 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             fetchChatMessages(user.id);
         }
     }, [isOpen, user?.id, fetchChatMessages]);
+
+    // Mark as read when selectedUser changes or new messages arrive
+    useEffect(() => {
+        if (isOpen && selectedUser && user?.id) {
+            const senderId = selectedUser === 'bot' ? 'bot' : selectedUser.id;
+            const hasUnread = chatMessages.some(m => m.senderId === senderId && m.receiverId === user.id && !m.isRead);
+            if (hasUnread) {
+                markMessagesAsRead(senderId);
+            }
+        }
+    }, [isOpen, selectedUser, chatMessages, user?.id, markMessagesAsRead]);
 
     useEffect(() => {
         if (!user?.id) return;
@@ -49,10 +60,15 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                     senderId: payload.new.sender_id,
                     receiverId: payload.new.receiver_id,
                     text: payload.new.text,
-                    timestamp: payload.new.timestamp
+                    timestamp: payload.new.timestamp,
+                    isRead: payload.new.is_read
                 };
-                // Only add if not already in state (to avoid double entry from local addChatMessage)
+                // Only add if not already in state
                 addChatMessage(newMsg);
+
+                // Play notification sound
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                audio.play().catch(e => console.log('Sound play blocked:', e));
             })
             .subscribe();
 
@@ -94,6 +110,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             receiverId: targetId,
             text: message,
             timestamp: new Date().toISOString(),
+            isRead: false,
         };
 
         await addChatMessage(newMsg);
@@ -123,6 +140,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                     receiverId: user?.id || 'anonymous',
                     text: botReply,
                     timestamp: new Date().toISOString(),
+                    isRead: false,
                 });
             }, 800);
         }
@@ -205,21 +223,33 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
 
                                         <div className="space-y-2">
                                             <p className="text-[10px] uppercase font-bold text-primary tracking-widest px-2 opacity-70">Active Brokers</p>
-                                            {filteredBrokers.map(broker => (
-                                                <div
-                                                    key={broker.id}
-                                                    className="flex items-center gap-4 p-3 rounded-2xl hover:bg-primary/5 cursor-pointer transition-all border border-transparent hover:border-primary/10 bg-background/40"
-                                                    onClick={() => setSelectedUser(broker)}
-                                                >
-                                                    <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center font-bold text-secondary-foreground">
-                                                        {broker.name[0]}
+                                            {filteredBrokers.map(broker => {
+                                                const brokerUnreadCount = chatMessages.filter(m => m.senderId === broker.id && m.receiverId === user?.id && !m.isRead).length;
+
+                                                return (
+                                                    <div
+                                                        key={broker.id}
+                                                        className={`flex items-center gap-4 p-3 rounded-2xl hover:bg-primary/5 cursor-pointer transition-all border bg-background/40 ${brokerUnreadCount > 0
+                                                            ? 'border-red-500/50 bg-red-50/10 dark:bg-red-900/10 shadow-sm'
+                                                            : 'border-transparent hover:border-primary/10'
+                                                            }`}
+                                                        onClick={() => setSelectedUser(broker)}
+                                                    >
+                                                        <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center font-bold text-secondary-foreground">
+                                                            {broker.name[0]}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-bold text-sm truncate">{broker.name}</p>
+                                                            <p className="text-[10px] font-mono text-muted-foreground truncate">{broker.id}</p>
+                                                        </div>
+                                                        {brokerUnreadCount > 0 && (
+                                                            <div className="h-5 w-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center font-bold animate-pulse">
+                                                                {brokerUnreadCount}
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-bold text-sm truncate">{broker.name}</p>
-                                                        <p className="text-[10px] font-mono text-muted-foreground truncate">{broker.id}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                             {searchQuery && filteredBrokers.length === 0 && (
                                                 <div className="text-center py-10 opacity-50">
                                                     <Search className="h-10 w-10 mx-auto mb-2" />

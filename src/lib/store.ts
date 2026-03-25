@@ -34,6 +34,7 @@ interface AppState {
     chatMessages: ChatMessage[];
     addChatMessage: (msg: ChatMessage) => Promise<void>;
     fetchChatMessages: (userId: string) => Promise<void>;
+    markMessagesAsRead: (senderId: string) => Promise<void>;
     applyReferral: (code: string, newBrokerId: string) => void;
     hasHydrated: boolean;
     setHasHydrated: (state: boolean) => void;
@@ -317,12 +318,13 @@ export const useStore = create<AppState>()(
                 if (error) {
                     console.error('Error fetching chat messages:', error);
                 } else if (data) {
-                    const mapped: ChatMessage[] = data.map((m: { id: string; sender_id: string; receiver_id: string; text: string; timestamp: string }) => ({
+                    const mapped: ChatMessage[] = data.map((m: { id: string; sender_id: string; receiver_id: string; text: string; timestamp: string; is_read: boolean }) => ({
                         id: m.id,
                         senderId: m.sender_id,
                         receiverId: m.receiver_id,
                         text: m.text,
-                        timestamp: m.timestamp
+                        timestamp: m.timestamp,
+                        isRead: m.is_read
                     }));
                     set({ chatMessages: mapped });
                 }
@@ -341,11 +343,35 @@ export const useStore = create<AppState>()(
                             sender_id: msg.senderId === 'anonymous' ? null : msg.senderId,
                             receiver_id: msg.receiverId,
                             text: msg.text,
-                            timestamp: msg.timestamp
+                            timestamp: msg.timestamp,
+                            is_read: msg.isRead
                         });
 
                     if (error) console.error('Error persisting chat message:', error);
                 }
+            },
+            markMessagesAsRead: async (senderId: string) => {
+                const { user, chatMessages } = useStore.getState();
+                if (!user) return;
+
+                // Optimistic local update
+                set({
+                    chatMessages: chatMessages.map(msg =>
+                        (msg.senderId === senderId && msg.receiverId === user.id)
+                            ? { ...msg, isRead: true }
+                            : msg
+                    )
+                });
+
+                const { supabase } = await import('@/lib/supabaseClient');
+                const { error } = await supabase
+                    .from('chat_messages')
+                    .update({ is_read: true })
+                    .eq('sender_id', senderId)
+                    .eq('receiver_id', user.id)
+                    .eq('is_read', false);
+
+                if (error) console.error('Error marking messages as read:', error);
             },
 
             // Referral Action
