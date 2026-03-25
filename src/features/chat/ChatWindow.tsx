@@ -128,6 +128,16 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
         }
     };
 
+    const unreadMap = useMemo(() => {
+        const counts: Record<string, number> = {};
+        chatMessages.forEach(m => {
+            if (m.receiverId === user?.id && !m.isRead) {
+                counts[m.senderId] = (counts[m.senderId] || 0) + 1;
+            }
+        });
+        return counts;
+    }, [chatMessages, user?.id]);
+
     const activeMessages = useMemo(() => {
         if (!selectedUser) return [];
         const targetId = selectedUser === 'bot' ? 'bot' : selectedUser.id;
@@ -262,7 +272,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                                         <div className="space-y-2">
                                             <p className="text-[10px] uppercase font-bold text-primary tracking-widest px-2 opacity-70">Active Brokers</p>
                                             {filteredBrokers.map(broker => {
-                                                const brokerUnreadCount = chatMessages.filter(m => m.senderId === broker.id && m.receiverId === user?.id && !m.isRead).length;
+                                                const brokerUnreadCount = unreadMap[broker.id] || 0;
 
                                                 return (
                                                     <div

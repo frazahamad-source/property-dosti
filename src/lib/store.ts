@@ -318,9 +318,9 @@ export const useStore = create<AppState>()(
                 if (error) {
                     console.error('Error fetching chat messages:', error);
                 } else if (data) {
-                    const mapped: ChatMessage[] = data.map((m: { id: string; sender_id: string; receiver_id: string; text: string; timestamp: string; is_read: boolean }) => ({
+                    const mapped: ChatMessage[] = (data as any[]).map((m: any) => ({
                         id: m.id,
-                        senderId: m.sender_id,
+                        senderId: m.sender_id || 'anonymous',
                         receiverId: m.receiver_id,
                         text: m.text,
                         timestamp: m.timestamp,
@@ -330,8 +330,11 @@ export const useStore = create<AppState>()(
                 }
             },
             addChatMessage: async (msg: ChatMessage) => {
-                // Optimistic update
-                set((state) => ({ chatMessages: [...state.chatMessages, msg] }));
+                // Prevent duplicates
+                set((state) => {
+                    if (state.chatMessages.some(m => m.id === msg.id)) return state;
+                    return { chatMessages: [...state.chatMessages, msg] };
+                });
 
                 const { supabase } = await import('@/lib/supabaseClient');
 
