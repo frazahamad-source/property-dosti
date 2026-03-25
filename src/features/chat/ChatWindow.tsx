@@ -81,14 +81,52 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
         scrollToBottom();
     }, [chatMessages, selectedUser]);
 
+    const sortedBrokers = useMemo(() => {
+        const lastMessageMap: Record<string, number> = {};
+        const unreadSet = new Set<string>();
+
+        chatMessages.forEach(msg => {
+            const otherParty = msg.senderId === user?.id ? msg.receiverId : msg.senderId;
+            if (otherParty !== 'bot' && otherParty !== 'anonymous') {
+                const ts = new Date(msg.timestamp).getTime();
+                if (!lastMessageMap[otherParty] || ts > lastMessageMap[otherParty]) {
+                    lastMessageMap[otherParty] = ts;
+                }
+                if (msg.receiverId === user?.id && !msg.isRead) {
+                    unreadSet.add(msg.senderId);
+                }
+            }
+        });
+
+        return [...brokers]
+            .filter(b => b.id !== user?.id)
+            .sort((a, b) => {
+                const hasUnreadA = unreadSet.has(a.id);
+                const hasUnreadB = unreadSet.has(b.id);
+
+                if (hasUnreadA && !hasUnreadB) return -1;
+                if (!hasUnreadA && hasUnreadB) return 1;
+
+                const timeA = lastMessageMap[a.id] || 0;
+                const timeB = lastMessageMap[b.id] || 0;
+                return timeB - timeA;
+            });
+    }, [brokers, chatMessages, user?.id]);
+
     const filteredBrokers = useMemo(() => {
-        if (!searchQuery.trim()) return brokers.filter(b => b.id !== user?.id).slice(0, 10);
-        return brokers.filter(b =>
+        if (!searchQuery.trim()) return sortedBrokers;
+        return sortedBrokers.filter(b =>
             (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                b.id.toLowerCase().includes(searchQuery.toLowerCase())) &&
-            b.id !== user?.id
+                b.id.toLowerCase().includes(searchQuery.toLowerCase()))
         );
-    }, [brokers, searchQuery, user]);
+    }, [sortedBrokers, searchQuery]);
+
+    const handleSelectUser = (broker: Broker | 'bot') => {
+        setSelectedUser(broker);
+        if (broker !== 'bot') {
+            markMessagesAsRead(broker.id);
+        }
+    };
 
     const activeMessages = useMemo(() => {
         if (!selectedUser) return [];
@@ -209,7 +247,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                                     <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
                                         <div
                                             className="flex items-center gap-4 p-3 rounded-2xl hover:bg-primary/5 cursor-pointer transition-all border border-transparent hover:border-primary/10 bg-background/40"
-                                            onClick={() => setSelectedUser('bot')}
+                                            onClick={() => handleSelectUser('bot')}
                                         >
                                             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/10">
                                                 <Bot className="h-7 w-7 text-primary" />
@@ -233,7 +271,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                                                             ? 'border-red-500/50 bg-red-50/10 dark:bg-red-900/10 shadow-sm'
                                                             : 'border-transparent hover:border-primary/10'
                                                             }`}
-                                                        onClick={() => setSelectedUser(broker)}
+                                                        onClick={() => handleSelectUser(broker)}
                                                     >
                                                         <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center font-bold text-secondary-foreground">
                                                             {broker.name[0]}
