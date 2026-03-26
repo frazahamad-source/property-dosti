@@ -89,13 +89,17 @@ export function PropertyCard({ property }: PropertyCardProps) {
             </div>
             <CardHeader>
                 <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className="text-lg line-clamp-1">{property.title}</CardTitle>
+                    <div className="flex-1 min-w-0">
+                        <Link href={`/property/${property.id}`} className="hover:text-primary transition-colors block">
+                            <CardTitle className="text-lg line-clamp-1">{property.title}</CardTitle>
+                        </Link>
                         <div className="flex items-center text-sm text-muted-foreground mt-1">
                             <MapPin className="h-4 w-4 mr-1 text-primary" />
-                            <span className="font-medium text-black dark:text-white">
-                                {property.village ? `${property.village}, ${property.location}` : property.location}
-                            </span>
+                            <Link href={`/property/${property.id}`} className="hover:underline flex items-center min-w-0">
+                                <span className="font-medium text-black dark:text-white truncate">
+                                    {property.village ? `${property.village}, ${property.location}` : property.location}
+                                </span>
+                            </Link>
                             <span className="text-xs ml-1 opacity-70">({property.district})</span>
                         </div>
                     </div>

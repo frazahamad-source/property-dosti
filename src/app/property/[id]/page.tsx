@@ -169,7 +169,7 @@ export default function PropertyDetailPage() {
             brokerId: property.brokerId,
             name: leadForm.name,
             phone: leadForm.phone,
-            message: leadForm.message,
+            message: `[Property Inquiry: ${property.title}] ${leadForm.message}`,
             status: 'new',
             timestamp: new Date().toISOString(),
         });

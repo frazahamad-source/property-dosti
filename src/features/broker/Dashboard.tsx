@@ -402,6 +402,11 @@ export function BrokerDashboard() {
         }
 
         try {
+            // Normalize category to lowercase for database constraint
+            const dbCategory = (finalCategory === 'Residential & Commercial') 
+                ? 'both' 
+                : (finalCategory?.toLowerCase() || 'residential');
+
             const { data: propertyData, error: propertyError } = await supabase
                 .from('properties')
                 .insert({
@@ -412,7 +417,7 @@ export function BrokerDashboard() {
                     district: data.district || (data.structureType === 'TDR' ? 'TDR' : 'Unknown'),
                     location: data.location || (data.structureType === 'TDR' ? data.tdrLocation || 'TDR Location' : 'Unknown'),
                     type: data.type,
-                    category: finalCategory,
+                    category: dbCategory,
                     structure_type: data.structureType,
                     land_area: data.landArea || null,
                     land_area_unit: data.landAreaUnit || 'Cents',
@@ -991,6 +996,112 @@ export function BrokerDashboard() {
                     </div>
                 )}
 
+                {activeTab === 'responses' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                <MessageSquare className="h-5 w-5 text-primary" />
+                                Recent Inquiries
+                            </h2>
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none">
+                                {unreadCount} New
+                            </Badge>
+                        </div>
+
+                        <div className="grid gap-4">
+                            {myLeads.length === 0 ? (
+                                <Card className="p-12 text-center">
+                                    <p className="text-muted-foreground italic text-lg">No inquiries received yet.</p>
+                                    <p className="text-sm text-muted-foreground mt-2">When customers inquire about your properties, they will appear here.</p>
+                                </Card>
+                            ) : (
+                                myLeads.map((lead) => (
+                                    <Card key={lead.id} className={cn(
+                                        "overflow-hidden transition-all border-l-4",
+                                        lead.status === 'new' ? "border-l-blue-500 bg-blue-50/30 shadow-sm" : "border-l-gray-300"
+                                    )}>
+                                        <CardContent className="p-6">
+                                            <div className="flex flex-col md:flex-row justify-between gap-6">
+                                                <div className="space-y-4 flex-1">
+                                                    <div className="flex items-start justify-between">
+                                                        <div>
+                                                            <div className="font-black text-lg text-gray-900 flex items-center gap-2">
+                                                                {lead.name}
+                                                                {lead.status === 'new' && (
+                                                                    <Badge className="bg-blue-500 text-[10px] h-4 px-1 uppercase font-bold">New</Badge>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                                                                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {new Date(lead.timestamp).toLocaleString()}</span>
+                                                                <span className="flex items-center gap-1 font-bold text-gray-600"><MapPin className="h-3 w-3" /> Property ID: {lead.property_id || lead.propertyId}</span>
+                                                            </div>
+                                                        </div>
+                                                        {lead.status === 'new' && (
+                                                            <Button
+                                                                variant="ghost" 
+                                                                size="sm"
+                                                                className="text-xs h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold"
+                                                                onClick={() => markLeadAsRead(lead.id)}
+                                                            >
+                                                                <Check className="h-3 w-3 mr-1" /> Mark as Read
+                                                            </Button>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="p-4 bg-white/50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-gray-800 text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap italic">
+                                                        &quot;{lead.message}&quot;
+                                                    </div>
+
+                                                    <div className="flex flex-wrap gap-2 pt-2">
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-9 px-4 rounded-full border-green-200 text-green-700 hover:bg-green-50 font-bold"
+                                                            onClick={() => {
+                                                                const phone = lead.phone.replace(/\D/g, '');
+                                                                const msg = encodeURIComponent(`Hi ${lead.name}, thank you for your inquiry on Property Dosti regarding the property!`);
+                                                                window.open(`https://wa.me/${phone.startsWith('91') ? '' : '91'}${phone}?text=${msg}`, '_blank');
+                                                                if (lead.status === 'new') markLeadAsRead(lead.id);
+                                                            }}
+                                                        >
+                                                            <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> WhatsApp
+                                                        </Button>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-9 px-4 rounded-full border-blue-200 text-blue-700 hover:bg-blue-50 font-bold"
+                                                            asChild
+                                                        >
+                                                            <a href={`tel:${lead.phone}`}>
+                                                                <Clock className="h-3.5 w-3.5 mr-1.5" /> Call Customer
+                                                            </a>
+                                                        </Button>
+                                                        <Button 
+                                                            variant="link" 
+                                                            size="sm" 
+                                                            className="h-9 text-primary font-bold decoration-primary/30"
+                                                            onClick={() => window.open(`/property/${lead.property_id || lead.propertyId}`, '_blank')}
+                                                        >
+                                                            <Eye className="h-3.5 w-3.5 mr-1.5" /> View Property
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="shrink-0">
+                                                    <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center min-w-[140px] h-full">
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Contact Phone</div>
+                                                        <div className="font-bold text-gray-900">{lead.phone}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                )}
+                
                 {activeTab === 'subscription' && (
                     <div className="max-w-4xl mx-auto py-10 space-y-12">
                         <SubscriptionDashboard />
@@ -1728,17 +1839,20 @@ export function BrokerDashboard() {
                         try {
                             const facilitiesArray = data.facilities || [];
 
-                            const { error } = await supabase
-                                .from('properties')
-                                .update({
-                                    title: data.title || (data.structureType === 'TDR' ? `TDR - ${data.tdrLocation}` : 'Untitled Property'),
-                                    description: data.description || (data.structureType === 'TDR' ? `TDR Certificate available at ${data.tdrLocation}` : ''),
-                                    price: data.price || (data.structureType === 'TDR' ? data.tdrTotalSaleConsideration || 0 : 0),
-                                    district: data.district || (data.structureType === 'TDR' ? 'TDR' : 'Unknown'),
-                                    location: data.location || (data.structureType === 'TDR' ? data.tdrLocation || 'TDR Location' : 'Unknown'),
-                                    village: data.village,
-                                    type: data.type,
-                                    category: (data.type === 'joint_venture' || (data.structureType === 'Land')) ? data.category : (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') ? 'Residential' : data.category),
+                                    const finalCategory = (data.type === 'joint_venture' || (data.structureType === 'Land')) ? data.category : (['Villa', 'Apartment', 'Farmhouse'].includes(data.structureType || '') ? 'Residential' : data.category);
+                                    const dbCategory = (finalCategory === 'Residential & Commercial') ? 'both' : (finalCategory?.toLowerCase() || 'residential');
+
+                                    const { error } = await supabase
+                                        .from('properties')
+                                        .update({
+                                            title: data.title || (data.structureType === 'TDR' ? `TDR - ${data.tdrLocation}` : 'Untitled Property'),
+                                            description: data.description || (data.structureType === 'TDR' ? `TDR Certificate available at ${data.tdrLocation}` : ''),
+                                            price: data.price || (data.structureType === 'TDR' ? data.tdrTotalSaleConsideration || 0 : 0),
+                                            district: data.district || (data.structureType === 'TDR' ? 'TDR' : 'Unknown'),
+                                            location: data.location || (data.structureType === 'TDR' ? data.tdrLocation || 'TDR Location' : 'Unknown'),
+                                            village: data.village,
+                                            type: data.type,
+                                            category: dbCategory,
                                     structure_type: data.structureType,
                                     land_area: data.landArea || null,
                                     land_area_unit: data.landAreaUnit || 'Cents',
