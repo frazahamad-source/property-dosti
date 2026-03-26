@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { Property } from '@/lib/types';
@@ -22,7 +22,7 @@ function PropertiesContent() {
     const query = searchParams.get('q') || '';
     const type = searchParams.get('type') || '';
 
-    const normalizeLocation = (loc: string) => {
+    const normalizeLocation = useCallback((loc: string) => {
         const lower = loc.toLowerCase().trim();
         // Common aliases and spelling variations
         const aliases: Record<string, string[]> = {
@@ -40,9 +40,9 @@ function PropertiesContent() {
             }
         }
         return lower;
-    };
+    }, []);
 
-    const applyFilters = (allProps: Property[], filters: SmartSearchFilters) => {
+    const applyFilters = useCallback((allProps: Property[], filters: SmartSearchFilters) => {
         let filtered = [...allProps];
 
         if (filters.query) {
@@ -82,7 +82,7 @@ function PropertiesContent() {
         }
 
         setFilteredProperties(filtered);
-    };
+    }, [normalizeLocation]);
 
     useEffect(() => {
         const fetchProperties = async () => {
@@ -160,17 +160,14 @@ function PropertiesContent() {
         };
 
         fetchProperties();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setProperties, searchBy, query, type]);
+    }, [setProperties, searchBy, query, type, applyFilters]);
 
     // Re-filter when search params change
     useEffect(() => {
         if (properties.length > 0) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             applyFilters(properties, { searchBy, query, propertyType: type });
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams, properties, applyFilters, searchBy, query, type]);
+    }, [properties, applyFilters, searchBy, query, type]);
 
 
     const handleSearch = (filters: SmartSearchFilters) => {
