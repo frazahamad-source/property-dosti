@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { Property } from '@/lib/types';
@@ -14,13 +14,20 @@ import { Button } from '@/components/ui/Button';
 function PropertiesContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { properties, setProperties } = useStore();
+    
+    // Use selectors for better performance and stability
+    const properties = useStore(state => state.properties);
+    const setProperties = useStore(state => state.setProperties);
+    
     const [loading, setLoading] = useState(true);
     const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
 
-    const searchBy = (searchParams.get('by') as SmartSearchFilters['searchBy']) || 'city';
-    const query = searchParams.get('q') || '';
-    const type = searchParams.get('type') || '';
+    // Memoize search params to ensure primitives are stable
+    const searchBy = useMemo(() => (searchParams.get('by') as SmartSearchFilters['searchBy']) || 'city', [searchParams]);
+    const query = useMemo(() => searchParams.get('q') || '', [searchParams]);
+    const type = useMemo(() => searchParams.get('type') || '', [searchParams]);
+
+    const initialFilters = useMemo(() => ({ searchBy, query, propertyType: type }), [searchBy, query, type]);
 
     const normalizeLocation = useCallback((loc: string) => {
         const lower = loc.toLowerCase().trim();
@@ -164,6 +171,7 @@ function PropertiesContent() {
 
     // Re-filter when search params change
     useEffect(() => {
+        console.log('Properties Page: properties or search params changed', { propertiesCount: properties.length, searchBy, query, type });
         if (properties.length > 0) {
             applyFilters(properties, { searchBy, query, propertyType: type });
         }
@@ -201,7 +209,7 @@ function PropertiesContent() {
 
                     <SmartSearchForm
                         onSearch={handleSearch}
-                        initialFilters={{ searchBy, query, propertyType: type }}
+                        initialFilters={initialFilters}
                     />
                 </div>
 
