@@ -8,7 +8,7 @@ import { PropertyCard } from '@/components/PropertyCard';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, Share2, User as UserIcon, MoreVertical, Eye, Gift, CheckCircle } from 'lucide-react';
+import { Plus, Search, MapPin, Clock, MessageSquare, Pencil, Trash2, Camera, Check, Share2, User as UserIcon, MoreVertical, Eye, Gift, CheckCircle, Phone } from 'lucide-react';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
@@ -111,7 +111,7 @@ const propertySchema = z.object({
 type PropertyFormValues = z.infer<typeof propertySchema>;
 
 export function BrokerDashboard() {
-    const { user, properties, addProperty, setProperties, updateProperty, deleteProperty, setUser } = useStore();
+    const { user, properties, addProperty, setProperties, updateProperty, deleteProperty, setUser, unreadLeadsCount, setUnreadLeadsCount } = useStore();
     const searchParams = useSearchParams();
     const router = useRouter();
     const viewParam = searchParams.get('view');
@@ -175,7 +175,6 @@ export function BrokerDashboard() {
     const myLeads = leadFilterPropertyId
         ? propertyLeads.filter(l => (l.property_id || l.propertyId) === leadFilterPropertyId)
         : propertyLeads;
-    const unreadCount = myLeads.filter(l => l.status === 'new').length;
 
     // Fetch properties from Supabase
     useEffect(() => {
@@ -328,6 +327,12 @@ export function BrokerDashboard() {
     }, []);
 
     const markLeadAsRead = async (leadId: string) => {
+        // Decrement unread count immediately if it was new
+        const lead = propertyLeads.find(l => l.id === leadId);
+        if (lead?.status === 'new') {
+            setUnreadLeadsCount(Math.max(0, unreadLeadsCount - 1));
+        }
+
         // Optimistic update
         setPropertyLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: 'read' } : l));
 
@@ -1018,9 +1023,9 @@ export function BrokerDashboard() {
                                 Recent Inquiries
                             </h2>
                             <div className="flex items-center gap-2">
-                                {unreadCount > 0 && (
+                                {unreadLeadsCount > 0 && (
                                     <Badge className="bg-red-500 text-white hover:bg-red-500 border-none animate-pulse">
-                                        {unreadCount} New
+                                        {unreadLeadsCount} New
                                     </Badge>
                                 )}
                             </div>
@@ -1058,77 +1063,69 @@ export function BrokerDashboard() {
                                         lead.status === 'new' ? "border-l-blue-500 bg-blue-50/30 shadow-sm" : "border-l-gray-300"
                                     )}>
                                         <CardContent className="p-6">
-                                            <div className="flex flex-col md:flex-row justify-between gap-6">
-                                                <div className="space-y-4 flex-1">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <div className="font-black text-lg text-gray-900 flex items-center gap-2">
-                                                                {lead.name}
-                                                                {lead.status === 'new' && (
-                                                                    <Badge className="bg-blue-500 text-[10px] h-4 px-1 uppercase font-bold">New</Badge>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                                                                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {new Date(lead.timestamp).toLocaleString()}</span>
-                                                                <span className="flex items-center gap-1 font-bold text-gray-600"><MapPin className="h-3 w-3" /> Property ID: {lead.property_id || lead.propertyId}</span>
-                                                            </div>
+                                            <div className="space-y-4">
+                                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                                    <div>
+                                                        <div className="font-black text-lg text-gray-900 flex flex-wrap items-center gap-2">
+                                                            {lead.name}
+                                                            {lead.status === 'new' && (
+                                                                <Badge className="bg-blue-500 text-[10px] h-4 px-1 uppercase font-bold shrink-0">New</Badge>
+                                                            )}
                                                         </div>
-                                                        {lead.status === 'new' && (
-                                                            <Button
-                                                                variant="ghost" 
-                                                                size="sm"
-                                                                className="text-xs h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold"
-                                                                onClick={() => markLeadAsRead(lead.id)}
-                                                            >
-                                                                <Check className="h-3 w-3 mr-1" /> Mark as Read
-                                                            </Button>
-                                                        )}
+                                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
+                                                            <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5 text-gray-400" /> <span className="font-bold text-gray-700">{lead.phone}</span></span>
+                                                            <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-gray-400" /> {new Date(lead.timestamp).toLocaleString()}</span>
+                                                            <span className="flex items-center gap-1 font-semibold text-gray-600"><MapPin className="h-3.5 w-3.5 text-gray-400" /> Property ID: {lead.property_id || lead.propertyId}</span>
+                                                        </div>
                                                     </div>
-
-                                                    <div className="p-4 bg-white/50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-gray-800 text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap italic">
-                                                        &quot;{lead.message}&quot;
-                                                    </div>
-
-                                                    <div className="flex flex-wrap gap-2 pt-2">
-                                                        <Button 
-                                                            variant="outline" 
-                                                            size="sm" 
-                                                            className="h-9 px-4 rounded-full border-green-200 text-green-700 hover:bg-green-50 font-bold"
-                                                            onClick={() => {
-                                                                const phone = lead.phone.replace(/\D/g, '');
-                                                                const msg = encodeURIComponent(`Hi ${lead.name}, thank you for your inquiry on Property Dosti regarding the property!`);
-                                                                window.open(`https://wa.me/${phone.startsWith('91') ? '' : '91'}${phone}?text=${msg}`, '_blank');
-                                                                if (lead.status === 'new') markLeadAsRead(lead.id);
-                                                            }}
+                                                    {lead.status === 'new' && (
+                                                        <Button
+                                                            variant="ghost" 
+                                                            size="sm"
+                                                            className="text-xs h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold shrink-0 border border-blue-100 shadow-sm"
+                                                            onClick={() => markLeadAsRead(lead.id)}
                                                         >
-                                                            <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> WhatsApp
+                                                            <Check className="h-3.5 w-3.5 mr-1" /> Mark as Read
                                                         </Button>
-                                                        <Button 
-                                                            variant="outline" 
-                                                            size="sm" 
-                                                            className="h-9 px-4 rounded-full border-blue-200 text-blue-700 hover:bg-blue-50 font-bold"
-                                                            asChild
-                                                        >
-                                                            <a href={`tel:${lead.phone}`}>
-                                                                <Clock className="h-3.5 w-3.5 mr-1.5" /> Call Customer
-                                                            </a>
-                                                        </Button>
-                                                        <Button 
-                                                            variant="link" 
-                                                            size="sm" 
-                                                            className="h-9 text-primary font-bold decoration-primary/30"
-                                                            onClick={() => window.open(`/property/${lead.property_id || lead.propertyId}`, '_blank')}
-                                                        >
-                                                            <Eye className="h-3.5 w-3.5 mr-1.5" /> View Property
-                                                        </Button>
-                                                    </div>
+                                                    )}
                                                 </div>
-                                                
-                                                <div className="shrink-0">
-                                                    <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center min-w-[140px] h-full">
-                                                        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Contact Phone</div>
-                                                        <div className="font-bold text-gray-900">{lead.phone}</div>
-                                                    </div>
+
+                                                <div className="p-4 bg-gray-50/80 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-gray-800 text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap italic">
+                                                    &quot;{lead.message}&quot;
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100 dark:border-gray-800 mt-4">
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="h-9 px-4 rounded-full border-green-200 text-green-700 hover:bg-green-50 font-bold"
+                                                        onClick={() => {
+                                                            const phone = lead.phone.replace(/\D/g, '');
+                                                            const msg = encodeURIComponent(`Hi ${lead.name}, thank you for your inquiry on Property Dosti regarding the property!`);
+                                                            window.open(`https://wa.me/${phone.startsWith('91') ? '' : '91'}${phone}?text=${msg}`, '_blank');
+                                                            if (lead.status === 'new') markLeadAsRead(lead.id);
+                                                        }}
+                                                    >
+                                                        <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> WhatsApp
+                                                    </Button>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="h-9 px-4 rounded-full border-blue-200 text-blue-700 hover:bg-blue-50 font-bold"
+                                                        asChild
+                                                    >
+                                                        <a href={`tel:${lead.phone}`}>
+                                                            <Phone className="h-3.5 w-3.5 mr-1.5" /> Call Customer
+                                                        </a>
+                                                    </Button>
+                                                    <Button 
+                                                        variant="link" 
+                                                        size="sm" 
+                                                        className="h-9 text-primary font-bold decoration-primary/30"
+                                                        onClick={() => window.open(`/property/${lead.property_id || lead.propertyId}`, '_blank')}
+                                                    >
+                                                        <Eye className="h-3.5 w-3.5 mr-1.5" /> View Property
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </CardContent>

@@ -11,6 +11,7 @@ interface AppState {
     bannerSlides: BannerSlide[];
     siteConfig: SiteConfig;
     propertyLeads: PropertyLead[];
+    unreadLeadsCount: number;
     setProperties: (properties: Property[]) => void;
     setBrokers: (brokers: Broker[]) => void;
     login: (user: Broker | Admin, isAdmin: boolean) => void;
@@ -21,6 +22,7 @@ interface AppState {
     likeProperty: (id: string) => void;
     addPropertyLead: (lead: PropertyLead) => void;
     setUser: (user: Broker | Admin) => void;
+    setUnreadLeadsCount: (count: number) => void;
     approveBroker: (brokerId: string) => void;
     rejectBroker: (brokerId: string) => void;
     deleteBroker: (brokerId: string) => void;
@@ -48,6 +50,7 @@ export const useStore = create<AppState>()(
             properties: [],
             brokers: [],
             propertyLeads: [],
+            unreadLeadsCount: 0,
             bannerSlides: [
                 {
                     id: '1',

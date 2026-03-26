@@ -16,11 +16,10 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { user, hasHydrated } = useStore();
+    const { user, hasHydrated, unreadLeadsCount, setUnreadLeadsCount } = useStore();
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -46,7 +45,7 @@ export default function DashboardLayout({
                 .select('*', { count: 'exact', head: true })
                 .eq('broker_id', user.id)
                 .eq('status', 'new');
-            setUnreadCount(count ?? 0);
+            setUnreadLeadsCount(count ?? 0);
         };
 
         fetchUnreadCount();
@@ -87,9 +86,9 @@ export default function DashboardLayout({
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    {unreadCount > 0 && (
+                    {unreadLeadsCount > 0 && (
                         <span className="flex items-center justify-center h-6 min-w-[24px] px-1.5 bg-red-500 text-white text-xs font-black rounded-full animate-pulse">
-                            {unreadCount > 99 ? '99+' : unreadCount}
+                            {unreadLeadsCount > 99 ? '99+' : unreadLeadsCount}
                         </span>
                     )}
                     <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-gray-400 hover:text-white">
@@ -108,7 +107,7 @@ export default function DashboardLayout({
                 )}
 
                 <Suspense fallback={<div className="w-64 bg-gray-900 hidden lg:block" />}>
-                    <BrokerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} unreadCount={unreadCount} />
+                    <BrokerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} unreadCount={unreadLeadsCount} />
                 </Suspense>
 
                 <main className={cn(
