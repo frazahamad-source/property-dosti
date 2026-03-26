@@ -9,6 +9,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { Suspense } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function DashboardLayout({
     children,
@@ -19,6 +20,7 @@ export default function DashboardLayout({
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -33,6 +35,34 @@ export default function DashboardLayout({
             }
         }
     }, [user, router, hasHydrated, mounted]);
+
+    // Fetch unread lead count and subscribe to realtime changes
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchUnreadCount = async () => {
+            const { count } = await supabase
+                .from('property_leads')
+                .select('*', { count: 'exact', head: true })
+                .eq('broker_id', user.id)
+                .eq('status', 'new');
+            setUnreadCount(count ?? 0);
+        };
+
+        fetchUnreadCount();
+
+        // Realtime subscription to update badge when new leads arrive
+        const channel = supabase
+            .channel('layout-leads-count')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'property_leads', filter: `broker_id=eq.${user.id}` },
+                () => { fetchUnreadCount(); }
+            )
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [user]);
 
     if (!mounted || !hasHydrated) {
         return (
@@ -56,9 +86,16 @@ export default function DashboardLayout({
                         centerOnMobile={false}
                     />
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-gray-400 hover:text-white">
-                    <Menu className="h-6 w-6" />
-                </Button>
+                <div className="flex items-center gap-2">
+                    {unreadCount > 0 && (
+                        <span className="flex items-center justify-center h-6 min-w-[24px] px-1.5 bg-red-500 text-white text-xs font-black rounded-full animate-pulse">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-gray-400 hover:text-white">
+                        <Menu className="h-6 w-6" />
+                    </Button>
+                </div>
             </header>
 
             <div className="flex flex-1 relative overflow-hidden">
@@ -71,7 +108,7 @@ export default function DashboardLayout({
                 )}
 
                 <Suspense fallback={<div className="w-64 bg-gray-900 hidden lg:block" />}>
-                    <BrokerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                    <BrokerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} unreadCount={unreadCount} />
                 </Suspense>
 
                 <main className={cn(
@@ -92,3 +129,4 @@ export default function DashboardLayout({
         </div >
     );
 }
+

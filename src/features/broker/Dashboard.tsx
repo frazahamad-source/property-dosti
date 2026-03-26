@@ -171,7 +171,10 @@ export function BrokerDashboard() {
         p.district.toLowerCase().includes(listingSearch.toLowerCase())
     );
     const [propertyLeads, setPropertyLeads] = useState<PropertyLead[]>([]); // Local state for leads
-    const myLeads = propertyLeads;
+    const [leadFilterPropertyId, setLeadFilterPropertyId] = useState<string | null>(null);
+    const myLeads = leadFilterPropertyId
+        ? propertyLeads.filter(l => (l.property_id || l.propertyId) === leadFilterPropertyId)
+        : propertyLeads;
     const unreadCount = myLeads.filter(l => l.status === 'new').length;
 
     // Fetch properties from Supabase
@@ -954,15 +957,26 @@ export function BrokerDashboard() {
                                                                 </div>
                                                                 <div
                                                                     className={cn(
-                                                                        "flex items-center gap-1 px-2 py-1 rounded-md border text-[10px] cursor-pointer transition-colors font-bold",
-                                                                        myLeads.filter(l => l.property_id === p.id && l.status === 'new').length > 0
+                                                                        "flex items-center gap-1 px-2 py-1 rounded-md border text-[10px] cursor-pointer transition-colors font-bold relative",
+                                                                        propertyLeads.filter(l => (l.property_id || l.propertyId) === p.id && l.status === 'new').length > 0
                                                                             ? "bg-blue-50 border-blue-200 text-blue-600"
                                                                             : "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-muted-foreground hover:text-primary"
                                                                     )}
-                                                                    onClick={() => setActiveTab('responses')}
+                                                                    onClick={() => {
+                                                                        setLeadFilterPropertyId(p.id);
+                                                                        setActiveTab('responses');
+                                                                    }}
                                                                 >
                                                                     <MessageSquare className="h-3 w-3" />
-                                                                    <span>{p.leadsCount}</span>
+                                                                    <span>{propertyLeads.filter(l => (l.property_id || l.propertyId) === p.id).length}</span>
+                                                                    {propertyLeads.filter(l => (l.property_id || l.propertyId) === p.id && l.status === 'new').length > 0 && (
+                                                                        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+                                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                                            <span className="relative inline-flex items-center justify-center rounded-full h-4 w-4 bg-red-500 text-white text-[8px] font-black">
+                                                                                {propertyLeads.filter(l => (l.property_id || l.propertyId) === p.id && l.status === 'new').length}
+                                                                            </span>
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             </div>
 
@@ -1003,10 +1017,33 @@ export function BrokerDashboard() {
                                 <MessageSquare className="h-5 w-5 text-primary" />
                                 Recent Inquiries
                             </h2>
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none">
-                                {unreadCount} New
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                                {unreadCount > 0 && (
+                                    <Badge className="bg-red-500 text-white hover:bg-red-500 border-none animate-pulse">
+                                        {unreadCount} New
+                                    </Badge>
+                                )}
+                            </div>
                         </div>
+
+                        {/* Property Filter Bar */}
+                        {leadFilterPropertyId && (() => {
+                            const filteredProp = myProperties.find(p => p.id === leadFilterPropertyId);
+                            return filteredProp ? (
+                                <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                                    <MessageSquare className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                    <p className="text-sm text-blue-700 font-semibold flex-1 truncate">
+                                        Showing inquiries for: <span className="font-black">{filteredProp.title}</span>
+                                    </p>
+                                    <button
+                                        onClick={() => setLeadFilterPropertyId(null)}
+                                        className="text-xs font-bold text-blue-600 hover:text-blue-800 px-3 py-1 rounded-lg bg-blue-100 hover:bg-blue-200 transition-colors flex-shrink-0"
+                                    >
+                                        Show All
+                                    </button>
+                                </div>
+                            ) : null;
+                        })()}
 
                         <div className="grid gap-4">
                             {myLeads.length === 0 ? (

@@ -241,8 +241,24 @@ export const useStore = create<AppState>()(
                 if (error) {
                     console.error('Failed to save property lead:', error);
                 } else {
-                    // Update leads_count on property
-                    await supabase.rpc('increment_leads', { row_id: lead.propertyId });
+                    // Increment leads_count directly (avoids needing a custom RPC)
+                    await supabase.rpc('increment_leads', { row_id: lead.propertyId }).then(({ error: rpcError }) => {
+                        if (rpcError) {
+                            // Fallback: update leads_count via raw SQL increment
+                            supabase.from('properties')
+                                .select('leads_count')
+                                .eq('id', lead.propertyId)
+                                .single()
+                                .then(({ data }) => {
+                                    if (data) {
+                                        supabase.from('properties')
+                                            .update({ leads_count: (data.leads_count || 0) + 1 })
+                                            .eq('id', lead.propertyId)
+                                            .then(() => {});
+                                    }
+                                });
+                        }
+                    });
                 }
             },
 

@@ -32,9 +32,10 @@ const sidebarItems = [
 interface BrokerSidebarProps {
     isOpen?: boolean;
     onClose?: () => void;
+    unreadCount?: number;
 }
 
-export function BrokerSidebar({ isOpen, onClose }: BrokerSidebarProps) {
+export function BrokerSidebar({ isOpen, onClose, unreadCount = 0 }: BrokerSidebarProps) {
     const pathname = usePathname();
     const { logout, user } = useStore();
     const router = useRouter();
@@ -84,20 +85,34 @@ export function BrokerSidebar({ isOpen, onClose }: BrokerSidebarProps) {
             )}
 
             <div className="flex-1 py-6 px-3 space-y-1">
-                {sidebarItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => onClose?.()}
-                        className={cn(
-                            "flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-gray-800 hover:text-white",
-                            isActive(item.href) ? "bg-gray-800 text-white" : "text-gray-400"
-                        )}
-                    >
-                        <item.icon className="mr-3 h-5 w-5" />
-                        {item.name}
-                    </Link>
-                ))}
+                {sidebarItems.map((item) => {
+                    const isResponsesLink = item.href.includes('view=responses');
+                    const showBadge = isResponsesLink && unreadCount > 0;
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => onClose?.()}
+                            className={cn(
+                                "flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-gray-800 hover:text-white",
+                                isActive(item.href) ? "bg-gray-800 text-white" : "text-gray-400"
+                            )}
+                        >
+                            <span className="flex items-center">
+                                <item.icon className="mr-3 h-5 w-5" />
+                                {item.name}
+                            </span>
+                            {showBadge && (
+                                <span className="relative flex h-5 w-5 items-center justify-center">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex items-center justify-center rounded-full h-5 min-w-[20px] px-1 bg-red-500 text-white text-[10px] font-black">
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                </span>
+                            )}
+                        </Link>
+                    );
+                })}
             </div>
 
             <div className="p-4 border-t border-gray-800">
