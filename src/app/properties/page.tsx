@@ -171,7 +171,6 @@ function PropertiesContent() {
 
     // Re-filter when search params change
     useEffect(() => {
-        console.log('Properties Page: properties or search params changed', { propertiesCount: properties.length, searchBy, query, type });
         if (properties.length > 0) {
             applyFilters(properties, { searchBy, query, propertyType: type });
         }
