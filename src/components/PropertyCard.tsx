@@ -41,32 +41,37 @@ export function PropertyCard({ property }: PropertyCardProps) {
     const isTdrSale = property.type === 'sale' && property.structureType === 'TDR';
 
     return (
-        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
-            <div className="aspect-[16/9] relative bg-gray-200">
-                <Link href={`/property/${property.id}`} className="block w-full h-full cursor-pointer">
-                    {property.images[0] ? (
-                        <Image
-                            src={property.images[0]}
-                            alt={property.title}
-                            fill
-                            className="object-cover transition-transform hover:scale-105 duration-300"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                    ) : isTdrSale ? (
-                        <Image
-                            src="/tdr-placeholder.png"
-                            alt="TDR For Sale"
-                            fill
-                            className="object-cover transition-transform hover:scale-105 duration-300"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">No Image</div>
-                    )}
-                </Link>
+        <Card className="relative overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col group">
+            {/* Main Navigation Link - Covers the whole card */}
+            <Link 
+                href={`/property/${property.id}`} 
+                className="absolute inset-0 z-10" 
+                aria-label={`View details for ${property.title}`}
+            />
+
+            <div className="aspect-[16/9] relative bg-gray-200 z-0">
+                {property.images[0] ? (
+                    <Image
+                        src={property.images[0]}
+                        alt={property.title}
+                        fill
+                        className="object-cover transition-transform group-hover:scale-105 duration-300"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                ) : isTdrSale ? (
+                    <Image
+                        src="/tdr-placeholder.png"
+                        alt="TDR For Sale"
+                        fill
+                        className="object-cover transition-transform group-hover:scale-105 duration-300"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground font-bold">No Image</div>
+                )}
                 
-                {/* Overlay Badges */}
-                <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
+                {/* Overlay Badges - Should be above the link if needed for info, but usually badges don't need clicks */}
+                <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-20 pointer-events-none">
                     <Badge variant={property.type === 'sale' ? 'default' : property.type === 'rent' ? 'secondary' : property.type === 'lease' ? 'outline' : 'destructive'}>
                         {property.type === 'sale' ? 'For Sale' : property.type === 'rent' ? 'For Rent' : property.type === 'lease' ? 'For Lease' : 'Joint Venture'}
                     </Badge>
@@ -79,7 +84,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
                 {/* TDR Location Overlay */}
                 {property.structureType === 'TDR' && (
-                    <div className="absolute bottom-2 left-2 pointer-events-none">
+                    <div className="absolute bottom-2 left-2 z-20 pointer-events-none">
                         <Badge variant="secondary" className="bg-primary text-white border-none shadow-md flex items-center gap-1 font-bold">
                             <MapPin className="h-3 w-3" />
                             {property.village || property.location || property.tdrLocation || 'Location unknown'}
@@ -87,19 +92,16 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     </div>
                 )}
             </div>
-            <CardHeader>
+
+            <CardHeader className="relative z-20 bg-white/50 dark:bg-black/20 backdrop-blur-sm -mt-2 mx-2 rounded-t-xl border-t border-x pointer-events-none">
                 <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
-                        <Link href={`/property/${property.id}`} className="hover:text-primary transition-colors block">
-                            <CardTitle className="text-lg line-clamp-1">{property.title}</CardTitle>
-                        </Link>
+                        <CardTitle className="text-lg line-clamp-1 group-hover:text-primary transition-colors">{property.title}</CardTitle>
                         <div className="flex items-center text-sm text-muted-foreground mt-1">
                             <MapPin className="h-4 w-4 mr-1 text-primary" />
-                            <Link href={`/property/${property.id}`} className="hover:underline flex items-center min-w-0">
-                                <span className="font-medium text-black dark:text-white truncate">
-                                    {property.village ? `${property.village}, ${property.location}` : property.location}
-                                </span>
-                            </Link>
+                            <span className="font-medium text-black dark:text-white truncate">
+                                {property.village ? `${property.village}, ${property.location}` : property.location}
+                            </span>
                             <span className="text-xs ml-1 opacity-70">({property.district})</span>
                         </div>
                     </div>
@@ -123,7 +125,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     )}
                 </div>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-between">
+
+            <CardContent className="flex-1 flex flex-col justify-between relative z-20 p-4 pt-0 pointer-events-none">
                 <p className="text-sm text-gray-600 line-clamp-2 mb-4 whitespace-pre-line">{property.description}</p>
                 <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
                     <div className="flex gap-2 text-[10px] font-bold">
@@ -132,12 +135,15 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     </div>
                 </div>
 
-                <div className="flex gap-2 mt-4">
+                <div className="flex gap-2 mt-4 pointer-events-auto">
                     <Button
                         variant="outline"
                         size="sm"
                         className="flex-1 h-9 text-pink-600 border-pink-100 hover:bg-pink-50 hover:text-pink-700 font-bold"
-                        onClick={handleLike}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleLike();
+                        }}
                     >
                         <Heart className={`h-4 w-4 mr-2 ${property.likes > 0 ? 'fill-current' : ''}`} />
                         {property.likes}
@@ -146,7 +152,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
                         variant="outline"
                         size="sm"
                         className="flex-1 h-9 text-blue-600 border-blue-100 hover:bg-blue-50 hover:text-blue-700 font-bold"
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.stopPropagation();
                             const url = `${window.location.origin}/property/${property.id}`;
                             const msg = encodeURIComponent(`Check out this property: ${property.title} - ${property.price.toLocaleString('en-IN')} INR. ${url}`);
                             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -163,8 +170,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
                 <Button
                     variant="default"
-                    className="w-full mt-3 font-bold shadow-md shadow-primary/20"
-                    onClick={() => {
+                    className="w-full mt-3 font-bold shadow-md shadow-primary/20 pointer-events-auto"
+                    onClick={(e) => {
+                        e.stopPropagation();
                         const phone = sanitizePhone(property.brokerPhone || '7760704400');
                         const promoText = `\n\n*Just a quick note* – I'm an active user on https://propertydosti.com, a platform built exclusively for brokers like us. It's free to join and great for networking.`;
                         const msg = encodeURIComponent(`Hi, I am interested in your property: "${property.title}" in ${property.location}. Is it still available? Please reply.${promoText}`);
