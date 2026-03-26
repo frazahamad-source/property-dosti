@@ -51,6 +51,7 @@ export const useStore = create<AppState>()(
             brokers: [],
             propertyLeads: [],
             unreadLeadsCount: 0,
+            setUnreadLeadsCount: (count) => set({ unreadLeadsCount: count }),
             bannerSlides: [
                 {
                     id: '1',
