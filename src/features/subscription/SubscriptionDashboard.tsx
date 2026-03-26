@@ -112,18 +112,15 @@ export function SubscriptionDashboard() {
                     <CardDescription>Scan QR to pay ₹100/month</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">
-                    <div className="w-40 h-40 bg-white border p-2 rounded-lg shadow-inner flex items-center justify-center relative group">
-                        <QrCode className="w-32 h-32 text-gray-800" />
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                            <p className="text-white text-xs font-bold px-2 text-center">UPI: propertydosti@upi</p>
-                        </div>
+                    <div className="w-48 h-48 bg-white border p-2 rounded-xl shadow-sm flex items-center justify-center relative overflow-hidden">
+                        <img src="/images/admin-gpay-qr.jpg" alt="Admin GPay QR Code" className="w-full h-full object-contain rounded-lg" />
                     </div>
-                    <p className="mt-4 text-sm text-muted-foreground text-center">
+                    <p className="mt-4 text-sm text-muted-foreground text-center leading-relaxed max-w-sm">
                         Scan the QR code with any UPI app (GPay, PhonePe, Paytm).
-                        Once paid, send a screenshot on WhatsApp to Admin for instant activation.
+                        Once paid, click the button below to send a screenshot on WhatsApp for instant activation.
                     </p>
-                    <Button className="mt-4 w-full" variant="outline" asChild>
-                        <a href="https://wa.me/919999999999?text=I%20have%20made%20the%20payment%20for%20my%20subscription%20on%20Property%20Dosti" target="_blank">
+                    <Button className="mt-5 w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-transparent" variant="outline" asChild>
+                        <a href="https://wa.me/917760704400?text=Hi, I have made the payment for my subscription on Property Dosti. Here is the screenshot." target="_blank" rel="noopener noreferrer">
                             Confirm Payment on WhatsApp
                         </a>
                     </Button>

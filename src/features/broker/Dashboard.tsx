@@ -1343,7 +1343,12 @@ export function BrokerDashboard() {
                                     </div>
                                     <div className="grid gap-1">
                                         <label className="text-xs font-semibold text-muted-foreground uppercase">Email Address</label>
-                                        <div className="p-2 bg-muted/30 rounded border">{broker?.email}</div>
+                                        <div 
+                                            className="p-2 bg-muted/30 rounded border min-h-[42px] flex items-center overflow-hidden text-ellipsis whitespace-nowrap text-sm font-medium" 
+                                            title={broker?.email || 'Not provided'}
+                                        >
+                                            {broker?.email || 'Not provided'}
+                                        </div>
                                     </div>
                                     <div className="pt-4">
                                         <Button variant="outline" className="w-full" disabled>

@@ -106,7 +106,7 @@ export function LoginForm() {
                 id: profile.id,
                 role: assignedRole as 'broker' | 'manager' | 'supervisor',
                 name: profile.name || 'Unknown',
-                email: profile.email || '',
+                email: profile.email || authData.user?.email || '',
                 phone: profile.phone || '',
                 broker_code: profile.broker_code || '',
                 status: profile.status || 'pending',
