@@ -107,19 +107,19 @@ export function SubscriptionDashboard() {
             )}
 
             <Card className="border-primary/20 bg-white/50 backdrop-blur md:col-span-2 lg:col-span-1">
-                <CardHeader>
-                    <CardTitle className="text-xl">Quick Payment</CardTitle>
-                    <CardDescription>Scan QR to pay ₹100/month</CardDescription>
+                <CardHeader className="text-center pb-2">
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">Complete Subscription</CardTitle>
+                    <CardDescription className="text-base font-medium">Scan to complete subscription payment</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col items-center">
-                    <div className="w-48 h-48 bg-white border p-2 rounded-xl shadow-sm flex items-center justify-center relative overflow-hidden">
-                        <img src="/images/admin-gpay-qr.jpg" alt="Admin GPay QR Code" className="w-full h-full object-contain rounded-lg" />
+                <CardContent className="flex flex-col items-center pt-4">
+                    <div className="w-64 h-64 bg-white border-2 border-primary/10 rounded-2xl shadow-sm flex items-center justify-center relative overflow-hidden p-2 transition-all hover:shadow-md hover:border-primary/30">
+                        <img src="/images/admin-gpay-qr.jpg" alt="Secure Payment QR Code" className="w-full h-full object-contain rounded-xl" />
                     </div>
                     <p className="mt-4 text-sm text-muted-foreground text-center leading-relaxed max-w-sm">
-                        Scan the QR code with any UPI app (GPay, PhonePe, Paytm).
-                        Once paid, click the button below to send a screenshot on WhatsApp for instant activation.
+                        Use any UPI app (GPay, PhonePe, Paytm) to pay <strong className="text-foreground">₹100/month</strong>.
+                        Once paid, share the screenshot on WhatsApp for instant activation.
                     </p>
-                    <Button className="mt-5 w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-transparent" variant="outline" asChild>
+                    <Button className="mt-6 w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-transparent shadow-sm hover:shadow transition-all" variant="outline" size="lg" asChild>
                         <a href="https://wa.me/917760704400?text=Hi, I have made the payment for my subscription on Property Dosti. Here is the screenshot." target="_blank" rel="noopener noreferrer">
                             Confirm Payment on WhatsApp
                         </a>
