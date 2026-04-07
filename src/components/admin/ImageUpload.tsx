@@ -87,54 +87,63 @@ export function ImageUpload({
     };
 
     return (
-        <div className={`space-y-2 ${className}`}>
-            <label className="text-xs font-bold uppercase text-gray-500">{label}</label>
+        <div className={`space-y-3 ${className}`}>
+            <div className="flex justify-between items-end">
+                <label className="text-xs font-bold uppercase text-gray-500">{label}</label>
+                <div className="text-right">
+                    <p className="text-[10px] font-semibold text-primary/80">Recommended: {recommendedSize}</p>
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-tighter">Max Size: {maxSizeMB}MB</p>
+                </div>
+            </div>
             
-            <div className={`relative border-2 border-dashed rounded-xl overflow-hidden transition-colors hover:bg-muted/30 ${value ? 'border-primary/20' : 'border-muted'} ${getAspectRatioClass()}`}>
+            <div className={`relative border-2 border-dashed rounded-xl overflow-hidden transition-all duration-300 hover:bg-muted/30 ${value ? 'border-primary/20 bg-primary/5' : 'border-muted'} ${getAspectRatioClass()}`}>
                 {value ? (
                     <div className="group relative h-full w-full">
                         <Image 
                             src={value} 
                             alt={label} 
                             fill 
-                            className="object-cover"
+                            className="object-contain p-2"
                         />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            <Button variant="secondary" size="sm" asChild className="cursor-pointer">
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                            <Button variant="secondary" size="sm" asChild className="cursor-pointer shadow-lg">
                                 <label>
-                                    <Upload className="h-4 w-4 mr-2" /> Change
+                                    <Upload className="h-4 w-4 mr-2" /> Change Image
                                     <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={isUploading} />
                                 </label>
                             </Button>
-                            <Button variant="destructive" size="sm" onClick={handleRemove} disabled={isUploading}>
-                                <Trash2 className="h-4 w-4" />
+                            <Button variant="destructive" size="sm" onClick={handleRemove} disabled={isUploading} className="shadow-lg">
+                                <Trash2 className="h-4 w-4 mr-2" /> Remove
                             </Button>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-3">
-                        <div className="p-3 bg-primary/10 rounded-full">
+                    <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-4">
+                        <div className="p-4 bg-primary/10 rounded-full animate-in zoom-in duration-300">
                             {isUploading ? (
-                                <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                                <Loader2 className="h-8 w-8 text-primary animate-spin" />
                             ) : (
-                                <ImageIcon className="h-6 w-6 text-primary" />
+                                <ImageIcon className="h-8 w-8 text-primary" />
                             )}
                         </div>
                         <div className="space-y-1">
-                            <p className="text-sm font-medium">{isUploading ? 'Uploading...' : `Upload ${label}`}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                                Recommended: {recommendedSize} • Max {maxSizeMB}MB
-                            </p>
+                            <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{isUploading ? 'Uploading Image...' : `Upload ${label}`}</p>
+                            <p className="text-[11px] text-muted-foreground">Drag and drop or click to browse</p>
                         </div>
-                        <Button variant="outline" size="sm" asChild className="relative cursor-pointer" disabled={isUploading}>
+                        <Button variant="outline" size="sm" asChild className="relative cursor-pointer hover:bg-primary hover:text-white transition-colors" disabled={isUploading}>
                             <label>
-                                Select Image
+                                <Upload className="h-4 w-4 mr-2" /> Select File
                                 <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={isUploading} />
                             </label>
                         </Button>
                     </div>
                 )}
             </div>
+            {isUploading && (
+                <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary animate-progress-indeterminate"></div>
+                </div>
+            )}
         </div>
     );
 }
