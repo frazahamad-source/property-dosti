@@ -357,8 +357,15 @@ export function BrokerDashboard() {
         const newImageUrls: string[] = [];
 
         for (const file of files) {
-            if (file.size > 1024 * 1024) { // 1MB limit for Supabase
-                toast.error(`${file.name} is too large. Please use images < 1MB.`);
+            const ext = file.name.split('.').pop()?.toLowerCase();
+            const validExts = ['png', 'jpg', 'jpeg', 'svg', 'gif', 'mp4'];
+            if (!validExts.includes(ext || '')) {
+                toast.error(`Unsupported format for ${file.name}. Allowed: PNG, JPG, JPEG, SVG, GIF, MP4.`);
+                continue;
+            }
+
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                toast.error(`${file.name} exceeds max size of 10 MB.`);
                 continue;
             }
 
@@ -670,8 +677,16 @@ export function BrokerDashboard() {
         const file = e.target.files?.[0];
         if (!file || !user) return;
 
-        if (file.size > 500 * 1024) {
-            toast.error('Avatar image must be less than 500KB');
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        const validExts = ['png', 'jpg', 'jpeg', 'svg', 'gif', 'mp4'];
+        
+        if (!validExts.includes(ext || '')) {
+            toast.error('Unsupported format. Allowed: PNG, JPG, JPEG, SVG, GIF, MP4.');
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error('Avatar image must be less than 10MB');
             return;
         }
 
@@ -1271,13 +1286,13 @@ export function BrokerDashboard() {
                                                 </div>
                                             )}
                                         </div>
-                                        <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg cursor-pointer hover:bg-primary/90 transition-transform active:scale-95">
+                                        <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg cursor-pointer hover:bg-primary/90 transition-transform active:scale-95" title="Formats: PNG, JPG, JPEG, SVG, GIF, MP4 | Recommended: 256 x 256 px | Max: 10 MB">
                                             <Camera className="h-5 w-5" />
                                             <input
                                                 id="avatar-upload"
                                                 type="file"
                                                 className="hidden"
-                                                accept="image/*"
+                                                accept=".png,.jpg,.jpeg,.svg,.gif,.mp4"
                                                 onChange={onAvatarUpload}
                                                 disabled={isUploadingAvatar}
                                             />
@@ -1824,7 +1839,7 @@ export function BrokerDashboard() {
                                 <Input
                                     type="file"
                                     multiple
-                                    accept="image/*"
+                                    accept=".png,.jpg,.jpeg,.svg,.gif,.mp4"
                                     onChange={handleImageUpload}
                                     className="hidden"
                                     id="photo-upload"
@@ -1838,9 +1853,10 @@ export function BrokerDashboard() {
                                     <span className="text-sm text-muted-foreground">Click to upload photos</span>
                                 </label>
                             </div>
-                            <p className="mt-2 text-[10px] text-muted-foreground">
-                                * Please upload only low resolution images. Acceptable size: less than 500KB per image.
-                            </p>
+                            <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded-md border text-center">
+                                <p className="font-semibold text-foreground">Allowed formats: PNG, JPG, JPEG, SVG, GIF, MP4</p>
+                                <p>Maximum file size: 10 MB. Recommended size: 1200 x 800 px</p>
+                            </div>
                             {uploadedImages.length > 0 && (
                                 <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
                                     {uploadedImages.map((img, idx) => (
@@ -2398,6 +2414,7 @@ export function BrokerDashboard() {
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div className="flex flex-col gap-2 col-span-2">
                                 <label className="text-sm font-medium">Photos (Max 3)</label>
+                                <p className="text-[10px] text-muted-foreground mb-2">Formats: PNG, JPG, JPEG, SVG, GIF, MP4 | Recommended: 1200 x 800 px | Max 10 MB</p>
                                 <div className="flex gap-2">
                                     {uploadedImages.map((img, idx) => (
                                         <div key={idx} className="relative h-10 w-10 flex-shrink-0 group">
@@ -2424,7 +2441,7 @@ export function BrokerDashboard() {
                                         id="edit-photo-upload"
                                         type="file"
                                         multiple
-                                        accept="image/*"
+                                        accept=".png,.jpg,.jpeg,.svg,.gif,.mp4"
                                         onChange={handleImageUpload}
                                         className="hidden"
                                     />

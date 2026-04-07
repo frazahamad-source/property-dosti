@@ -49,15 +49,16 @@ export function LogoSettings() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validation
-        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
-        if (!validTypes.includes(file.type)) {
-            toast.error('Please upload a valid image (PNG, JPG, or SVG)');
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        const validExts = ['png', 'jpg', 'jpeg', 'svg', 'gif', 'mp4'];
+        
+        if (!validExts.includes(ext || '')) {
+            toast.error('Unsupported format. Allowed: PNG, JPG, JPEG, SVG, GIF, MP4');
             return;
         }
 
-        if (file.size > 2 * 1024 * 1024) {
-            toast.error('Image size should be less than 2MB');
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error('Image size should be less than 10MB');
             return;
         }
 
@@ -157,12 +158,15 @@ export function LogoSettings() {
                                 )}
                             </div>
                             <div className="flex-1 space-y-1">
-                                <p className="text-xs font-medium">Resolution: 128x128px recommended</p>
+                                <div className="space-y-1 mb-2">
+                                    <p className="text-xs font-medium">Resolution: 128x128px recommended</p>
+                                    <p className="text-[10px] text-muted-foreground">Formats: PNG, JPG, JPEG, SVG, GIF, MP4. Max 10 MB</p>
+                                </div>
                                 <div className="flex gap-2">
                                     <Button variant="outline" size="sm" asChild className="relative overflow-hidden cursor-pointer h-8 text-xs">
                                         <label>
                                             <Upload className="h-3 w-3 mr-1" /> Replace Icon
-                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'icon')} />
+                                            <input type="file" className="hidden" accept=".png,.jpg,.jpeg,.svg,.gif,.mp4" onChange={(e) => handleImageUpload(e, 'icon')} />
                                         </label>
                                     </Button>
                                     {icon.type === 'image' && (
@@ -253,7 +257,7 @@ export function LogoSettings() {
                                         <Button variant="outline" size="sm" asChild className="cursor-pointer relative">
                                             <label>
                                                 Change Image
-                                                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'logo')} />
+                                                <input type="file" className="hidden" accept=".png,.jpg,.jpeg,.svg,.gif,.mp4" onChange={(e) => handleImageUpload(e, 'logo')} />
                                             </label>
                                         </Button>
                                         <Button variant="ghost" size="sm" className="text-red-600" onClick={() => setLogo({ ...logo, imageUrl: undefined, type: 'text' })}>
@@ -268,13 +272,13 @@ export function LogoSettings() {
                                     </div>
                                     <div className="space-y-1">
                                         <p className="font-medium">Upload Logo Image</p>
-                                        <p className="text-xs text-muted-foreground">PNG, SVG or JPG (Max 2MB)</p>
+                                        <p className="text-xs text-muted-foreground">PNG, JPG, JPEG, SVG, GIF, MP4 (Max 10MB)</p>
                                         <p className="text-xs text-muted-foreground italic">Recommended dimensions: 300x80px</p>
                                     </div>
                                     <Button variant="default" size="sm" asChild className="cursor-pointer relative">
                                         <label>
                                             Select File
-                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'logo')} />
+                                            <input type="file" className="hidden" accept=".png,.jpg,.jpeg,.svg,.gif,.mp4" onChange={(e) => handleImageUpload(e, 'logo')} />
                                         </label>
                                     </Button>
                                 </div>
