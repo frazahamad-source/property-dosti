@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Trash2, Plus, Save, Image as ImageIcon } from 'lucide-react';
 import { BannerSlide, SiteConfig } from '@/lib/types';
 import { toast } from 'sonner';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 export default function BannersPage() {
     const {
@@ -119,14 +120,14 @@ export default function BannersPage() {
                                     placeholder="Grow Your Business with Property Dosti"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-gray-500">Background Image URL (Optional)</label>
-                                <Input
-                                    value={config.promoBanner?.backgroundImage || ''}
-                                    onChange={(e) => handlePromoChange('backgroundImage', e.target.value)}
-                                    placeholder="https://... (1920x60 recommended)"
-                                />
-                            </div>
+                            <ImageUpload
+                                label="Background Image"
+                                value={config.promoBanner?.backgroundImage || ''}
+                                onChange={(url) => handlePromoChange('backgroundImage', url)}
+                                recommendedSize="1920x60px"
+                                path="banners/promo"
+                                aspectRatio="wide"
+                            />
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase text-gray-500">Button Text</label>
                                 <Input
@@ -173,14 +174,14 @@ export default function BannersPage() {
                                         placeholder="Banner Title"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold uppercase text-gray-500">Image URL</label>
-                                    <Input
-                                        value={slide.backgroundImage}
-                                        onChange={(e) => handleChange(slide.id, 'backgroundImage', e.target.value)}
-                                        placeholder="https://..."
-                                    />
-                                </div>
+                                <ImageUpload
+                                    label="Slide Image"
+                                    value={slide.backgroundImage}
+                                    onChange={(url) => handleChange(slide.id, 'backgroundImage', url)}
+                                    recommendedSize="1920x1080px"
+                                    path="banners/hero"
+                                    aspectRatio="video"
+                                />
                                 <div className="col-span-2 space-y-2">
                                     <label className="text-xs font-semibold uppercase text-gray-500">Description</label>
                                     <textarea

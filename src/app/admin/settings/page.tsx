@@ -10,6 +10,7 @@ import { SiteConfig } from '@/lib/types';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { LogoSettings } from '@/components/admin/LogoSettings';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 export default function SettingsPage() {
     const { siteConfig, fetchSiteConfig, updateSiteConfig } = useStore();
@@ -144,13 +145,14 @@ export default function SettingsPage() {
                                         onChange={(e) => handleChange('heroDescription', e.target.value)}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Hero Background Image URL</label>
-                                    <Input
-                                        value={config.heroBackgroundImage}
-                                        onChange={(e) => handleChange('heroBackgroundImage', e.target.value)}
-                                    />
-                                </div>
+                                <ImageUpload
+                                    label="Hero Background Image"
+                                    value={config.heroBackgroundImage}
+                                    onChange={(url) => handleChange('heroBackgroundImage', url)}
+                                    recommendedSize="1920x1080px"
+                                    path="branding/hero"
+                                    aspectRatio="video"
+                                />
                             </CardContent>
                         </Card>
 
