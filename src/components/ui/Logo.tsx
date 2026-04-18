@@ -86,11 +86,11 @@ export function Logo({
                         />
                     ) : (
                         <span
-                            className={cn("font-bold leading-none block whitespace-nowrap", !hasTextColorOverride && "text-[#0f172a] dark:text-white", textClassName)}
+                            className={cn("font-bold leading-none block whitespace-nowrap", !hasTextColorOverride && "text-foreground", textClassName)}
                             style={{
                                 fontFamily: 'Inter, sans-serif',
                                 fontSize: `${logoFontSize}px`,
-                                color: !hasTextColorOverride ? logoColor : undefined
+                                color: !hasTextColorOverride ? undefined : logoColor
                             }}
                         >
                             {logoText}

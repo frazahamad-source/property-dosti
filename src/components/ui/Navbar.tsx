@@ -21,7 +21,10 @@ export function Navbar() {
     if (pathname === '/' || pathname?.startsWith('/admin') || pathname?.startsWith('/dashboard')) return null; // Don't show navbar on landing page, admin panel, or dashboard
 
     return (
-        <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <nav className={cn(
+            "sticky top-0 z-50 w-full border-b transition-all duration-300",
+            "glass-effect"
+        )}>
             <div className="container flex h-20 items-center px-2 md:px-4">
                 <Link href="/" className="mr-2 md:mr-6 flex-shrink-0">
                     <Logo className="scale-90 md:scale-100 origin-left" />
