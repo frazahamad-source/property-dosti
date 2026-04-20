@@ -6,6 +6,7 @@ import { useStore } from "@/lib/store";
 import { Button } from "./Button";
 import { Home, User, LogOut, Settings, Building2, LayoutDashboard } from "lucide-react";
 import { Logo } from "./Logo";
+import { cn } from "@/lib/utils";
 
 
 export function Navbar() {
