@@ -9,9 +9,10 @@ import { Calendar, QrCode, MessageSquare, CheckCircle, AlertTriangle, Clock, Ref
 import { toast } from 'sonner';
 import { ReferralBanner } from '@/components/broker/ReferralBanner';
 import { supabase } from '@/lib/supabaseClient';
+import { mapProfileToBroker } from '@/lib/authUtils';
 
 export function SubscriptionDashboard() {
-    const { user } = useStore();
+    const { user, setUser } = useStore();
     const broker = user && 'referralCode' in user ? user : null;
     const [pendingRequest, setPendingRequest] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -28,11 +29,53 @@ export function SubscriptionDashboard() {
     }, [expiryDate]);
     const isExpired = daysLeft <= 0;
 
+    // Sync profile and subscription status from database
+    const syncProfile = async () => {
+        if (!user?.id) return;
+        try {
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError) {
+                console.error('Error fetching profile for sync inside SubscriptionDashboard:', profileError.message);
+                return;
+            }
+
+            if (profile) {
+                const { data: userRoleData } = await supabase
+                    .from('user_roles')
+                    .select('*')
+                    .eq('user_id', profile.id);
+
+                const userRole = (userRoleData && userRoleData.length > 0) ? userRoleData[0] : null;
+                const mappedProfile = mapProfileToBroker(profile, userRole, user.email || '');
+
+                // Check if there are updates compared to local Zustand store
+                const expiryChanged = mappedProfile.subscriptionExpiry !== (user as any).subscriptionExpiry;
+                const roleChanged = mappedProfile.role !== (user as any).role;
+                const statusChanged = mappedProfile.status !== (user as any).status;
+
+                if (expiryChanged || roleChanged || statusChanged) {
+                    setUser(mappedProfile);
+                    console.log('Synchronized broker profile state with database inside SubscriptionDashboard.');
+                }
+            }
+        } catch (err) {
+            console.error('Failed to sync user profile in SubscriptionDashboard:', err);
+        }
+    };
+
     // Fetch the agent's latest request on mount
     const fetchLatestRequest = async () => {
         if (!broker) return;
         setIsLoading(true);
         try {
+            // First sync the profile state so any DB overrides are loaded in UI
+            await syncProfile();
+
             const { data, error } = await supabase
                 .from('renewal_requests')
                 .select('*')

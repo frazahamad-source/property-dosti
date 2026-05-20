@@ -20,6 +20,7 @@ import { CommissionDashboard, SoldPropertyInfo } from '@/features/broker/Commiss
 import { AmenitySelector } from '@/components/broker/AmenitySelector';
 import { supabase } from '@/lib/supabaseClient';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { mapProfileToBroker } from '@/lib/authUtils';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -293,6 +294,51 @@ export function BrokerDashboard() {
         };
         fetchReferrals();
     }, [user]);
+
+    // Sync profile and subscription status from database on mount
+    useEffect(() => {
+        const syncProfile = async () => {
+            if (!user?.id) return;
+            try {
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profileError) {
+                    console.error('Error fetching profile for sync:', profileError.message);
+                    return;
+                }
+
+                if (profile) {
+                    const { data: userRoleData } = await supabase
+                        .from('user_roles')
+                        .select('*')
+                        .eq('user_id', profile.id);
+
+                    const userRole = (userRoleData && userRoleData.length > 0) ? userRoleData[0] : null;
+                    const mappedProfile = mapProfileToBroker(profile, userRole, user.email || '');
+
+                    // Check if there are updates compared to local Zustand store
+                    const expiryChanged = mappedProfile.subscriptionExpiry !== (user as any).subscriptionExpiry;
+                    const roleChanged = mappedProfile.role !== (user as any).role;
+                    const statusChanged = mappedProfile.status !== (user as any).status;
+                    const nameChanged = mappedProfile.name !== user.name;
+                    const avatarChanged = mappedProfile.avatarUrl !== (user as any).avatarUrl;
+
+                    if (expiryChanged || roleChanged || statusChanged || nameChanged || avatarChanged) {
+                        setUser(mappedProfile);
+                        console.log('Synchronized broker profile state with database.');
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to sync user profile:', err);
+            }
+        };
+
+        syncProfile();
+    }, [user?.id, setUser, user]);
 
     // Fetch amenities config
     useEffect(() => {
