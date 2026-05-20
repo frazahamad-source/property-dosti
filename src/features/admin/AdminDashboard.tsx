@@ -9,12 +9,13 @@ import { PropertyManager } from './PropertyManager';
 import { AmenitiesManager } from './AmenitiesManager';
 import { VillaTypesManager } from './VillaTypesManager';
 import { RoleManager } from './RoleManager';
-import { ListChecks, Shield, Home } from 'lucide-react';
+import { SubscriptionManager } from './SubscriptionManager';
+import { ListChecks, Shield, Home, CreditCard } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 
 interface AdminDashboardProps {
-    view?: 'overview' | 'brokers' | 'properties' | 'amenities' | 'villaTypes' | 'roles';
+    view?: 'overview' | 'brokers' | 'properties' | 'amenities' | 'villaTypes' | 'roles' | 'subscriptions';
 }
 
 export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
@@ -95,6 +96,15 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
             color: "text-indigo-600",
             bgColor: "bg-indigo-50",
             targetView: 'roles'
+        },
+        {
+            title: "Subscription Hub",
+            value: "Manage",
+            icon: CreditCard,
+            description: "Approve payments & overrides",
+            color: "text-rose-600",
+            bgColor: "bg-rose-50",
+            targetView: 'subscriptions'
         }
     ];
 
@@ -110,6 +120,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
                 return <VillaTypesManager />;
             case 'roles':
                 return <RoleManager />;
+            case 'subscriptions':
+                return <SubscriptionManager />;
             default:
                 return (
                     <>
@@ -168,7 +180,8 @@ export function AdminDashboard({ view = 'overview' }: AdminDashboardProps) {
                     view === 'brokers' ? 'Broker Management' :
                         view === 'roles' ? 'Role Management' :
                             view === 'villaTypes' ? 'Villa Types Management' :
-                                'Property Management'}
+                                view === 'subscriptions' ? 'Subscription Hub' :
+                                    'Property Management'}
             </h1>
 
             {renderContent()}
