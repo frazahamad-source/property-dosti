@@ -1,6 +1,4 @@
--- =========================================================================
 -- PROPERTY DOSTI – SUBSCRIPTION RENEWAL SYSTEM DATABASE MIGRATION
--- =========================================================================
 -- Run this script inside the Supabase SQL Editor.
 -- This script configures the databases, foreign keys, and Row Level Security.
 
@@ -49,9 +47,7 @@ ALTER TABLE public.renewal_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_logs ENABLE ROW LEVEL SECURITY;
 
--- =========================================================================
 -- RLS SECURITY POLICIES
--- =========================================================================
 
 -- --- renewal_requests Policies ---
 DROP POLICY IF EXISTS "Agents can view their own requests." ON public.renewal_requests;
