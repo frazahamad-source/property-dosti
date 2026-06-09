@@ -7,6 +7,7 @@ import { Navbar } from "@/components/ui/Navbar";
 import { Footer } from "@/components/ui/Footer";
 import { GlobalChat } from "@/features/chat/GlobalChat";
 import { cn } from "@/lib/utils";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +30,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <GlobalChat />
+        <InstallPrompt />
         <Toaster position="top-center" richColors />
       </body>
     </html>
