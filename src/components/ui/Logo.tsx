@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2 } from "lucide-react";
+import { useState } from 'react';
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 
@@ -21,6 +21,7 @@ export function Logo({
     showTagline = true,
     centerOnMobile = false
 }: LogoProps) {
+    const [imageError, setImageError] = useState(false);
     const { siteConfig, hasHydrated } = useStore();
     const logo = siteConfig?.logo;
     const icon = siteConfig?.icon;
@@ -60,15 +61,21 @@ export function Logo({
                 "flex-shrink-0 flex items-center justify-center mr-3 md:mr-4",
                 iconClassName
             )}>
-                {iconType === 'image' && iconImageUrl ? (
+                {iconType === 'image' && iconImageUrl && !imageError ? (
                     <img
                         src={iconImageUrl}
                         alt="Logo Icon"
                         className="h-8 w-8 object-contain"
                         style={{ maxWidth: '40px', maxHeight: '40px' }}
+                        onError={() => setImageError(true)}
                     />
                 ) : (
-                    <Building2 className={cn("h-8 w-8 text-primary", iconClassName?.includes('text-') ? "" : "text-primary")} />
+                    <img
+                        src="/icon.svg"
+                        alt="Property Dosti Logo Icon"
+                        className="h-8 w-8 object-contain"
+                        style={{ maxWidth: '40px', maxHeight: '40px' }}
+                    />
                 )}
             </div>
 
