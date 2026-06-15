@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Logo } from '@/components/ui/Logo';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
@@ -51,7 +52,13 @@ export function ForgotPasswordForm() {
 
     if (isSubmitted) {
         return (
-            <Card className="w-full max-w-md mx-auto">
+            <div className="w-full max-w-md mx-auto space-y-6">
+                <div className="flex justify-center">
+                    <Link href="/">
+                        <Logo className="scale-110" />
+                    </Link>
+                </div>
+                <Card>
                 <CardHeader>
                     <CardTitle>Email Sent</CardTitle>
                     <CardDescription>
@@ -63,12 +70,19 @@ export function ForgotPasswordForm() {
                         <Link href="/login">Return to Login</Link>
                     </Button>
                 </CardContent>
-            </Card>
+                </Card>
+            </div>
         );
     }
 
     return (
-        <Card className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md mx-auto space-y-6">
+            <div className="flex justify-center">
+                <Link href="/">
+                    <Logo className="scale-110" />
+                </Link>
+            </div>
+            <Card>
             <CardHeader>
                 <CardTitle>Forgot Password</CardTitle>
                 <CardDescription>Enter your email to receive recovery instructions</CardDescription>
@@ -90,6 +104,7 @@ export function ForgotPasswordForm() {
                     </div>
                 </form>
             </CardContent>
-        </Card>
+            </Card>
+        </div>
     );
 }

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useStore } from '@/lib/store';
+import { Logo } from '@/components/ui/Logo';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { mapProfileToBroker } from '@/lib/authUtils';
@@ -136,7 +137,13 @@ export function LoginForm() {
     };
 
     return (
-        <Card className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md mx-auto space-y-6">
+            <div className="flex justify-center">
+                <Link href="/">
+                    <Logo className="scale-110" />
+                </Link>
+            </div>
+            <Card>
             <CardHeader>
                 <CardTitle>Login</CardTitle>
                 <CardDescription>Enter your credentials to access your account</CardDescription>
@@ -214,7 +221,8 @@ export function LoginForm() {
                     </div>
                 </div>
             </CardContent>
-        </Card>
+            </Card>
+        </div>
     );
 }
 

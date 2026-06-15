@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useStore } from '@/lib/store';
+import { Logo } from '@/components/ui/Logo';
 import { DISTRICTS } from '@/lib/types';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
@@ -156,7 +157,13 @@ export function SignupForm() {
     };
 
     return (
-        <Card className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md mx-auto space-y-6">
+            <div className="flex justify-center">
+                <Link href="/">
+                    <Logo className="scale-110" />
+                </Link>
+            </div>
+            <Card>
             <CardHeader>
                 <CardTitle>Broker Registration</CardTitle>
                 <CardDescription>Join our network of verified brokers</CardDescription>
@@ -370,6 +377,7 @@ export function SignupForm() {
                 </form>
                 </div>
             </CardContent>
-        </Card>
+            </Card>
+        </div>
     );
 }

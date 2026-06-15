@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   title: "Property Dosti",
   description: "Connect with verified brokers in Karnataka",
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: "/icon.png",
+    apple: "/icon.png",
   },
 };
 

@@ -22,6 +22,7 @@ export function Logo({
     centerOnMobile = false
 }: LogoProps) {
     const [imageError, setImageError] = useState(false);
+    const [logoImageError, setLogoImageError] = useState(false);
     const { siteConfig, hasHydrated } = useStore();
     const logo = siteConfig?.logo;
     const icon = siteConfig?.icon;
@@ -71,7 +72,7 @@ export function Logo({
                     />
                 ) : (
                     <img
-                        src="/icon.svg"
+                        src="/icon.png"
                         alt="Property Dosti Logo Icon"
                         className="h-8 w-8 object-contain"
                         style={{ maxWidth: '40px', maxHeight: '40px' }}
@@ -84,9 +85,17 @@ export function Logo({
                 "flex flex-col justify-center items-start overflow-visible"
             )}>
                 <div className="flex items-center">
-                    {logoType === 'image' && logoImageUrl ? (
+                    {logoType === 'image' && logoImageUrl && !logoImageError ? (
                         <img
                             src={logoImageUrl}
+                            alt={logoText}
+                            className="h-10 w-auto object-contain"
+                            style={{ maxHeight: '50px' }}
+                            onError={() => setLogoImageError(true)}
+                        />
+                    ) : logoType === 'image' ? (
+                        <img
+                            src="/logo.png"
                             alt={logoText}
                             className="h-10 w-auto object-contain"
                             style={{ maxHeight: '50px' }}
@@ -97,7 +106,7 @@ export function Logo({
                             style={{
                                 fontFamily: 'Inter, sans-serif',
                                 fontSize: `${logoFontSize}px`,
-                                color: !hasTextColorOverride ? undefined : logoColor
+                                color: hasTextColorOverride ? undefined : logoColor
                             }}
                         >
                             {logoText}

@@ -154,7 +154,7 @@ export function LogoSettings() {
                                 {icon.type === 'image' && icon.imageUrl ? (
                                     <Image src={icon.imageUrl} alt="Icon preview" width={48} height={48} className="object-contain" />
                                 ) : (
-                                    <span className="text-primary font-bold">PD</span>
+                                    <Image src="/icon.png" alt="Icon preview" width={48} height={48} className="object-contain" />
                                 )}
                             </div>
                             <div className="flex-1 space-y-1">

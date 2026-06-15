@@ -7,6 +7,8 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Logo } from '@/components/ui/Logo';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
@@ -62,7 +64,13 @@ export function UpdatePasswordForm() {
     };
 
     return (
-        <Card className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md mx-auto space-y-6">
+            <div className="flex justify-center">
+                <Link href="/">
+                    <Logo className="scale-110" />
+                </Link>
+            </div>
+            <Card>
             <CardHeader>
                 <CardTitle>Set New Password</CardTitle>
                 <CardDescription>Enter your new password below</CardDescription>
@@ -104,6 +112,7 @@ export function UpdatePasswordForm() {
                     </Button>
                 </form>
             </CardContent>
-        </Card>
+            </Card>
+        </div>
     );
 }
